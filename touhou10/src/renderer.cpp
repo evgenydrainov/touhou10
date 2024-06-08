@@ -23,6 +23,15 @@ void Renderer::init() {
 
 			glCompileShader(shader);
 
+			int success;
+			glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+			if (!success) {
+				char buf[512];
+				glGetShaderInfoLog(shader, sizeof(buf), NULL, buf);
+				log_error("SHADER COMPILATION ERROR:\n%s", buf);
+				Assert(false);
+			}
+
 			return shader;
 		};
 
@@ -33,6 +42,15 @@ void Renderer::init() {
 			glAttachShader(program, fragment_shader);
 
 			glLinkProgram(program);
+
+			int success;
+			glGetProgramiv(program, GL_LINK_STATUS, &success);
+			if (!success) {
+				char buf[512];
+				glGetProgramInfoLog(program, sizeof(buf), NULL, buf);
+				log_error("SHADER LINKING ERROR:\n%s", buf);
+				Assert(false);
+			}
 
 			return program;
 		};
@@ -208,20 +226,15 @@ void Renderer::draw_texture(Texture* t, Rect src,
 
 	Assert(t);
 
-	if (src.w == 0) {
+	if (src.w == 0 && src.h == 0) {
 		src.w = t->width;
-	}
-	if (src.h == 0) {
 		src.h = t->height;
 	}
 
-	if (t->ID != batch_texture) {
+	if (t->ID != batch_texture || mode != MODE_QUADS) {
 		break_batch();
-		batch_texture = t->ID;
-	}
 
-	if (mode != MODE_QUADS) {
-		break_batch();
+		batch_texture = t->ID;
 		mode = MODE_QUADS;
 	}
 
@@ -259,7 +272,7 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		// glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		// glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// Has to be in this order
+		// Has to be in this order (learned it the hard way)
 		glm::mat4 model = glm::translate(glm::mat4{1.0f}, {pos.x, pos.y, 0.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
 		model = glm::scale(model, {scale.x, scale.y, 1.0f});
@@ -347,6 +360,14 @@ void Renderer::draw_rectangle(Rect rect, glm::vec4 color) {
 #else
 	draw_sprite(GetSprite(spr_white), 0, {rect.x, rect.y}, {rect.w / 16.0f, rect.h / 16.0f}, 0.0f, color);
 #endif
+}
+
+void Renderer::draw_rectangle_ext(glm::vec2 pos, glm::vec2 scale,
+								  glm::vec2 origin, float angle, glm::vec4 color) {
+	Sprite* s = GetSprite(spr_white);
+	Texture* t = GetTexture(s->texture_index);
+	SpriteFrame f = s->frames[0];
+	draw_texture(t, {f.u, f.v, f.w, f.h}, pos, scale, origin, angle, color);
 }
 
 void Renderer::draw_sprite(Sprite* s, int frame_index,

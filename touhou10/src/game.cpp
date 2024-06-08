@@ -451,11 +451,7 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 	// SDL_Window* win = SDL_GL_GetCurrentWindow();
 	// SDL_ShowSimpleMessageBox(0, "", message, win);
 
-#ifdef _WIN32
-	__debugbreak();
-#else
-	__builtin_trap();
-#endif
+	Assert(false);
 
 	/*
 	switch (source)

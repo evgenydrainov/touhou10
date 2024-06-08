@@ -23,6 +23,15 @@ Texture load_texture(const char* fname, bool filter = false);
 
 double GetTime();
 
+struct Stats {
+	int score;
+	int lives = 3;
+	int bombs = 3;
+	int power;
+	int graze;
+	int points;
+};
+
 struct Game {
 	SDL_Window* window;
 
@@ -34,6 +43,7 @@ struct Game {
 	SDL_GLContext gl_context;
 
 	World world;
+	Stats stats;
 
 	Arena arena;
 	Arena frame_arena;

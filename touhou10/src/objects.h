@@ -143,6 +143,12 @@ struct PlayerBullet : Object {
 	PlayerBulletType type;
 	float dmg;
 	// instance_id owner;
+
+	union {
+		struct {
+			float rotation;
+		} reimu_card;
+	};
 };
 
 enum PickupType {

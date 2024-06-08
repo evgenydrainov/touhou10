@@ -47,7 +47,7 @@ static void reimu_shot_type(Player* p, float delta) {
 			int card_shot_type = 0;
 			int orb_shot_type = 0;
 
-			int power = 0; // stats.power;
+			int power = g->stats.power;
 
 			if (power >= 128) {
 				card_shot_type = 3;

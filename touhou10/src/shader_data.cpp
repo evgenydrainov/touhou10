@@ -107,6 +107,7 @@ void main() {
 	vec4 color = mix(color1, color2, 0.5);
 
 	FragColor = color * v_Color;
+	// FragColor = vec4(fract(v_Position), 1.0);
 }
 
 )END_SHADER";

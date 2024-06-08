@@ -85,6 +85,8 @@ void Console::execute() {
 			w->boss.timer = 0;
 			w->boss.wait_timer = 0;
 		}
+	} else if (strcmp(cmd, "full_power") == 0) {
+		g->stats.power = MAX_POWER;
 	}
 }
 

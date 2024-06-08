@@ -126,6 +126,7 @@ void World::physics_update(float delta) {
 	// Check collisions.
 	// 
 
+	// Player vs bullets
 	For (b, bullets) {
 		if (player_collides_with_bullet(&player, b)) {
 			player_init(&player);
@@ -135,6 +136,7 @@ void World::physics_update(float delta) {
 		}
 	}
 
+	// Boss vs player bullets
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		For (b, p_bullets) {
 			if (circle_vs_circle(boss.x, boss.y, boss.radius, b->x, b->y, b->radius)) {
@@ -148,6 +150,7 @@ void World::physics_update(float delta) {
 		}
 	}
 
+	// Enemy vs player bullets
 	For (e, enemies) {
 		For (b, p_bullets) {
 			if (circle_vs_circle(e->x, e->y, e->radius, b->x, b->y, b->radius)) {
@@ -156,6 +159,53 @@ void World::physics_update(float delta) {
 				object_cleanup(b);
 				Remove(b, p_bullets);
 			}
+		}
+	}
+
+	// Player vs pickups
+	For (p, pickups) {
+		if (circle_vs_circle(player.x, player.y, player.GetCharacter()->graze_radius, p->x, p->y, p->radius)) {
+			switch (p->pickup_type) {
+				case PICKUP_TYPE_POWER:
+					g->stats.power++;
+					g->stats.power = min(g->stats.power, MAX_POWER);
+					g->stats.score += 10;
+					break;
+
+				case PICKUP_TYPE_POINT:
+					g->stats.points++;
+					break;
+
+				case PICKUP_TYPE_POWER_BIG:
+					g->stats.power += 8;
+					g->stats.power = min(g->stats.power, MAX_POWER);
+					break;
+
+				case PICKUP_TYPE_POINT_BIG:
+					g->stats.points += 8;
+					break;
+
+				case PICKUP_TYPE_BOMB:
+					g->stats.bombs++;
+					g->stats.bombs = min(g->stats.bombs, 8);
+					break;
+
+				case PICKUP_TYPE_LIFE:
+					g->stats.lives++;
+					g->stats.lives = min(g->stats.lives, 8);
+					break;
+
+				case PICKUP_TYPE_SCORE:
+					g->stats.score += 10;
+					break;
+
+				case PICKUP_TYPE_FULL_POWER:
+					g->stats.power = MAX_POWER;
+					break;
+			}
+
+			object_cleanup(p);
+			Remove(p, pickups);
 		}
 	}
 }
@@ -276,6 +326,11 @@ void World::update(float delta) {
 			}
 
 			switch (b->type) {
+				case PLAYER_BULLET_REIMU_CARD: {
+					b->reimu_card.rotation += 16 * delta;
+					break;
+				}
+
 				case PLAYER_BULLET_REIMU_ORB_SHOT: {
 
 					auto find_target = [&]() -> Object* {
@@ -437,25 +492,34 @@ void World::draw(float delta) {
 		float x = PLAY_AREA_X + PLAY_AREA_W + 16;
 		float y = PLAY_AREA_Y + 32;
 
-		r->draw_text(GetSprite(spr_font_main), "HiScore", x, y);
+		char buf[64];
+
+		stb_snprintf(buf, sizeof(buf), "HiScore %d", 0);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		r->draw_text(GetSprite(spr_font_main), "Score", x, y);
+		stb_snprintf(buf, sizeof(buf), "Score %d", g->stats.score);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16 * 2;
 
-		r->draw_text(GetSprite(spr_font_main), "Player", x, y);
+		stb_snprintf(buf, sizeof(buf), "Player %d", g->stats.lives);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		r->draw_text(GetSprite(spr_font_main), "Bomb", x, y);
-		y += 16;
-
-		r->draw_text(GetSprite(spr_font_main), "Power", x, y);
+		stb_snprintf(buf, sizeof(buf), "Bomb %d", g->stats.bombs);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16 * 2;
 
-		r->draw_text(GetSprite(spr_font_main), "Graze", x, y);
+		stb_snprintf(buf, sizeof(buf), "Power %d", g->stats.power);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		r->draw_text(GetSprite(spr_font_main), "Point", x, y);
+		stb_snprintf(buf, sizeof(buf), "Graze %d", g->stats.graze);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		y += 16;
+
+		stb_snprintf(buf, sizeof(buf), "Point %d", g->stats.points);
+		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 	}
 
@@ -498,8 +562,12 @@ void World::draw(float delta) {
 
 	For (b, p_bullets) {
 		glm::vec4 color = {1, 1, 1, 0.35f};
-		glm::vec2 scale{1.5f};
-		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, scale, 0, color);
+		glm::vec2 scale = {1.5f, 1.5f};
+		float angle = 0;
+		if (b->type == PLAYER_BULLET_REIMU_CARD) {
+			angle = b->reimu_card.rotation;
+		}
+		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, scale, angle, color);
 	}
 
 	For (b, bullets) {
@@ -536,17 +604,38 @@ void World::draw(float delta) {
 			r->draw_circle({boss.x, boss.y}, boss.radius, {1, 1, 1, 0.5f});
 		}
 
+		For (e, enemies) {
+			r->draw_circle({e->x, e->y}, e->radius, {1, 1, 1, 0.25f});
+		}
+
 		{
 			r->draw_circle({player.x, player.y}, player.radius);
 			r->draw_circle({player.x, player.y}, player.GetCharacter()->graze_radius, {1, 1, 1, 0.25f});
 		}
 
 		For (b, p_bullets) {
-			r->draw_circle({b->x, b->y}, b->radius, {1, 1, 1, 0.5f});
+			r->draw_circle({b->x, b->y}, b->radius, {1, 1, 1, 0.25f});
 		}
 
 		For (b, bullets) {
-			r->draw_circle({b->x, b->y}, b->radius);
+			switch (b->bullet_type) {
+				case BULLET_TYPE_BULLET: {
+					r->draw_circle({b->x, b->y}, b->radius);
+					break;
+				}
+
+				case BULLET_TYPE_LAZER: {
+					float angle = b->dir + 90.0f;
+					float xscale = b->lazer.thickness / 16.0f;
+					float yscale = b->lazer.length / 16.0f;
+					r->draw_rectangle_ext({b->x, b->y}, {xscale, yscale}, {8.0f, 0.0f}, angle);
+					break;
+				}
+			}
+		}
+
+		For (p, pickups) {
+			r->draw_circle({p->x, p->y}, p->radius, {1, 1, 1, 0.25f});
 		}
 	}
 

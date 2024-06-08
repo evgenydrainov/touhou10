@@ -175,6 +175,7 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.sprite_index = sprite_index;
 	e.hp = hp;
 	e.drops = drops;
+	e.radius = 10;
 
 	if (script) {
 		mco_desc desc = mco_desc_init(script, 0);
