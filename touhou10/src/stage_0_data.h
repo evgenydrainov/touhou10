@@ -72,6 +72,7 @@ static void Stage_0_Script(mco_coro* co) {
 
 		Wait(co, 180);
 	}
+#endif
 
 	{
 		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;
@@ -88,7 +89,8 @@ static void Stage_0_Script(mco_coro* co) {
 		// 	Wait(co, 1);
 		// }
 	}
-#else
+
+#if 0
 	CreateBoss(MIDBOSS_YOUMU);
 #endif
 }

@@ -236,7 +236,7 @@ static void drop_pickups(int drops, float x, float y) {
 			object_init(&p, OBJ_TYPE_PICKUP);
 			p.x = x;
 			p.y = y;
-			p.vsp = -1.5f;
+			p.vsp = -1.6f;
 			p.radius = 8;
 			p.sprite_index = spr_pickup;
 
@@ -382,10 +382,10 @@ void World::update(float delta) {
 				continue;
 			}
 
-			const float gravity = 0.025f;
+			const float gravity = 0.03f;
 
 			p->vsp += gravity * delta;
-			p->vsp = min(p->vsp, 2.0f);
+			p->vsp = min(p->vsp, 3.0f);
 		}
 	}
 
@@ -523,6 +523,12 @@ void World::draw(float delta) {
 		y += 16;
 	}
 
+	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+		float x = PLAY_AREA_X + boss.x;
+		float y = PLAY_AREA_Y + PLAY_AREA_H;
+		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y});
+	}
+
 	r->break_batch();
 
 	glViewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
@@ -594,6 +600,10 @@ void World::draw(float delta) {
 
 	For (p, pickups) {
 		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
+
+		if (p->y < 0) {
+			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8});
+		}
 	}
 
 
