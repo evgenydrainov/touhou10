@@ -42,6 +42,7 @@ static Bullet* ShootExt(Object* o,
 	b.frame_index = (float)frame_index;
 	b.flags = flags;
 	b.owner = o->id;
+	b.bullet_type = BULLET_TYPE_BULLET;
 
 	switch (sprite_index) {
 		case spr_bullet_arrow:	 b.radius = 2.5f; b.flags |= FLAG_BULLET_ROTATE; break;
@@ -71,6 +72,32 @@ static Bullet* Shoot(Object* o,
 	return ShootExt(o, o->x, o->y, spd, dir, acc, sprite_index, frame_index, flags, script);
 }
 
+static Bullet* ShootLazer(Object* o,
+						  float spd, float dir,
+						  float target_length, float thickness,
+						  int frame_index) {
+	// Don't divide by zero.
+	Assert(spd != 0);
+	Assert(target_length != 0);
+	
+	Bullet b = {};
+
+	object_init(&b, OBJ_TYPE_BULLET);
+	b.x = o->x;
+	b.y = o->y;
+	b.spd = spd;
+	b.dir = dir;
+	b.sprite_index = spr_lazer;
+	b.frame_index = (float)frame_index;
+
+	b.bullet_type = BULLET_TYPE_LAZER;
+	b.lazer.target_length = target_length;
+	b.lazer.thickness = thickness;
+	b.lazer.time = target_length / spd;
+
+	return w->bullets.add(b);
+}
+
 template <typename Func>
 static void ShootRadial(int count, float dir_diff, const Func& func) {
 	for (int i = 0; i < count; i++) {
@@ -96,8 +123,8 @@ static float DirToPlayer(Object* o) {
 }
 
 static void Wander(Object* o) {
-	float target_x = w->random.range(32.0f, (float)PLAY_AREA_W - 32.0f);
-	float target_y = w->random.range(32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
+	float target_x = w->random.rangef(32.0f, (float)PLAY_AREA_W - 32.0f);
+	float target_y = w->random.rangef(32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
 	float x = o->x;
 	float y = o->y;
 	target_x = clamp(target_x, x - 80.0f, x + 80.0f);
@@ -130,4 +157,28 @@ static Boss* CreateBoss(u32 boss_index,
 	boss_start_phase(b);
 
 	return b;
+}
+
+static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
+						  u32 sprite_index, int drops,
+						  void (*script)(mco_coro*) = nullptr,
+						  void (*death_callback)(Object*) = nullptr,
+						  void (*update_callback)(Object*) = nullptr) {
+	Enemy e = {};
+
+	object_init(&e, OBJ_TYPE_ENEMY);
+	e.x = x;
+	e.y = y;
+	e.spd = spd;
+	e.dir = dir;
+	e.acc = acc;
+	e.sprite_index = sprite_index;
+	e.drops = drops;
+
+	if (script) {
+		mco_desc desc = mco_desc_init(script, 0);
+		mco_create(&e.co, &desc);
+	}
+
+	return w->enemies.add(e);
 }

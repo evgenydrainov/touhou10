@@ -94,7 +94,7 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 
 	while (true) {
 		ShootRadial(4, 360.0f / 4.0f, [&]() {
-			return Shoot(self, w->random.range(3.0f, 4.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
+			return Shoot(self, w->random.rangef(3.0f, 4.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
 				for (int i = 45; i--;) {
 					self->dir++;
 					Wait(co, 1);
@@ -180,9 +180,9 @@ static void Cirno_Nonspell_1(mco_coro* co) {
 		Wander(self);
 
 		for (int i = 1; i <= 3; i++) {
-			// ShootRadial(3, 20, [&]() {
-			// 	return ShootLazer{GetX(id), GetY(id), 3.5, TargetDir(id), 180, 2, 15}
-			// });
+			ShootRadial(3, 20, [&]() {
+				return ShootLazer(self, 3.5, DirToPlayer(self), 180, 2, 15);
+			});
 
 			Wait(co, 60);
 		}
@@ -200,7 +200,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 			Repeat (2) {
 				int colors[] = {2, 6, 10, 13, 14};
 				int color = w->random.index(colors);
-				bullets[nbullets++] = Shoot(self, w->random.range(1.0f, 4.0f), w->random.range(0.0f, 360.0f), 0, spr_bullet_outline, color)->id;
+				bullets[nbullets++] = Shoot(self, w->random.rangef(1.0f, 4.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_outline, color)->id;
 			}
 
 			Wait(co, 1);
@@ -234,8 +234,8 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 		for (instance_id id : bullets) {
 			if (Bullet* b = w->find_bullet(id)) {
 				b->spd = 0;
-				b->dir = w->random.range(0.0f, 360.0f);
-				b->acc = w->random.range(0.01f, 0.015f);
+				b->dir = w->random.rangef(0.0f, 360.0f);
+				b->acc = w->random.rangef(0.01f, 0.015f);
 			}
 		}
 
@@ -248,19 +248,19 @@ static void Cirno_Diamond_Blizzard(mco_coro* co) {
 		Repeat (30) {
 			instance_id bullets[6] = {};
 
-			float x = self->x + w->random.range(-50.0f, 50.0f);
-			float y = self->y + w->random.range(-50.0f, 50.0f);
+			float x = self->x + w->random.rangef(-50.0f, 50.0f);
+			float y = self->y + w->random.rangef(-50.0f, 50.0f);
 
 			int n = 4 + w->random.next() % 3;
 			for (int i = 0; i < n; i++) {
-				bullets[i] = ShootExt(self, x, y, w->random.range(4.0f, 5.0f), w->random.range(0.0f, 360.0f), 0, spr_bullet_pellet, 6)->id;
+				bullets[i] = ShootExt(self, x, y, w->random.rangef(4.0f, 5.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_pellet, 6)->id;
 			}
 
 			Wait(co, 4);
 
 			for (int i = 0; i < n; i++) {
 				if (Bullet* b = w->find_bullet(bullets[i])) {
-					b->spd = w->random.range(1.0f, 2.0f);
+					b->spd = w->random.rangef(1.0f, 2.0f);
 				}
 			}
 		}

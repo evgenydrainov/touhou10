@@ -8,6 +8,7 @@
 
 #define MAX_BULLETS 10'000
 #define MAX_PLAYER_BULLETS 1'000
+#define MAX_ENEMIES 1'000
 
 #define PLAYER_STARTING_X ((float)PLAY_AREA_W / 2.0f)
 #define PLAYER_STARTING_Y 384.0f
@@ -25,6 +26,7 @@ void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc);
 struct World {
 	Player player;
 	Boss boss;
+	Arena_Backed_Array<Enemy> enemies;
 	Arena_Backed_Array<Bullet> bullets;
 	Arena_Backed_Array<PlayerBullet> p_bullets;
 

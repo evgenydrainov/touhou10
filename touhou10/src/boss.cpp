@@ -9,11 +9,11 @@
 void boss_update(Boss* b, float delta) {
 	switch (b->state) {
 		case BOSS_STATE_NORMAL: {
-		b->timer -= delta;
-		if (b->timer <= 0.0f || b->hp <= 0.0f) {
-			boss_end_phase(b);
-		}
-		break;
+			b->timer -= delta;
+			if (b->timer <= 0.0f || b->hp <= 0.0f) {
+				boss_end_phase(b);
+			}
+			break;
 		}
 
 		case BOSS_WAITING_FOR_PHASE_TO_START: {
@@ -40,7 +40,7 @@ void boss_update(Boss* b, float delta) {
 		}
 	}
 
-	b->dir = wrap(b->dir, 360.0f);
+	b->dir = wrapf(b->dir, 360.0f);
 
 	object_animate(b, delta);
 

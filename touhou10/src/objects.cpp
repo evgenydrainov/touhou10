@@ -6,12 +6,7 @@ void object_init(Object* o, ObjType type) {
 	o->id = w->get_instance_id(type);
 }
 
-void object_cleanup(Bullet* b) {
-	if (b->co) {
-		mco_destroy(b->co);
-		b->co = nullptr;
-	}
-}
+void object_cleanup(Player* p) {}
 
 void object_cleanup(Boss* b) {
 	if (b->co) {
@@ -20,8 +15,21 @@ void object_cleanup(Boss* b) {
 	}
 }
 
+void object_cleanup(Enemy* e) {
+	if (e->co) {
+		mco_destroy(e->co);
+		e->co = nullptr;
+	}
+}
+
+void object_cleanup(Bullet* b) {
+	if (b->co) {
+		mco_destroy(b->co);
+		b->co = nullptr;
+	}
+}
+
 void object_cleanup(PlayerBullet* b) {}
-void object_cleanup(Player* p) {}
 
 void object_animate(Object* o, float delta) {
 	Sprite* s = o->GetSprite();

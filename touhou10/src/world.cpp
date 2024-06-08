@@ -14,6 +14,7 @@ void World::init() {
 
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
+	enemies   = array_from_arena<Enemy>(&g->arena, MAX_ENEMIES);
 	bullets   = array_from_arena<Bullet>(&g->arena, MAX_BULLETS);
 	p_bullets = array_from_arena<PlayerBullet>(&g->arena, MAX_PLAYER_BULLETS);
 
@@ -40,6 +41,11 @@ void World::destroy() {
 	}
 	bullets.clear();
 
+	For (e, enemies) {
+		object_cleanup(e);
+	}
+	enemies.clear();
+
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		object_cleanup(&boss);
 	}
@@ -48,25 +54,60 @@ void World::destroy() {
 	object_cleanup(&player);
 }
 
+static bool player_collides_with_bullet(Player* p, Bullet* b) {
+	bool result = false;
+
+	switch (b->bullet_type) {
+		case BULLET_TYPE_BULLET: {
+			result = circle_vs_circle(p->x, p->y, p->radius, b->x, b->y, b->radius);
+			break;
+		}
+
+		case BULLET_TYPE_LAZER: {
+			float rect_center_x = b->x + lengthdir_x(b->lazer.length / 2.0f, b->dir);
+			float rect_center_y = b->y + lengthdir_y(b->lazer.length / 2.0f, b->dir);
+			result = circle_vs_rotated_rect(p->x, p->y, p->radius, rect_center_x, rect_center_y, b->lazer.thickness, b->lazer.length, b->dir);
+			break;
+		}
+	}
+
+	return result;
+}
+
 void World::physics_update(float delta) {
+
+	auto object_move = [](Object* o, float delta) {
+		o->x += o->spd * cosf(glm::radians(o->dir)) * delta;
+		o->y -= o->spd * sinf(glm::radians(o->dir)) * delta;
+		o->spd += o->acc * delta;
+		o->spd = max(o->spd, 0.0f);
+	};
+
 	player.x += player.hsp * delta;
 	player.y += player.vsp * delta;
 
-	boss.x += boss.spd * cosf(glm::radians(boss.dir)) * delta;
-	boss.y -= boss.spd * sinf(glm::radians(boss.dir)) * delta;
-	boss.spd += boss.acc * delta;
-	boss.spd = max(boss.spd, 0.0f);
+	object_move(&boss, delta);
+
+	For (e, enemies) {
+		object_move(e, delta);
+	}
 
 	For (b, bullets) {
-		b->x += b->spd * cosf(glm::radians(b->dir)) * delta;
-		b->y -= b->spd * sinf(glm::radians(b->dir)) * delta;
-		b->spd += b->acc * delta;
-		b->spd = max(b->spd, 0.0f);
+		switch (b->bullet_type) {
+			case BULLET_TYPE_LAZER:
+				// Fallthrough
+				if (b->lazer.timer < b->lazer.time) {
+					break;
+				}
+			case BULLET_TYPE_BULLET: {
+				object_move(b, delta);
+				break;
+			}
+		}
 	}
 
 	For (b, p_bullets) {
-		b->x += b->spd * cosf(glm::radians(b->dir)) * delta;
-		b->y -= b->spd * sinf(glm::radians(b->dir)) * delta;
+		object_move(b, delta);
 	}
 
 	// 
@@ -74,7 +115,7 @@ void World::physics_update(float delta) {
 	// 
 
 	For (b, bullets) {
-		if (circle_vs_circle(player.x, player.y, player.radius, b->x, b->y, b->radius)) {
+		if (player_collides_with_bullet(&player, b)) {
 			player_init(&player);
 
 			object_cleanup(b);
@@ -113,7 +154,47 @@ void World::update(float delta) {
 			boss_update(&boss, delta);
 		}
 
+		For (e, enemies) {
+			if (out_of_bounds(e->x, e->y)) {
+				object_cleanup(e);
+				Remove(e, enemies);
+				continue;
+			}
+
+			e->dir = wrapf(e->dir, 360.0f);
+
+			object_animate(e, delta);
+		}
+
+		For (b, bullets) {
+			if (out_of_bounds(b->x, b->y)) {
+				object_cleanup(b);
+				Remove(b, bullets);
+				continue;
+			}
+
+			b->dir = wrapf(b->dir, 360.0f);
+
+			switch (b->bullet_type) {
+				case BULLET_TYPE_LAZER: {
+					if (b->lazer.timer < b->lazer.time) {
+						b->lazer.timer += delta;
+						b->lazer.length = lerp(0.0f, b->lazer.target_length, b->lazer.timer / b->lazer.time);
+					} else {
+						b->lazer.length = b->lazer.target_length;
+					}
+					break;
+				}
+			}
+		}
+
 		For (b, p_bullets) {
+			if (out_of_bounds(b->x, b->y)) {
+				object_cleanup(b);
+				Remove(b, p_bullets);
+				continue;
+			}
+
 			switch (b->type) {
 				case PLAYER_BULLET_REIMU_ORB_SHOT: {
 
@@ -162,67 +243,44 @@ void World::update(float delta) {
 		player.x = clamp(player.x, 0.0f, (float)PLAY_AREA_W);
 		player.y = clamp(player.y, 0.0f, (float)PLAY_AREA_H);
 
-		For (b, bullets) {
-			b->dir = wrap(b->dir, 360.0f);
-
-			if (out_of_bounds(b->x, b->y)) {
-				object_cleanup(b);
-				Remove(b, bullets);
-			}
-		}
-
-		For (b, p_bullets) {
-			if (out_of_bounds(b->x, b->y)) {
-				object_cleanup(b);
-				Remove(b, p_bullets);
-			}
-		}
+		// 
+		// Does it matter that we destroy out of bounds objects earlier
+		// or sould we do it here?
+		// 'dir' wrap also.
+		// 
 	}
 
 	// Call coroutines
 	{
-		coro_memory = 0;
-
-		if (co) {
-			if (co->state == MCO_SUSPENDED) {
-				mco_resume(co);
-				coro_memory += co->coro_size;
-			} else if (co->state == MCO_DEAD) {
-				mco_destroy(co);
-				co = nullptr;
-			} else {
-				Assert(!"unexpected mco_coro state");
-			}
-		}
-
-		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			if (boss.co) {
-				if (boss.co->state == MCO_SUSPENDED) {
-					boss.co->user_data = &boss;
-					mco_resume(boss.co);
-					coro_memory += boss.co->coro_size;
-				} else if (boss.co->state == MCO_DEAD) {
-					mco_destroy(boss.co);
-					boss.co = nullptr;
+		auto handle_coroutine = [&](mco_coro* &co, Object* self) {
+			if (co) {
+				if (co->state == MCO_SUSPENDED) {
+					co->user_data = self;
+					mco_resume(co);
+					coro_memory += co->coro_size;
+				} else if (co->state == MCO_DEAD) {
+					mco_destroy(co);
+					co = nullptr;
 				} else {
 					Assert(!"unexpected mco_coro state");
 				}
 			}
+		};
+
+		coro_memory = 0;
+
+		handle_coroutine(co, nullptr);
+
+		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+			handle_coroutine(boss.co, &boss);
+		}
+
+		For (e, enemies) {
+			handle_coroutine(e->co, e);
 		}
 
 		For (b, bullets) {
-			if (b->co) {
-				if (b->co->state == MCO_SUSPENDED) {
-					b->co->user_data = b;
-					mco_resume(b->co);
-					coro_memory += b->co->coro_size;
-				} else if (b->co->state == MCO_DEAD) {
-					mco_destroy(b->co);
-					b->co = nullptr;
-				} else {
-					Assert(!"unexpected mco_coro state");
-				}
-			}
+			handle_coroutine(b->co, b);
 		}
 	}
 
@@ -327,6 +385,10 @@ void World::draw(float delta) {
 		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y});
 	}
 
+	For (e, enemies) {
+		r->draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y});
+	}
+
 	player_draw(&player, delta);
 
 	For (b, p_bullets) {
@@ -336,11 +398,25 @@ void World::draw(float delta) {
 	}
 
 	For (b, bullets) {
-		float dir = 0.0f;
-		if (b->flags & FLAG_BULLET_ROTATE) {
-			dir = b->dir - 90.0f;
+		switch (b->bullet_type) {
+			case BULLET_TYPE_BULLET: {
+				float angle = 0.0f;
+				if (b->flags & FLAG_BULLET_ROTATE) {
+					angle = b->dir - 90.0f;
+				}
+				r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
+				break;
+			}
+
+			case BULLET_TYPE_LAZER: {
+				float angle = b->dir + 90.0f;
+				float xscale = (b->lazer.thickness + 2.0f) / 16.0f;
+				float yscale = b->lazer.length / 16.0f;
+				r->draw_sprite(b->GetSprite(), (int)b->frame_index,
+							   {b->x, b->y}, {xscale, yscale}, angle);
+				break;
+			}
 		}
-		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, {1.0f, 1.0f}, dir);
 	}
 
 

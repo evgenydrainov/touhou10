@@ -57,7 +57,24 @@ static bool circle_vs_circle(float x1, float y1, float r1, float x2, float y2, f
 	float dx = x2 - x1;
 	float dy = y2 - y1;
 	float r = r1 + r2;
-	return (dx * dx + dy * dy) < r * r;
+	return (dx * dx + dy * dy) < (r * r);
+}
+
+static bool circle_vs_rotated_rect(float circle_x, float circle_y, float circle_radius,
+								   float rect_center_x, float rect_center_y, float rect_w, float rect_h, float rect_dir) {
+	float dx = circle_x - rect_center_x;
+	float dy = circle_y - rect_center_y;
+
+	float x_rotated = rect_center_x - (dx * sin(glm::radians(rect_dir))) - (dy * cos(glm::radians(rect_dir)));
+	float y_rotated = rect_center_y + (dx * cos(glm::radians(rect_dir))) - (dy * sin(glm::radians(rect_dir)));
+
+	float x_closest = clamp(x_rotated, rect_center_x - rect_w / 2.0f, rect_center_x + rect_w / 2.0f);
+	float y_closest = clamp(y_rotated, rect_center_y - rect_h / 2.0f, rect_center_y + rect_h / 2.0f);
+
+	dx = x_closest - x_rotated;
+	dy = y_closest - y_rotated;
+
+	return (dx * dx + dy * dy) < (circle_radius * circle_radius);
 }
 
 static float lengthdir_x(float len, float dir) {
@@ -68,6 +85,6 @@ static float lengthdir_y(float len, float dir) {
 	return -sinf(glm::radians(dir)) * len;
 }
 
-static float wrap(float a, float b) {
+static float wrapf(float a, float b) {
 	return fmodf((fmodf(a, b) + b), b);
 }

@@ -259,9 +259,10 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		// glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		// glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+		// Has to be in this order
 		glm::mat4 model = glm::translate(glm::mat4{1.0f}, {pos.x, pos.y, 0.0f});
-		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
+		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 
 		vertices[0].pos = model * glm::vec4{vertices[0].pos, 1.0f};
 		vertices[1].pos = model * glm::vec4{vertices[1].pos, 1.0f};
@@ -282,8 +283,8 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		glUseProgram(shader_texture_program);
 
 		model = glm::translate(glm::mat4{1.0f}, {pos.x, pos.y, 0.0f});
-		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
+		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 
 		glm::mat4 MVP = (proj * view) * model;
 
@@ -437,7 +438,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 	}
 
 	int ch;
-	for (const char* ptr = text; ch = *ptr; ptr++) {
+	for (const char* ptr = text; (ch = *ptr); ptr++) {
 		if (33 <= ch && ch <= 127) {
 			draw_sprite(font, ch - 32, {ch_x, ch_y});
 		}
@@ -471,7 +472,7 @@ glm::vec2 Renderer::measure_text(Sprite* font, const char* text, bool only_one_l
 	float ch_y = 0;
 
 	int ch;
-	for (const char* ptr = text; ch = *ptr; ptr++) {
+	for (const char* ptr = text; (ch = *ptr); ptr++) {
 		if (33 <= ch && ch <= 127) {
 			w = max(w, ch_x + (float)font->width);
 			h = max(h, ch_y + (float)font->height);

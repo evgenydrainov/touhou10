@@ -1,9 +1,80 @@
 #pragma once
 
 static void Stage_0_Script(mco_coro* co) {
+
+	auto spawn_spinner = [&]() {
+		auto Script = [](mco_coro* co) {
+			Wait(co, 60);
+			self->acc = -0.01f;
+			while (self->spd > 0) {
+				Wait(co, 1);
+			}
+			self->dir = -self->dir;
+			self->acc = 0.01f;
+		};
+
+		auto OnDeath = [](Object* o) {
+			u32 r = w->random.next() % 3;
+			float dir = w->random.rangef(0.0f, 360.0f);
+			if (r == 0) {
+				Shoot(o, 2, dir,       0, spr_bullet_rice, 2);
+				Shoot(o, 2, dir +  90, 0, spr_bullet_rice, 2);
+				Shoot(o, 2, dir + 180, 0, spr_bullet_rice, 2);
+				Shoot(o, 2, dir + 270, 0, spr_bullet_rice, 2);
+			} else if (r == 1) {
+				Shoot(o, 3, dir,       0, spr_bullet_kunai, 10);
+				Shoot(o, 3, dir +  90, 0, spr_bullet_kunai, 10);
+				Shoot(o, 3, dir + 180, 0, spr_bullet_kunai, 10);
+				Shoot(o, 3, dir + 270, 0, spr_bullet_kunai, 10);
+			}
+		};
+
+		auto OnUpdate = [](Object* o) {
+			// o->angle += 10;
+		};
+
+		float x = w->random.rangef(0.0f, (float)PLAY_AREA_W);
+		float y = 0;
+		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 1, Script, OnDeath, OnUpdate);
+	};
+
 	Wait(co, 60);
 
 #if 1
+
+#if 1
+	{
+		Repeat (50) {
+			spawn_spinner();
+			Wait(co, 5);
+		}
+
+		Wait(co, 180);
+
+		for (int j = 1; j <= 4; j++) {
+			for (int i = 1; i <= 18; i++) {
+				float x = i * (PLAY_AREA_W / 19.0f);
+				if (j % 2 == 0) {
+					x = PLAY_AREA_W - x;
+				}
+				float y = 0;
+
+				CreateEnemy(x, y, 2, point_direction(x, y, w->player.x, w->player.y), 0, spr_fairy_0, 2);
+
+				if (i >= 12) {
+					spawn_spinner();
+				}
+
+				Wait(co, 20);
+			}
+
+			Wait(co, 60);
+		}
+
+		Wait(co, 180);
+	}
+#endif
+
 	{
 		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;
 		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == dai_chan) {
@@ -15,9 +86,9 @@ static void Stage_0_Script(mco_coro* co) {
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;
-		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == baka) {
-			Wait(co, 1);
-		}
+		// while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == baka) {
+		// 	Wait(co, 1);
+		// }
 	}
 #else
 	CreateBoss(MIDBOSS_YOUMU);

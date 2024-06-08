@@ -4,8 +4,8 @@
 static void Daiyousei_Nonspell_0(mco_coro* co) {
 
 	auto tp = [&]() {
-		self->x = w->random.range(32.0f, PLAY_AREA_W - 32.0f);
-		self->y = w->random.range(32.0f, BOSS_STARTING_Y * 2.0f - 32.0f);
+		self->x = w->random.rangef(32.0f, PLAY_AREA_W - 32.0f);
+		self->y = w->random.rangef(32.0f, BOSS_STARTING_Y * 2.0f - 32.0f);
 	};
 
 	while (true) {

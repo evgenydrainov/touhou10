@@ -26,5 +26,8 @@ enum {
 	spr_boss_cirno_right,
 	spr_boss_cirno_left,
 	spr_boss_daiyousei_idle,
+	spr_fairy_0,
+	spr_fairy_1,
+	spr_enemy_0,
 	NUM_SPRITES,
 };

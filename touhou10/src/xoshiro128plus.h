@@ -51,7 +51,7 @@ struct xoshiro128plus {
 	// 
 	// [a, b)
 	// 
-	float range(float a, float b) {
+	float rangef(float a, float b) {
 		uint32_t x = next();
 
 		float f = (x >> 8) * 0x1.0p-24f;

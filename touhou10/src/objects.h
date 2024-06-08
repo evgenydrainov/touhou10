@@ -9,6 +9,7 @@ typedef u64 instance_id;
 enum ObjType : u64 {
 	OBJ_TYPE_PLAYER = 1,
 	OBJ_TYPE_BOSS,
+	OBJ_TYPE_ENEMY,
 	OBJ_TYPE_BULLET,
 	OBJ_TYPE_PLAYER_BULLET,
 };
@@ -98,9 +99,32 @@ void boss_update(Boss* b, float delta);
 void boss_start_phase(Boss* b);
 void boss_end_phase(Boss* b);
 
+struct Enemy : Object {
+	mco_coro* co;
+	int drops;
+};
+
+enum BulletType {
+	BULLET_TYPE_BULLET = 1,
+	BULLET_TYPE_LAZER,
+};
+
 struct Bullet : Object {
 	mco_coro* co;
 	instance_id owner;
+	BulletType bullet_type;
+	float lifetime; // TODO
+	float lifespan; // TODO
+
+	union {
+		struct {
+			float target_length;
+			float thickness;
+			float time;
+			float length;
+			float timer;
+		} lazer;
+	};
 };
 
 enum PlayerBulletType {
@@ -114,7 +138,8 @@ struct PlayerBullet : Object {
 	// instance_id owner;
 };
 
-void object_cleanup(Bullet* b);
-void object_cleanup(Boss* b);
-void object_cleanup(PlayerBullet* b);
 void object_cleanup(Player* p);
+void object_cleanup(Boss* b);
+void object_cleanup(Enemy* e);
+void object_cleanup(Bullet* b);
+void object_cleanup(PlayerBullet* b);
