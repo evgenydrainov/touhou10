@@ -11,6 +11,7 @@ enum {
 	spr_enemy_label,
 	spr_reimu_shot_card,
 	spr_reimu_shot_orb,
+	spr_reimu_orb,
 	spr_pickup,
 	spr_lazer,
 	spr_bullet_arrow,
