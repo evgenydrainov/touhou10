@@ -29,18 +29,17 @@ static void Stage_0_Script(mco_coro* co) {
 			}
 		};
 
-		auto OnUpdate = [](Object* o) {
-			// o->angle += 10;
+		auto OnUpdate = [](Object* o, float delta) {
+			((Enemy*)o)->angle += 10 * delta;
 		};
 
 		float x = w->random.rangef(0.0f, (float)PLAY_AREA_W);
 		float y = 0;
-		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 1, Script, OnDeath, OnUpdate);
+
+		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
 	Wait(co, 60);
-
-#if 1
 
 #if 1
 	{
@@ -59,7 +58,7 @@ static void Stage_0_Script(mco_coro* co) {
 				}
 				float y = 0;
 
-				CreateEnemy(x, y, 2, point_direction(x, y, w->player.x, w->player.y), 0, spr_fairy_0, 2);
+				CreateEnemy(x, y, 2, point_direction(x, y, w->player.x, w->player.y), 0, spr_fairy_0, 10, 2);
 
 				if (i >= 12) {
 					spawn_spinner();
@@ -73,7 +72,6 @@ static void Stage_0_Script(mco_coro* co) {
 
 		Wait(co, 180);
 	}
-#endif
 
 	{
 		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;

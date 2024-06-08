@@ -354,6 +354,9 @@ void Renderer::draw_sprite(Sprite* s, int frame_index,
 						   float angle, glm::vec4 color, glm::bvec2 flip) {
 	Texture* t = GetTexture(s->texture_index);
 
+	Assert(frame_index >= 0);
+	Assert(frame_index < s->frame_count);
+
 	SpriteFrame* frame = &s->frames[frame_index];
 
 	draw_texture(t, {frame->u, frame->v, frame->w, frame->h},

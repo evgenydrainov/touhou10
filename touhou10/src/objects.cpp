@@ -30,6 +30,7 @@ void object_cleanup(Bullet* b) {
 }
 
 void object_cleanup(PlayerBullet* b) {}
+void object_cleanup(Pickup* p) {}
 
 void object_animate(Object* o, float delta) {
 	Sprite* s = o->GetSprite();

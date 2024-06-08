@@ -17,6 +17,7 @@ void World::init() {
 	enemies   = array_from_arena<Enemy>(&g->arena, MAX_ENEMIES);
 	bullets   = array_from_arena<Bullet>(&g->arena, MAX_BULLETS);
 	p_bullets = array_from_arena<PlayerBullet>(&g->arena, MAX_PLAYER_BULLETS);
+	pickups   = array_from_arena<Pickup>(&g->arena, MAX_PICKUPS);
 
 	{
 		mco_desc desc = mco_desc_init(GetStageData(stage_index)->script, 0);
@@ -30,6 +31,11 @@ void World::destroy() {
 		mco_destroy(co);
 		co = nullptr;
 	}
+
+	For (p, pickups) {
+		object_cleanup(p);
+	}
+	pickups.clear();
 
 	For (b, p_bullets) {
 		object_cleanup(b);
@@ -49,6 +55,7 @@ void World::destroy() {
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		object_cleanup(&boss);
 	}
+	boss = {};
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
 	object_cleanup(&player);
@@ -110,6 +117,11 @@ void World::physics_update(float delta) {
 		object_move(b, delta);
 	}
 
+	For (p, pickups) {
+		p->x += p->hsp * delta;
+		p->y += p->vsp * delta;
+	}
+
 	// 
 	// Check collisions.
 	// 
@@ -135,6 +147,17 @@ void World::physics_update(float delta) {
 			}
 		}
 	}
+
+	For (e, enemies) {
+		For (b, p_bullets) {
+			if (circle_vs_circle(e->x, e->y, e->radius, b->x, b->y, b->radius)) {
+				e->hp -= b->dmg;
+
+				object_cleanup(b);
+				Remove(b, p_bullets);
+			}
+		}
+	}
 }
 
 static bool out_of_bounds(float x, float y, float off = 50.0f) {
@@ -142,6 +165,39 @@ static bool out_of_bounds(float x, float y, float off = 50.0f) {
 		return true;
 	}
 	return false;
+}
+
+static void drop_pickups(int drops, float x, float y) {
+	// 
+	// All possible enemy drops
+	// 
+
+	switch (drops) {
+		case 2:
+			// A power or a point at a 50% chance
+			if (!(w->random.rangef(0.0f, 1.0f) < 0.5f)) {
+				break;
+			}
+			// Fallthrough
+		case 1: {
+			// A power or a point
+			Pickup p = {};
+
+			object_init(&p, OBJ_TYPE_PICKUP);
+			p.x = x;
+			p.y = y;
+			p.vsp = -1.5f;
+			p.radius = 8;
+			p.sprite_index = spr_pickup;
+
+			PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
+			p.pickup_type = w->random.index(types);
+			p.frame_index = (float)p.pickup_type;
+
+			w->pickups.add(p);
+			break;
+		}
+	}
 }
 
 void World::update(float delta) {
@@ -154,14 +210,38 @@ void World::update(float delta) {
 			boss_update(&boss, delta);
 		}
 
+		size_t enemy_count = enemies.count;
+
 		For (e, enemies) {
+			// Make sure noone messes with the array during this loop
+			Assert(enemies.count == enemy_count);
+
 			if (out_of_bounds(e->x, e->y)) {
+				// Don't call the death callback and don't drop pickups when enemy leaves the screen
 				object_cleanup(e);
 				Remove(e, enemies);
+				enemy_count--;
+				continue;
+			}
+
+			if (e->hp <= 0) {
+				drop_pickups(e->drops, e->x, e->y);
+
+				if (e->death_callback) {
+					e->death_callback(e);
+				}
+
+				object_cleanup(e);
+				Remove(e, enemies);
+				enemy_count--;
 				continue;
 			}
 
 			e->dir = wrapf(e->dir, 360.0f);
+
+			if (e->update_callback) {
+				e->update_callback(e, delta);
+			}
 
 			object_animate(e, delta);
 		}
@@ -199,11 +279,23 @@ void World::update(float delta) {
 				case PLAYER_BULLET_REIMU_ORB_SHOT: {
 
 					auto find_target = [&]() -> Object* {
+						Object* result = nullptr;
+						float dist_closest = INFINITY;
+
 						if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-							return &boss;
+							result = &boss;
+							dist_closest = point_distance(b->x, b->y, boss.x, boss.y);
 						}
 
-						return nullptr;
+						For (e, enemies) {
+							float dist = point_distance(b->x, b->y, e->x, e->y);
+							if (dist < dist_closest) {
+								result = e;
+								dist_closest = dist;
+							}
+						}
+
+						return result;
 					};
 
 					if (Object* target = find_target()) {
@@ -226,6 +318,19 @@ void World::update(float delta) {
 					break;
 				}
 			}
+		}
+
+		For (p, pickups) {
+			if (out_of_bounds(p->x, p->y)) {
+				object_cleanup(p);
+				Remove(p, pickups);
+				continue;
+			}
+
+			const float gravity = 0.025f;
+
+			p->vsp += gravity * delta;
+			p->vsp = min(p->vsp, 2.0f);
 		}
 	}
 
@@ -386,7 +491,7 @@ void World::draw(float delta) {
 	}
 
 	For (e, enemies) {
-		r->draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y});
+		r->draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y}, {1, 1}, e->angle);
 	}
 
 	player_draw(&player, delta);
@@ -417,6 +522,10 @@ void World::draw(float delta) {
 				break;
 			}
 		}
+	}
+
+	For (p, pickups) {
+		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
 	}
 
 

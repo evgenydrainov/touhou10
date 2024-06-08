@@ -127,9 +127,10 @@ void Game::init() {
 		const size_t memory_for_renderer = BATCH_MAX_VERTICES * sizeof(Vertex);
 
 		const size_t memory_for_world =
-			MAX_BULLETS * sizeof(Bullet)
+			  MAX_BULLETS        * sizeof(Bullet)
 			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
-			+ MAX_ENEMIES * sizeof(Enemy);
+			+ MAX_ENEMIES        * sizeof(Enemy)
+			+ MAX_PICKUPS        * sizeof(Pickup);
 
 		const size_t all_memory =
 			memory_for_renderer
@@ -352,25 +353,30 @@ void Game::draw(float delta) {
 #if TH_DEBUG
 						 "COMPILED WITH DEBUG\n"
 #endif
-						 ,
+						 "__cplusplus=%ld\n",
 						 fps,
 						 update_took * 1000.0,
 						 draw_took * 1000.0,
 						 Size_Arg(arena.offset), Size_Arg(arena.size),
 						 Size_Arg(frame_arena.offset), Size_Arg(frame_arena.size),
 						 draw_calls,
-						 max_batch, BATCH_MAX_VERTICES);
+						 max_batch, BATCH_MAX_VERTICES,
+						 __cplusplus);
 			glm::vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
 
 			/*if (in play state)*/ {
 				char buf[256];
 				stb_snprintf(buf, sizeof(buf),
 							 "bullets: %zu / %zu\n"
+							 "enemies: %zu / %zu\n"
 							 "player bullets: %zu / %zu\n"
+							 "pickups: %zu / %zu\n"
 							 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
 							 "coroutine memory: " Size_Fmt "\n",
 							 w->bullets.count, w->bullets.capacity,
+							 w->enemies.count, w->enemies.capacity,
 							 w->p_bullets.count, w->p_bullets.capacity,
+							 w->pickups.count, w->pickups.capacity,
 							 w->next_instance_id, (u64)UINT32_MAX,
 							 Size_Arg(w->coro_memory));
 				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);

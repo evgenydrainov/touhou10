@@ -12,6 +12,7 @@ enum ObjType : u64 {
 	OBJ_TYPE_ENEMY,
 	OBJ_TYPE_BULLET,
 	OBJ_TYPE_PLAYER_BULLET,
+	OBJ_TYPE_PICKUP,
 };
 
 enum {
@@ -101,7 +102,13 @@ void boss_end_phase(Boss* b);
 
 struct Enemy : Object {
 	mco_coro* co;
+	float hp;
 	int drops;
+
+	void (*death_callback)(Object*);
+	void (*update_callback)(Object*, float);
+
+	float angle;
 };
 
 enum BulletType {
@@ -138,8 +145,28 @@ struct PlayerBullet : Object {
 	// instance_id owner;
 };
 
+enum PickupType {
+	PICKUP_TYPE_POWER,
+	PICKUP_TYPE_POINT,
+	PICKUP_TYPE_POWER_BIG,
+	PICKUP_TYPE_POINT_BIG,
+	PICKUP_TYPE_BOMB,
+	PICKUP_TYPE_LIFE,
+	PICKUP_TYPE_SCORE,
+	PICKUP_TYPE_FULL_POWER,
+
+	PICKUP_TYPE_COUNT,
+};
+
+struct Pickup : Object {
+	PickupType pickup_type;
+	float hsp;
+	float vsp;
+};
+
 void object_cleanup(Player* p);
 void object_cleanup(Boss* b);
 void object_cleanup(Enemy* e);
 void object_cleanup(Bullet* b);
 void object_cleanup(PlayerBullet* b);
+void object_cleanup(Pickup* p);

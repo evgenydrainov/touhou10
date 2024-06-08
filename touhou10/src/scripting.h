@@ -160,10 +160,10 @@ static Boss* CreateBoss(u32 boss_index,
 }
 
 static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
-						  u32 sprite_index, int drops,
+						  u32 sprite_index, float hp, int drops,
 						  void (*script)(mco_coro*) = nullptr,
 						  void (*death_callback)(Object*) = nullptr,
-						  void (*update_callback)(Object*) = nullptr) {
+						  void (*update_callback)(Object*, float) = nullptr) {
 	Enemy e = {};
 
 	object_init(&e, OBJ_TYPE_ENEMY);
@@ -173,12 +173,16 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.dir = dir;
 	e.acc = acc;
 	e.sprite_index = sprite_index;
+	e.hp = hp;
 	e.drops = drops;
 
 	if (script) {
 		mco_desc desc = mco_desc_init(script, 0);
 		mco_create(&e.co, &desc);
 	}
+
+	e.death_callback = death_callback;
+	e.update_callback = update_callback;
 
 	return w->enemies.add(e);
 }

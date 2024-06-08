@@ -9,6 +9,7 @@
 #define MAX_BULLETS 10'000
 #define MAX_PLAYER_BULLETS 1'000
 #define MAX_ENEMIES 1'000
+#define MAX_PICKUPS 1'000
 
 #define PLAYER_STARTING_X ((float)PLAY_AREA_W / 2.0f)
 #define PLAYER_STARTING_Y 384.0f
@@ -29,6 +30,7 @@ struct World {
 	Arena_Backed_Array<Enemy> enemies;
 	Arena_Backed_Array<Bullet> bullets;
 	Arena_Backed_Array<PlayerBullet> p_bullets;
+	Arena_Backed_Array<Pickup> pickups;
 
 	u32 stage_index;
 
