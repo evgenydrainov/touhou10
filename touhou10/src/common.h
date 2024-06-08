@@ -8,9 +8,9 @@
 // 
 
 #if defined(_DEBUG) || defined(DEBUG)
-#define TH_DEBUG 1
+  #define TH_DEBUG 1
 #else
-#define TH_DEBUG 0
+  #define TH_DEBUG 0
 #endif
 
 typedef uint8_t u8;
@@ -42,9 +42,13 @@ struct Rectf {
 #define log_error(fmt, ...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, fmt, ##__VA_ARGS__)
 
 #if TH_DEBUG
-#define Assert(cond) while (!(cond)) __debugbreak()
+  #ifdef _WIN32
+    #define Assert(cond) while (!(cond)) __debugbreak()
+  #else
+    #define Assert(cond) while (!(cond)) __builtin_trap()
+  #endif
 #else
-#define Assert(cond)
+  #define Assert(cond)
 #endif
 
 // 

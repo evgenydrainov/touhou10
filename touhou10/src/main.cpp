@@ -2,7 +2,7 @@
 
 #include "game.h"
 
-int SDL_main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	Game game = {};
 	g = &game;
 

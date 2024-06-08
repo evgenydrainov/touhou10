@@ -8,6 +8,8 @@
 #include <stb/stb_sprintf.h>
 #include <qoi/qoi.h>
 
+#include <inttypes.h>
+
 Game* g;
 
 static GLADapiproc glad_load_func(const char* name) {
@@ -115,10 +117,10 @@ void Game::init() {
 	{
 		static_assert(NUM_TEXTURES == 4, "");
 
-		texture_data[tex_atlas_0]                    = load_texture("textures/atlas_0.qoi");
-		texture_data[tex_stage_0_bg]                 = load_texture("textures/stage_0_bg.qoi",                 true);
-		texture_data[tex_cirno_spellcard_background] = load_texture("textures/cirno_spellcard_background.qoi", true);
-		texture_data[tex_background]                 = load_texture("textures/background.qoi");
+		texture_data[tex_atlas_0]                    = load_texture("textures/atlas_0.png");
+		texture_data[tex_stage_0_bg]                 = load_texture("textures/stage_0_bg.png",                 true);
+		texture_data[tex_cirno_spellcard_background] = load_texture("textures/cirno_spellcard_background.png", true);
+		texture_data[tex_background]                 = load_texture("textures/background.png");
 	}
 
 	{
@@ -126,7 +128,8 @@ void Game::init() {
 
 		const size_t memory_for_world =
 			MAX_BULLETS * sizeof(Bullet)
-			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet);
+			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
+			+ MAX_ENEMIES * sizeof(Enemy);
 
 		const size_t all_memory =
 			memory_for_renderer
@@ -345,7 +348,11 @@ void Game::draw(float delta) {
 						 "arena: " Size_Fmt " / " Size_Fmt "\n"
 						 "frame arena: " Size_Fmt " / " Size_Fmt "\n"
 						 "draw calls: %d\n"
-						 "max batch: %zu / %zu\n",
+						 "max batch: %zu / %zu\n"
+#if TH_DEBUG
+						 "COMPILED WITH DEBUG\n"
+#endif
+						 ,
 						 fps,
 						 update_took * 1000.0,
 						 draw_took * 1000.0,
@@ -360,7 +367,7 @@ void Game::draw(float delta) {
 				stb_snprintf(buf, sizeof(buf),
 							 "bullets: %zu / %zu\n"
 							 "player bullets: %zu / %zu\n"
-							 "next instance id: %llX / %llX\n"
+							 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
 							 "coroutine memory: " Size_Fmt "\n",
 							 w->bullets.count, w->bullets.capacity,
 							 w->p_bullets.count, w->p_bullets.capacity,
@@ -368,7 +375,7 @@ void Game::draw(float delta) {
 							 Size_Arg(w->coro_memory));
 				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
 
-#define Object_Fmt "id: %llX\n"
+#define Object_Fmt "id: %" PRIX64 "\n"
 
 #define Object_Arg(o) (o)->id
 
@@ -438,7 +445,11 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 	// SDL_Window* win = SDL_GL_GetCurrentWindow();
 	// SDL_ShowSimpleMessageBox(0, "", message, win);
 
+#ifdef _WIN32
 	__debugbreak();
+#else
+	__builtin_trap();
+#endif
 
 	/*
 	switch (source)
@@ -479,7 +490,11 @@ static u8* read_entire_file(const char* fname, size_t* out_size) {
 	u8* result = nullptr;
 
 	FILE* f = nullptr;
+#ifdef _WIN32
 	fopen_s(&f, fname, "rb");
+#else
+	f = fopen(fname, "rb");
+#endif
 	Defer { if (f) fclose(f); };
 
 	if (f) {

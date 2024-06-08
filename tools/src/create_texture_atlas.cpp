@@ -20,7 +20,12 @@
 #include <SDL_image.h>
 
 #include <assert.h>
+
+#ifdef _WIN32
 #include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 #include <vector>
 #include <unordered_map>
@@ -58,6 +63,8 @@ struct Create_Sprite {
 
 
 static Create_Sprite create_sprites[] = {
+
+	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
 	{"spr_white"             , "white.png",         0,   0, 16, 16,  0,  0,  1,  1},
 	{"spr_reimu_idle"        , "characters.png",    0,   0, 32, 48, 16, 24,  8,  8, 0.20f,  0, 32, 48},
 	{"spr_reimu_left"        , "characters.png",    0,  48, 32, 48, 16, 24,  8,  8, 0.20f,  4, 32, 48},
@@ -88,26 +95,48 @@ static Create_Sprite create_sprites[] = {
 
 	{"spr_boss_daiyousei_idle","Enemies.png",     288, 496, 48, 48, 24, 24,  1,  1, 0.00f,  0, 48, 48},
 
+	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
+	{"spr_fairy_0",            "Enemies.png",     288, 288, 32, 32, 16, 16, 8,   8, 0.10f},
+	{"spr_fairy_1",            "Enemies.png",     288, 320, 32, 32, 16, 16, 8,   8, 0.10f},
+	{"spr_enemy_0",            "Enemies.png",     416, 384, 32, 32, 16, 16, 1},
+
 };
 
 
 
 
 
-int SDL_main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 
 
-	// for (int i = 0; i < ArrayLength(create_sprites); i++) {
-	// 	Create_Sprite* s = &create_sprites[i];
-	// 	if (s->xstride == 0) {
-	// 		s->xstride = s->width;
-	// 	}
-	// 	if (s->ystride == 0) {
-	// 		s->ystride = s->height;
-	// 	}
-	// }
+	for (int i = 0; i < ArrayLength(create_sprites); i++) {
+		Create_Sprite* s = &create_sprites[i];
+		if (s->xstride == 0) {
+			s->xstride = s->width;
+			printf("INFO: %s: xstride = 0\n", s->name);
+		}
+		if (s->ystride == 0) {
+			s->ystride = s->height;
+			printf("INFO: %s: ystride = 0\n", s->name);
+		}
+		if (s->frames_in_row == 0) {
+			s->frames_in_row = s->frame_count;
+			printf("INFO: %s: frames_in_row = 0\n", s->name);
+		}
 
+		Assert(s->name);
+		Assert(s->texture);
+		Assert(s->width > 0);
+		Assert(s->height > 0);
+		Assert(s->frame_count > 0);
+		Assert(s->frames_in_row > 0);
+	}
+
+#ifdef _WIN32
 	_chdir("../touhou10");
+#else
+	chdir("../touhou10");
+#endif
 
 
 	int atlas_index = 0;
