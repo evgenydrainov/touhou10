@@ -83,7 +83,7 @@ struct Renderer {
 
 	void draw_rectangle(Rect rect, glm::vec4 color);
 
-	// This is temporary. Draws a 16x16 rect
+	// @Temp This is temporary. Draws a 16x16 rect
 	void draw_rectangle_ext(glm::vec2 pos, glm::vec2 scale = {1.0f, 1.0f},
 							glm::vec2 origin = {}, float angle = 0.0f, glm::vec4 color = color_white);
 

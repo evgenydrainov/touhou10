@@ -117,12 +117,15 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 4, "");
+		static_assert(NUM_TEXTURES == 7, "");
 
-		texture_data[tex_atlas_0]                    = load_texture("textures/atlas_0.png");
-		texture_data[tex_stage_0_bg]                 = load_texture("textures/stage_0_bg.png",                 true);
-		texture_data[tex_cirno_spellcard_background] = load_texture("textures/cirno_spellcard_background.png", true);
-		texture_data[tex_background]                 = load_texture("textures/background.png");
+		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png");
+		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                 true);
+		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png", true);
+		texture_data[tex_background]                  = load_texture("textures/background.png");
+		texture_data[tex_white]                       = load_texture("textures/white.png");
+		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png");
+		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
 	}
 
 	{
@@ -132,7 +135,8 @@ void Game::init() {
 			  MAX_BULLETS        * sizeof(Bullet)
 			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
 			+ MAX_ENEMIES        * sizeof(Enemy)
-			+ MAX_PICKUPS        * sizeof(Pickup);
+			+ MAX_PICKUPS        * sizeof(Pickup)
+			+ MAX_ANIMATIONS     * sizeof(Animation);
 
 		const size_t all_memory =
 			memory_for_renderer
@@ -420,13 +424,15 @@ void Game::draw(float delta) {
 							 "player bullets: %zu / %zu\n"
 							 "pickups: %zu / %zu\n"
 							 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
-							 "coroutine memory: " Size_Fmt "\n",
+							 "coroutine memory: " Size_Fmt "\n"
+							 "animations: %zu / %zu\n",
 							 w->bullets.count, w->bullets.capacity,
 							 w->enemies.count, w->enemies.capacity,
 							 w->p_bullets.count, w->p_bullets.capacity,
 							 w->pickups.count, w->pickups.capacity,
 							 w->next_instance_id, (u64)UINT32_MAX,
-							 Size_Arg(w->coro_memory));
+							 Size_Arg(w->coro_memory),
+							 w->animations.count, w->animations.capacity);
 				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
 
 #define Object_Fmt "id: %" PRIX64 "\n"

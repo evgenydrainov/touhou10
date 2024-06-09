@@ -14,10 +14,11 @@ void World::init() {
 
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
-	enemies   = array_from_arena<Enemy>(&g->arena, MAX_ENEMIES);
-	bullets   = array_from_arena<Bullet>(&g->arena, MAX_BULLETS);
-	p_bullets = array_from_arena<PlayerBullet>(&g->arena, MAX_PLAYER_BULLETS);
-	pickups   = array_from_arena<Pickup>(&g->arena, MAX_PICKUPS);
+	enemies    = array_from_arena<Enemy>        (&g->arena, MAX_ENEMIES);
+	bullets    = array_from_arena<Bullet>       (&g->arena, MAX_BULLETS);
+	p_bullets  = array_from_arena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
+	pickups    = array_from_arena<Pickup>       (&g->arena, MAX_PICKUPS);
+	animations = array_from_arena<Animation>    (&g->arena, MAX_PICKUPS);
 
 	{
 		mco_desc desc = mco_desc_init(GetStageData(stage_index)->script, 0);
@@ -464,6 +465,13 @@ void World::update(float delta) {
 		}
 	}
 
+	For (a, animations) {
+		a->time += a->speed * delta / 60.0f;
+		if (a->time >= a->data->length) {
+			Remove(a, animations);
+		}
+	}
+
 
 	{
 		bool spellcard_bg_on_screen = false;
@@ -624,6 +632,10 @@ void World::draw(float delta) {
 		if (p->y < 0) {
 			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8});
 		}
+	}
+
+	For (a, animations) {
+		a->draw(delta);
 	}
 
 

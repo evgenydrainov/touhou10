@@ -170,6 +170,8 @@
     <Text Include="env.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\animation.cpp" />
+    <ClCompile Include="src\anim_data_boss_cpellcard_anim.cpp" />
     <ClCompile Include="src\arena.cpp" />
     <ClCompile Include="src\assets.cpp" />
     <ClCompile Include="src\boss.cpp" />
@@ -186,6 +188,7 @@
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\animation.h" />
     <ClInclude Include="src\arena.h" />
     <ClInclude Include="src\array.h" />
     <ClInclude Include="src\assets.h" />

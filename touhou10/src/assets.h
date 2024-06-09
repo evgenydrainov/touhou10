@@ -2,6 +2,8 @@
 
 #include "common.h"
 #include "sprite_indices.h"
+#include "animation.h"
+
 #include <minicoro/minicoro.h>
 #include <SDL_mixer.h>
 
@@ -22,6 +24,9 @@ enum {
 	tex_stage_0_bg,
 	tex_cirno_spellcard_background,
 	tex_background,
+	tex_white,
+	tex_boss_cirno_portrait,
+	tex_spellcard_attack_anim_label,
 
 	NUM_TEXTURES,
 };
@@ -186,3 +191,9 @@ enum {
 extern Mix_Chunk* sound_data[NUM_SOUNDS];
 
 Mix_Chunk* GetSound(u32 sound_index);
+
+// 
+// Animations
+// 
+
+extern AnimData anim_boss_spellcard;

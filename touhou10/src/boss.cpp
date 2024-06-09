@@ -3,8 +3,9 @@
 #include "game.h"
 #include "cpml.h"
 
-#define BOSS_PHASE_START_TIME 60.0f
-#define BOSS_SPELL_END_TIME   60.0f
+#define BOSS_PHASE_START_TIME_SPELL    150.0f
+#define BOSS_PHASE_START_TIME_NONSPELL 60.0f
+#define BOSS_SPELL_END_TIME            60.0f
 
 void boss_update(Boss* b, float delta) {
 	switch (b->state) {
@@ -71,7 +72,6 @@ void boss_start_phase(Boss* b) {
 
 	b->hp = phase->hp;
 	b->timer = phase->time * 60.0f;
-	b->wait_timer = BOSS_PHASE_START_TIME;
 	b->state = BOSS_WAITING_FOR_PHASE_TO_START;
 
 	if (b->phase_index > 0) {
@@ -79,7 +79,16 @@ void boss_start_phase(Boss* b) {
 	}
 
 	if (phase->type == PHASE_SPELLCARD) {
+		b->wait_timer = BOSS_PHASE_START_TIME_SPELL;
+
 		play_sound(snd_spellcard);
+
+		Animation a = {};
+		a.data = &anim_boss_spellcard;
+		a.speed = 0.75f;
+		w->animations.add(a);
+	} else {
+		b->wait_timer = BOSS_PHASE_START_TIME_NONSPELL;
 	}
 }
 
