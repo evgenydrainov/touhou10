@@ -3,6 +3,7 @@
 #include "common.h"
 #include "sprite_indices.h"
 #include <minicoro/minicoro.h>
+#include <SDL_mixer.h>
 
 struct Player;
 
@@ -114,11 +115,16 @@ struct BossPhase {
 	void (*script)(mco_coro*);
 };
 
+enum BossType {
+	BOSS_TYPE_BOSS,
+	BOSS_TYPE_MIDBOSS,
+};
+
 struct BossData {
 	const char* name;
 	BossPhase* phases;
 	int phase_count;
-	bool midboss;
+	BossType type;
 	u32 spr_idle;
 	u32 spr_left;
 	u32 spr_right;
@@ -134,7 +140,7 @@ struct BossData {
 
 DEFINE_NAMED_ENUM(BossIndex, BOSS_INDEX_ENUM)
 
-extern BossData boss_data[];
+extern BossData boss_data[NUM_BOSSES];
 
 BossData* GetBossData(u32 boss_index);
 
@@ -150,3 +156,33 @@ struct StageData {
 extern StageData stage_data[];
 
 StageData* GetStageData(u32 stage_index);
+
+
+// 
+// Sounds
+// 
+
+enum {
+	snd_boss_die,
+	snd_char_reimu_shoot,
+	snd_enemy_die,
+	snd_enemy_hurt,
+	snd_enemy_shoot,
+	snd_extend,
+	snd_graze,
+	snd_lazer,
+	snd_menu_cancel,
+	snd_menu_navigate,
+	snd_menu_ok,
+	snd_pause,
+	snd_pichuun,
+	snd_pickup,
+	snd_powerup,
+	snd_spellcard,
+
+	NUM_SOUNDS,
+};
+
+extern Mix_Chunk* sound_data[NUM_SOUNDS];
+
+Mix_Chunk* GetSound(u32 sound_index);

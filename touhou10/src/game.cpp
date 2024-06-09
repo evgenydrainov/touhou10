@@ -91,6 +91,7 @@ void Game::init() {
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
+	// Create game framebuffer
 	{
 		glGenTextures(1, &game_texture);
 
@@ -114,6 +115,7 @@ void Game::init() {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_texture, 0);
 	}
 
+	// load textures
 	{
 		static_assert(NUM_TEXTURES == 4, "");
 
@@ -142,18 +144,64 @@ void Game::init() {
 
 	// frame_arena = ArenaAlloc(1000);
 
+	Mix_Init(MIX_INIT_MP3);
+
+	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
+
+	{
+		float master_volume = 0.50f;
+		float sound_volume  = 0.50f;
+		float music_volume  = 0.75f;
+
+		Mix_Volume(-1,  (int)(MIX_MAX_VOLUME * (master_volume * sound_volume)));
+		Mix_VolumeMusic((int)(MIX_MAX_VOLUME * (master_volume * music_volume)));
+	}
+
+	// load sounds
+	{
+
+		static_assert(NUM_SOUNDS == 16, "");
+
+		sound_data[snd_boss_die]         = Mix_LoadWAV("sounds/boss_die.wav");
+		sound_data[snd_char_reimu_shoot] = Mix_LoadWAV("sounds/char_reimu_shoot.wav");
+		sound_data[snd_enemy_die]        = Mix_LoadWAV("sounds/enemy_die.wav");
+		sound_data[snd_enemy_hurt]       = Mix_LoadWAV("sounds/enemy_hurt.wav");
+		sound_data[snd_enemy_shoot]      = Mix_LoadWAV("sounds/enemy_shoot.wav");
+		sound_data[snd_extend]           = Mix_LoadWAV("sounds/extend.wav");
+		sound_data[snd_graze]            = Mix_LoadWAV("sounds/graze.wav");
+		sound_data[snd_lazer]            = Mix_LoadWAV("sounds/lazer.wav");
+		sound_data[snd_menu_cancel]      = Mix_LoadWAV("sounds/menu_cancel.wav");
+		sound_data[snd_menu_navigate]    = Mix_LoadWAV("sounds/menu_navigate.wav");
+		sound_data[snd_menu_ok]          = Mix_LoadWAV("sounds/menu_ok.wav");
+		sound_data[snd_pause]            = Mix_LoadWAV("sounds/pause.wav");
+		sound_data[snd_pichuun]          = Mix_LoadWAV("sounds/pichuun.wav");
+		sound_data[snd_pickup]           = Mix_LoadWAV("sounds/pickup.wav");
+		sound_data[snd_powerup]          = Mix_LoadWAV("sounds/powerup.wav");
+		sound_data[snd_spellcard]        = Mix_LoadWAV("sounds/spellcard.wav");
+
+		Mix_VolumeChunk(sound_data[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
+	}
+
 	r = &renderer;
 	r->init();
 
 	w = &world;
 	w->init();
 
+	music = Mix_LoadMUS("music/dbu_the_foolish_girl.mp3");
+	Mix_PlayMusic(music, -1);
 }
 
 void Game::destroy() {
+
+	Mix_FreeMusic(music);
+
 	w->destroy();
 
 	r->destroy();
+
+	Mix_CloseAudio();
+	Mix_Quit();
 
 	ArenaRelease(&frame_arena);
 	ArenaRelease(&arena);
@@ -608,4 +656,22 @@ Texture load_texture(const char* fname, bool filter) {
 	}
 
 	return result;
+}
+
+void stop_sound(u32 sound_index) {
+	Mix_Chunk* chunk = GetSound(sound_index);
+
+	int nchannels = Mix_AllocateChannels(-1);
+	for (int i = 0; i < nchannels; i++) {
+		if (Mix_Playing(i) && Mix_GetChunk(i) == chunk) {
+			Mix_HaltChannel(i);
+		}
+	}
+}
+
+void play_sound(u32 sound_index) {
+	stop_sound(sound_index);
+
+	Mix_Chunk* chunk = GetSound(sound_index);
+	Mix_PlayChannel(-1, chunk, 0);
 }

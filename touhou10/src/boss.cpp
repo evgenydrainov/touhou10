@@ -79,37 +79,38 @@ void boss_start_phase(Boss* b) {
 	}
 
 	if (phase->type == PHASE_SPELLCARD) {
-		//PlaySound("se_spellcard.wav");
+		play_sound(snd_spellcard);
 	}
 }
 
 void boss_end_phase(Boss* b) {
 	For (b, w->bullets) {
-		// DropPickup(bullet.x, bullet.y, PICKUP_SCORE);
+		drop_pickup(b->x, b->y, PICKUP_TYPE_SCORE);
+
 		object_cleanup(b);
 	}
 	w->bullets.clear();
 
-	// for (Pickup& pickup : pickups) {
-	// 	pickup.homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
-	// }
+	For (p, w->pickups) {
+		// p->homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
+	}
 
 	Assert(b->co);
 	mco_destroy(b->co);
 	b->co = nullptr;
 
-	// if (phase_data->type == PHASE_SPELLCARD) {
-	// 	// drop some pickups
-	// 	for (int i = 0; i < 5; i++) {
-	// 		float x = boss.x + random.range(-50.0f, 50.0f);
-	// 		float y = boss.y + random.range(-50.0f, 50.0f);
-	// 		PickupType type = (i == 4) ? PICKUP_BIGP : PICKUP_POWER;
-	// 		DropPickup(x, y, type);
-	// 	}
-	// }
-
 	BossData* data = b->GetData();
 	BossPhase* phase = b->GetPhase();
+
+	if (phase->type == PHASE_SPELLCARD) {
+		// Drop some pickups
+		for (int i = 0; i < 5; i++) {
+			float x = b->x + w->random.rangef(-50.0f, 50.0f);
+			float y = b->y + w->random.rangef(-50.0f, 50.0f);
+			PickupType type = (i == 4) ? PICKUP_TYPE_POWER_BIG : PICKUP_TYPE_POWER;
+			drop_pickup(x, y, type);
+		}
+	}
 
 	if (b->phase_index + 1 < data->phase_count) {
 		b->phase_index++;
@@ -120,17 +121,18 @@ void boss_end_phase(Boss* b) {
 		} else {
 			boss_start_phase(b);
 		}
-		//PlaySound("se_enemy_die.wav");
-	} else {
-		// for (Pickup& pickup : pickups) {
-		// 	pickup.homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
-		// }
 
-		if (!data->midboss) {
-			//PlaySound("se_boss_die.wav");
+		play_sound(snd_enemy_die);
+	} else {
+		For (p, w->pickups) {
+			// pickup.homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
+		}
+
+		if (data->type == BOSS_TYPE_BOSS) {
+			play_sound(snd_boss_die);
 			//ScreenShake(6.0f, 120.0f);
 		} else {
-			//PlaySound("se_enemy_die.wav");
+			play_sound(snd_enemy_die);
 		}
 
 		object_cleanup(b);

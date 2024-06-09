@@ -23,6 +23,9 @@ Texture load_texture(const char* fname, bool filter = false);
 
 double GetTime();
 
+void stop_sound(u32 sound_index);
+void play_sound(u32 sound_index);
+
 struct Stats {
 	int score;
 	int lives = 3;
@@ -47,6 +50,8 @@ struct Game {
 
 	Arena arena;
 	Arena frame_arena;
+
+	Mix_Music* music;
 
 	u32 key_pressed[(SDL_SCANCODE_UP + 1 + 31) / 32];
 	u32 key_repeat[(SDL_SCANCODE_UP + 1 + 31) / 32];

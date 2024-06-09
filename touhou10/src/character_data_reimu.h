@@ -170,7 +170,8 @@ static void reimu_shot_type(Player* p, float delta) {
 				}
 			}
 
-			//PlaySound("se_plst00.wav");
+			play_sound(snd_char_reimu_shoot);
+
 			p->reimu.fire_queue--;
 		}
 

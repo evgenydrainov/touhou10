@@ -62,6 +62,8 @@ static Bullet* ShootExt(Object* o,
 		mco_create(&b.co, &desc);
 	}
 
+	play_sound(snd_enemy_shoot);
+
 	return w->bullets.add(b);
 }
 
@@ -94,6 +96,8 @@ static Bullet* ShootLazer(Object* o,
 	b.lazer.target_length = target_length;
 	b.lazer.thickness = thickness;
 	b.lazer.time = target_length / spd;
+
+	play_sound(snd_lazer);
 
 	return w->bullets.add(b);
 }

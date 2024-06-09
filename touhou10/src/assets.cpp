@@ -16,3 +16,10 @@ Character* GetCharacter(u32 character_index) {
 	Assert(character_index < NUM_CHARACTERS);
 	return &character_data[character_index];
 }
+
+Mix_Chunk* sound_data[NUM_SOUNDS];
+
+Mix_Chunk* GetSound(u32 sound_index) {
+	Assert(sound_index < NUM_SOUNDS);
+	return sound_data[sound_index];
+}

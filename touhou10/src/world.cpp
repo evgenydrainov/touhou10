@@ -55,7 +55,6 @@ void World::destroy() {
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		object_cleanup(&boss);
 	}
-	boss = {};
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
 	object_cleanup(&player);
@@ -133,7 +132,8 @@ void World::physics_update(float delta) {
 				if (player.iframes <= 0) {
 					player.state = PLAYER_STATE_DYING;
 					player.timer = PLAYER_DEATH_TIME;
-					// PlaySound("se_pichuun.wav");
+
+					play_sound(snd_pichuun);
 				}
 
 				object_cleanup(b);
@@ -150,6 +150,8 @@ void World::physics_update(float delta) {
 					boss.hp -= b->dmg;
 				}
 
+				play_sound(snd_enemy_hurt);
+
 				object_cleanup(b);
 				Remove(b, p_bullets);
 			}
@@ -161,6 +163,8 @@ void World::physics_update(float delta) {
 		For (b, p_bullets) {
 			if (circle_vs_circle(e->x, e->y, e->radius, b->x, b->y, b->radius)) {
 				e->hp -= b->dmg;
+
+				play_sound(snd_enemy_hurt);
 
 				object_cleanup(b);
 				Remove(b, p_bullets);
@@ -210,6 +214,8 @@ void World::physics_update(float delta) {
 						g->stats.power = MAX_POWER;
 						break;
 				}
+
+				play_sound(snd_pickup);
 
 				object_cleanup(p);
 				Remove(p, pickups);
@@ -292,6 +298,8 @@ void World::update(float delta) {
 				if (e->death_callback) {
 					e->death_callback(e);
 				}
+
+				play_sound(snd_enemy_die);
 
 				object_cleanup(e);
 				Remove(e, enemies);
