@@ -60,10 +60,10 @@
     <ClCompile Include="src\console.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\anim_data_boss_cpellcard_anim.cpp">
+    <ClCompile Include="src\animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\animation.cpp">
+    <ClCompile Include="src\anim_data_boss_spellcard_anim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
