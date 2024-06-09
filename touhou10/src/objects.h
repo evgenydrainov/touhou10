@@ -38,6 +38,10 @@ struct Object {
 	Sprite* GetSprite() {
 		return ::GetSprite(sprite_index);
 	}
+
+	ObjType GetType() {
+		return (ObjType)(id >> 32);
+	}
 };
 
 void object_init(Object* o, ObjType type);
@@ -184,6 +188,7 @@ struct Pickup : Object {
 	PickupType pickup_type;
 	float hsp;
 	float vsp;
+	instance_id homing_target;
 };
 
 void object_cleanup(Player* p);

@@ -191,4 +191,8 @@ static void reimu_bomb(Player* p) {
 	}
 	w->enemies.clear();
 
+	For (it, w->pickups) {
+		it->homing_target = p->id;
+	}
+
 }

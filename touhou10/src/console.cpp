@@ -92,6 +92,10 @@ void Console::execute() {
 	} else if (strcmp(cmd, "life") == 0) {
 		g->stats.lives++;
 		g->stats.lives = min(g->stats.lives, 8);
+	} else if (strcmp(cmd, "kill_player") == 0) {
+		w->player.state = PLAYER_STATE_DYING;
+		w->player.timer = PLAYER_DEATH_TIME;
+		play_sound(snd_pichuun);
 	}
 }
 

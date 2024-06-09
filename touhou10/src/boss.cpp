@@ -101,7 +101,7 @@ void boss_end_phase(Boss* b) {
 	w->bullets.clear();
 
 	For (p, w->pickups) {
-		// p->homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
+		p->homing_target = w->player.id;
 	}
 
 	Assert(b->co);
@@ -134,7 +134,7 @@ void boss_end_phase(Boss* b) {
 		play_sound(snd_enemy_die);
 	} else {
 		For (p, w->pickups) {
-			// pickup.homing_target = MAKE_INSTANCE_ID(0, TYPE_PLAYER);
+			p->homing_target = w->player.id;
 		}
 
 		if (data->type == BOSS_TYPE_BOSS) {

@@ -232,13 +232,15 @@ static bool out_of_bounds(float x, float y, float off = 50.0f) {
 	return false;
 }
 
+#define PICKUP_STARTING_VSP -1.6f
+
 void drop_pickup(float x, float y, PickupType type) {
 	Pickup p = {};
 
 	object_init(&p, OBJ_TYPE_PICKUP);
 	p.x = x;
 	p.y = y;
-	p.vsp = -1.6f;
+	p.vsp = PICKUP_STARTING_VSP;
 	p.radius = 8;
 	p.sprite_index = spr_pickup;
 
@@ -403,10 +405,36 @@ void World::update(float delta) {
 				continue;
 			}
 
-			const float gravity = 0.03f;
+			if (p->homing_target != 0) {
+				bool stop_homing = true;
 
-			p->vsp += gravity * delta;
-			p->vsp = min(p->vsp, 3.0f);
+				Object* target = find_object(p->homing_target);
+				if (target) {
+					stop_homing = false;
+
+					if (target->GetType() == OBJ_TYPE_PLAYER) {
+						if (((Player*)target)->state != PLAYER_STATE_NORMAL) {
+							stop_homing = true;
+						}
+					}
+				}
+
+				if (stop_homing) {
+					p->hsp = 0;
+					p->vsp = PICKUP_STARTING_VSP;
+					p->homing_target = 0;
+				} else {
+					float spd = 8;
+					float dir = point_direction(p->x, p->y, player.x, player.y);
+					p->hsp = lengthdir_x(spd, dir);
+					p->vsp = lengthdir_y(spd, dir);
+				}
+			} else {
+				const float gravity = 0.03f;
+
+				p->vsp += gravity * delta;
+				p->vsp = min(p->vsp, 3.0f);
+			}
 		}
 	}
 
@@ -753,6 +781,37 @@ static T* BinarySearch(Arena_Backed_Array<T> arr, instance_id id) {
 
 Bullet* World::find_bullet(instance_id id) {
 	return BinarySearch(bullets, id);
+}
+
+Player* World::find_player(instance_id id) {
+	Player* result = nullptr;
+	if (player.id == id) {
+		result = &player;
+	}
+	return result;
+}
+
+// @Todo
+Object* World::find_object(instance_id id) {
+	Object* result = nullptr;
+	u64 object_type = id >> 32;
+	switch (object_type) {
+		case OBJ_TYPE_PLAYER :
+			result = find_player(id);
+			break;
+		case OBJ_TYPE_BOSS:
+			break;
+		case OBJ_TYPE_ENEMY:
+			break;
+		case OBJ_TYPE_BULLET:
+			result = find_bullet(id);
+			break;
+		case OBJ_TYPE_PLAYER_BULLET:
+			break;
+		case OBJ_TYPE_PICKUP:
+			break;
+	}
+	return result;
 }
 
 void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc) {

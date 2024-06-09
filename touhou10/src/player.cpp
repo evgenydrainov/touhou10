@@ -3,6 +3,8 @@
 #include "game.h"
 #include "cpml.h"
 
+#define POINT_OF_COLLECTION 96.0f
+
 void player_init(Player* p) {
 	*p = {};
 	object_init(p, OBJ_TYPE_PLAYER);
@@ -127,6 +129,12 @@ void player_update(Player* p, float delta) {
 			}
 
 			player_animate(p, delta);
+
+			if (p->y < POINT_OF_COLLECTION) {
+				For (it, w->pickups) {
+					it->homing_target = p->id;
+				}
+			}
 			break;
 		}
 

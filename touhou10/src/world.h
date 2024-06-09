@@ -61,4 +61,7 @@ struct World {
 	instance_id get_instance_id(ObjType type);
 
 	Bullet* find_bullet(instance_id id);
+	Player* find_player(instance_id id);
+
+	Object* find_object(instance_id id);
 };
