@@ -43,12 +43,28 @@ struct Object {
 void object_init(Object* o, ObjType type);
 void object_animate(Object* o, float delta);
 
+#define PLAYER_STATE_ENUM(X) \
+	X(PLAYER_STATE_NORMAL) \
+	X(PLAYER_STATE_DYING) \
+	X(PLAYER_STATE_APPEARING)
+
+DEFINE_NAMED_ENUM(PlayerState, PLAYER_STATE_ENUM)
+
+#define PLAYER_DEATH_TIME      15.0f
+#define PLAYER_APPEAR_TIME     30.0f
+#define PLAYER_RESPAWN_IFRAMES 120.0f
+#define PLAYER_BOMB_TIME       (2.5f * 60.0f)
+
 struct Player : Object {
 	float hsp;
 	float vsp;
+	PlayerState state;
+	bool focused;
+	float iframes;
+	float timer;
+	float bomb_timer;
 
 	u32 character_index;
-	bool focused;
 	float hitbox_alpha;
 
 	union {

@@ -391,9 +391,17 @@ void Game::draw(float delta) {
 					char buf[256];
 					stb_snprintf(buf, sizeof(buf),
 								 Object_Fmt
-								 "focused: %d\n",
+								 "state: %s\n"
+								 "focused: %d\n"
+								 "iframes: %f\n"
+								 "timer: %f\n"
+								 "bomb_timer: %f\n",
 								 Object_Arg(p),
-								 p->focused);
+								 GetPlayerStateName(p->state),
+								 p->focused,
+								 p->iframes,
+								 p->timer,
+								 p->bomb_timer);
 					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(p->x), world_to_screen_y(p->y));
 				}
 

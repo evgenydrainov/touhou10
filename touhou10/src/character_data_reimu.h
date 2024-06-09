@@ -180,4 +180,14 @@ static void reimu_shot_type(Player* p, float delta) {
 
 static void reimu_bomb(Player* p) {
 
+	For (b, w->bullets) {
+		object_cleanup(b);
+	}
+	w->bullets.clear();
+
+	For (e, w->enemies) {
+		object_cleanup(e);
+	}
+	w->enemies.clear();
+
 }

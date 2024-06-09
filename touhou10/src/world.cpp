@@ -129,10 +129,16 @@ void World::physics_update(float delta) {
 	// Player vs bullets
 	For (b, bullets) {
 		if (player_collides_with_bullet(&player, b)) {
-			player_init(&player);
+			if (player.state == PLAYER_STATE_NORMAL) {
+				if (player.iframes <= 0) {
+					player.state = PLAYER_STATE_DYING;
+					player.timer = PLAYER_DEATH_TIME;
+					// PlaySound("se_pichuun.wav");
+				}
 
-			object_cleanup(b);
-			Remove(b, bullets);
+				object_cleanup(b);
+				Remove(b, bullets);
+			}
 		}
 	}
 
@@ -165,47 +171,49 @@ void World::physics_update(float delta) {
 	// Player vs pickups
 	For (p, pickups) {
 		if (circle_vs_circle(player.x, player.y, player.GetCharacter()->graze_radius, p->x, p->y, p->radius)) {
-			switch (p->pickup_type) {
-				case PICKUP_TYPE_POWER:
-					g->stats.power++;
-					g->stats.power = min(g->stats.power, MAX_POWER);
-					g->stats.score += 10;
-					break;
+			if (player.state == PLAYER_STATE_NORMAL) {
+				switch (p->pickup_type) {
+					case PICKUP_TYPE_POWER:
+						g->stats.power++;
+						g->stats.power = min(g->stats.power, MAX_POWER);
+						g->stats.score += 10;
+						break;
 
-				case PICKUP_TYPE_POINT:
-					g->stats.points++;
-					break;
+					case PICKUP_TYPE_POINT:
+						g->stats.points++;
+						break;
 
-				case PICKUP_TYPE_POWER_BIG:
-					g->stats.power += 8;
-					g->stats.power = min(g->stats.power, MAX_POWER);
-					break;
+					case PICKUP_TYPE_POWER_BIG:
+						g->stats.power += 8;
+						g->stats.power = min(g->stats.power, MAX_POWER);
+						break;
 
-				case PICKUP_TYPE_POINT_BIG:
-					g->stats.points += 8;
-					break;
+					case PICKUP_TYPE_POINT_BIG:
+						g->stats.points += 8;
+						break;
 
-				case PICKUP_TYPE_BOMB:
-					g->stats.bombs++;
-					g->stats.bombs = min(g->stats.bombs, 8);
-					break;
+					case PICKUP_TYPE_BOMB:
+						g->stats.bombs++;
+						g->stats.bombs = min(g->stats.bombs, 8);
+						break;
 
-				case PICKUP_TYPE_LIFE:
-					g->stats.lives++;
-					g->stats.lives = min(g->stats.lives, 8);
-					break;
+					case PICKUP_TYPE_LIFE:
+						g->stats.lives++;
+						g->stats.lives = min(g->stats.lives, 8);
+						break;
 
-				case PICKUP_TYPE_SCORE:
-					g->stats.score += 10;
-					break;
+					case PICKUP_TYPE_SCORE:
+						g->stats.score += 10;
+						break;
 
-				case PICKUP_TYPE_FULL_POWER:
-					g->stats.power = MAX_POWER;
-					break;
+					case PICKUP_TYPE_FULL_POWER:
+						g->stats.power = MAX_POWER;
+						break;
+				}
+
+				object_cleanup(p);
+				Remove(p, pickups);
 			}
-
-			object_cleanup(p);
-			Remove(p, pickups);
 		}
 	}
 }
@@ -215,6 +223,22 @@ static bool out_of_bounds(float x, float y, float off = 50.0f) {
 		return true;
 	}
 	return false;
+}
+
+void drop_pickup(float x, float y, PickupType type) {
+	Pickup p = {};
+
+	object_init(&p, OBJ_TYPE_PICKUP);
+	p.x = x;
+	p.y = y;
+	p.vsp = -1.6f;
+	p.radius = 8;
+	p.sprite_index = spr_pickup;
+
+	p.pickup_type = type;
+	p.frame_index = (float)type;
+
+	w->pickups.add(p);
 }
 
 static void drop_pickups(int drops, float x, float y) {
@@ -231,20 +255,8 @@ static void drop_pickups(int drops, float x, float y) {
 			// Fallthrough
 		case 1: {
 			// A power or a point
-			Pickup p = {};
-
-			object_init(&p, OBJ_TYPE_PICKUP);
-			p.x = x;
-			p.y = y;
-			p.vsp = -1.6f;
-			p.radius = 8;
-			p.sprite_index = spr_pickup;
-
 			PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
-			p.pickup_type = w->random.index(types);
-			p.frame_index = (float)p.pickup_type;
-
-			w->pickups.add(p);
+			drop_pickup(x, y, w->random.index(types));
 			break;
 		}
 	}

@@ -24,6 +24,8 @@ extern World* w;
 
 void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc);
 
+void drop_pickup(float x, float y, PickupType type);
+
 struct World {
 	Player player;
 	Boss boss;

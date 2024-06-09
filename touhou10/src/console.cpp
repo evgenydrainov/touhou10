@@ -1,7 +1,9 @@
 #include "console.h"
 
 #include "game.h"
+#include "cpml.h"
 #include <glad/gl.h>
+
 #include <string.h>
 
 void Console::update(float delta) {
@@ -87,6 +89,9 @@ void Console::execute() {
 		}
 	} else if (strcmp(cmd, "full_power") == 0) {
 		g->stats.power = MAX_POWER;
+	} else if (strcmp(cmd, "life") == 0) {
+		g->stats.lives++;
+		g->stats.lives = min(g->stats.lives, 8);
 	}
 }
 
