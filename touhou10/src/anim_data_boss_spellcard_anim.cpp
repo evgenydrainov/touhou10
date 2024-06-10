@@ -1,3 +1,6 @@
+// 
+// GENERATED
+// 
 #include "animation.h"
 #include "assets.h"
 static glm::vec2 anim_boss_spellcard_sprite_tracks_BossCirnoPortrait_position_values[] = {glm::vec2{304.000000f, 64.000000f}, glm::vec2{304.000000f, 256.000000f}};

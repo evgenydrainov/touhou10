@@ -157,6 +157,9 @@ func print_anim(a_: Animation, anim_var_name: String, sprite_tracks: Array[Strin
 	
 	a = a_;
 	
+	print("// ")
+	print("// GENERATED")
+	print("// ")
 	print("#include \"animation.h\"")
 	print("#include \"assets.h\"")
 	
