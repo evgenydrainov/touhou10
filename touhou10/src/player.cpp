@@ -196,6 +196,25 @@ void player_update(Player* p, float delta) {
 	p->hitbox_alpha = approach(p->hitbox_alpha,
 							   (p->focused) ? 1.0f : 0.0f,
 							   0.1f * delta);
+
+	// Particle test
+	{
+		static u32 last_spawn_time = 0;
+
+		if (SDL_GetTicks() - last_spawn_time > 100) {
+			Particle_Type type = {};
+			type.speed_min = 1;
+			type.speed_max = 2;
+			type.speed_incr = -0.01f;
+			type.direction_min = 0;
+			type.direction_max = 360;
+			type.lifespan_min = 60;
+			type.lifespan_max = 90;
+			w->part_sys.create_particle({p->x, p->y}, type);
+
+			last_spawn_time = SDL_GetTicks();
+		}
+	}
 }
 
 void player_draw(Player* p, float delta) {

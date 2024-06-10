@@ -60,7 +60,7 @@ struct xoshiro128plus {
 
 		float result = a + (b - a) * f;
 		Assert(result >= a);
-		Assert(result < b);
+		Assert(result < b || (b - a == 0)); // Range can be zero.
 
 		return result;
 	}

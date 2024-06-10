@@ -20,6 +20,8 @@ void World::init() {
 	pickups    = array_from_arena<Pickup>       (&g->arena, MAX_PICKUPS);
 	animations = array_from_arena<Animation>    (&g->arena, MAX_PICKUPS);
 
+	part_sys.init();
+
 	{
 		mco_desc desc = mco_desc_init(GetStageData(stage_index)->script, 0);
 		mco_create(&co, &desc);
@@ -32,6 +34,8 @@ void World::destroy() {
 		mco_destroy(co);
 		co = nullptr;
 	}
+
+	part_sys.destroy();
 
 	For (p, pickups) {
 		object_cleanup(p);
@@ -500,6 +504,8 @@ void World::update(float delta) {
 		}
 	}
 
+	part_sys.update(delta);
+
 
 	{
 		bool spellcard_bg_on_screen = false;
@@ -661,6 +667,8 @@ void World::draw(float delta) {
 			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8});
 		}
 	}
+
+	part_sys.draw(delta);
 
 	For (a, animations) {
 		a->draw(delta);

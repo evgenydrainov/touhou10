@@ -70,8 +70,8 @@ void Renderer::init() {
 		u32 shader_stage_0_bg_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_stage_0_bg_fragment_text);
 		Defer { glDeleteShader(shader_stage_0_bg_fragment); };
 
-		shader_texture_program = link_program(shader_texture_vertex, shader_texture_fragment);
-		shader_color_program = link_program(shader_texture_vertex, shader_color_fragment);
+		shader_texture_program    = link_program(shader_texture_vertex,    shader_texture_fragment);
+		shader_color_program      = link_program(shader_texture_vertex,    shader_color_fragment);
 		shader_stage_0_bg_program = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
 	}
 
@@ -200,6 +200,9 @@ void Renderer::init() {
 	model = {1.0f};
 	view = {1.0f};
 	proj = {1.0f};
+
+	current_texture_shader = shader_texture_program;
+	current_color_shader   = shader_color_program;
 
 }
 
@@ -534,12 +537,14 @@ void Renderer::break_batch() {
 
 	switch (mode) {
 		case MODE_QUADS: {
-			glUseProgram(shader_texture_program);
+			u32 program = current_texture_shader;
+
+			glUseProgram(program);
 			Defer { glUseProgram(0); };
 
 			glm::mat4 MVP = (proj * view) * model;
 
-			int u_MVP = glGetUniformLocation(shader_texture_program, "u_MVP");
+			int u_MVP = glGetUniformLocation(program, "u_MVP");
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 			glBindTexture(GL_TEXTURE_2D, batch_texture);
@@ -557,12 +562,14 @@ void Renderer::break_batch() {
 		}
 
 		case MODE_TRIANGLES: {
-			glUseProgram(shader_color_program);
+			u32 program = current_color_shader;
+
+			glUseProgram(program);
 			Defer { glUseProgram(0); };
 
 			glm::mat4 MVP = (proj * view) * model;
 
-			int u_MVP = glGetUniformLocation(shader_color_program, "u_MVP");
+			int u_MVP = glGetUniformLocation(program, "u_MVP");
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 			glBindVertexArray(batch_vao);

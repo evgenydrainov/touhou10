@@ -1,8 +1,11 @@
 #pragma once
 
 #include "common.h"
-#include "objects.h"
 #include "array.h"
+
+#include "objects.h"
+#include "particle_system.h"
+
 #include "xoshiro128plus.h"
 #include <minicoro/minicoro.h>
 
@@ -47,6 +50,8 @@ struct World {
 	float boss_spellcard_background_alpha;
 
 	Arena_Backed_Array<Animation> animations;
+
+	Particle_System part_sys;
 
 	bool show_hitboxes;
 	size_t coro_memory;

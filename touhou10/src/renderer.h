@@ -54,6 +54,9 @@ struct Renderer {
 	u32 shader_color_program;
 	u32 shader_stage_0_bg_program;
 
+	u32 current_texture_shader;
+	u32 current_color_shader;
+
 	u32 quad_vao;
 	u32 quad_vbo;
 	u32 quad_ebo;

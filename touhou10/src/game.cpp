@@ -136,7 +136,8 @@ void Game::init() {
 			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
 			+ MAX_ENEMIES        * sizeof(Enemy)
 			+ MAX_PICKUPS        * sizeof(Pickup)
-			+ MAX_ANIMATIONS     * sizeof(Animation);
+			+ MAX_ANIMATIONS     * sizeof(Animation)
+			+ MAX_PARTICLES      * sizeof(Particle);
 
 		const size_t all_memory =
 			memory_for_renderer

@@ -181,6 +181,7 @@
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\objects.cpp" />
+    <ClCompile Include="src\particle_system.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\shader_data.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="src\cpml.h" />
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\objects.h" />
+    <ClInclude Include="src\particle_system.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scripting.h" />
     <ClInclude Include="src\sprite_indices.h" />

@@ -111,3 +111,57 @@ void main() {
 }
 
 )END_SHADER";
+
+
+#if 0
+const char shader_particle_vertex_text[] = R"END_SHADER(
+#version 330 core
+
+layout(location = 0) in vec3 in_Position;
+layout(location = 1) in vec4 in_Color;
+layout(location = 2) in vec2 in_TexCoord;
+
+// in_Position.xy : vec2  init_pos
+// in_Color.xy    : vec2  init_spd
+// in_Color.z     : float acc
+// in_Color.w     : float time
+
+out vec4 v_Color;
+out vec2 v_TexCoord;
+
+uniform mat4 u_MVP;
+
+void main() {
+	vec2  init_pos = in_Position.xy;
+	vec2  init_spd = in_Color.xy;
+	float acc      = in_Color.z;
+	float time     = in_Color.w;
+
+	vec2 position = init_pos + init_spd * time + vec2(acc, 0.0) * time * time / 2.0;
+
+	gl_Position = u_MVP * vec4(position, 0.0, 1.0);
+
+	v_Color = vec4(1.0);
+	v_TexCoord = in_TexCoord;
+}
+
+)END_SHADER";
+
+
+const char shader_particle_fragment_text[] = R"END_SHADER(
+#version 330 core
+
+layout(location = 0) out vec4 FragColor;
+
+in vec4 v_Color;
+in vec2 v_TexCoord;
+
+uniform sampler2D u_Texture;
+
+void main() {
+	vec4 color = texture(u_Texture, v_TexCoord);
+	FragColor = color * v_Color;
+}
+
+)END_SHADER";
+#endif
