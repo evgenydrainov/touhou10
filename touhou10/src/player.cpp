@@ -27,9 +27,9 @@ static void player_animate(Player* p, float delta) {
 
 	if (p->hsp < 0.0f) {
 		if (p->frame_index < 4.0f) {
-			object_animate(p, delta * 2.0f);
+			p->frame_index = object_animate(p->sprite_index, p->frame_index, delta * 2.0f);
 		} else {
-			object_animate(p, delta);
+			p->frame_index = object_animate(p->sprite_index, p->frame_index, delta);
 		}
 
 		if (p->sprite_index != character->spr_left) {
@@ -38,9 +38,9 @@ static void player_animate(Player* p, float delta) {
 		}
 	} else if (p->hsp > 0.0f) {
 		if (p->frame_index < 4.0f) {
-			object_animate(p, delta * 2.0f);
+			p->frame_index = object_animate(p->sprite_index, p->frame_index, delta * 2.0f);
 		} else {
-			object_animate(p, delta);
+			p->frame_index = object_animate(p->sprite_index, p->frame_index, delta);
 		}
 
 		if (p->sprite_index != character->spr_right) {
@@ -56,7 +56,7 @@ static void player_animate(Player* p, float delta) {
 				p->frame_index = 0.0f;
 			}
 		} else {
-			object_animate(p, delta);
+			p->frame_index = object_animate(p->sprite_index, p->frame_index, delta);
 		}
 	}
 }
@@ -196,25 +196,6 @@ void player_update(Player* p, float delta) {
 	p->hitbox_alpha = approach(p->hitbox_alpha,
 							   (p->focused) ? 1.0f : 0.0f,
 							   0.1f * delta);
-
-	// Particle test
-	{
-		static u32 last_spawn_time = 0;
-
-		if (SDL_GetTicks() - last_spawn_time > 100) {
-			Particle_Type type = {};
-			type.speed_min = 1;
-			type.speed_max = 2;
-			type.speed_incr = -0.01f;
-			type.direction_min = 0;
-			type.direction_max = 360;
-			type.lifespan_min = 60;
-			type.lifespan_max = 90;
-			w->part_sys.create_particle({p->x, p->y}, type);
-
-			last_spawn_time = SDL_GetTicks();
-		}
-	}
 }
 
 void player_draw(Player* p, float delta) {

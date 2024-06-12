@@ -32,15 +32,17 @@ void object_cleanup(Bullet* b) {
 void object_cleanup(PlayerBullet* b) {}
 void object_cleanup(Pickup* p) {}
 
-void object_animate(Object* o, float delta) {
-	Sprite* s = o->GetSprite();
+float object_animate(u32 sprite_index, float frame_index, float delta) {
+	Sprite* s = GetSprite(sprite_index);
 
-	o->frame_index += s->anim_spd * delta;
+	frame_index += s->anim_spd * delta;
 
-	if (o->frame_index >= (float)s->frame_count) {
-		float a = o->frame_index - (float)s->loop_frame;
+	if (frame_index >= (float)s->frame_count) {
+		float a = frame_index - (float)s->loop_frame;
 		float b = (float)(s->frame_count - s->loop_frame);
 		Assert(b != 0);
-		o->frame_index = (float)s->loop_frame + fmodf(a, b);
+		frame_index = (float)s->loop_frame + fmodf(a, b);
 	}
+
+	return frame_index;
 }

@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+char Console::text[1024];
+
 void Console::update(float delta) {
 	if (!show) {
 		return;
@@ -71,7 +73,8 @@ void Console::event(SDL_Event* ev) {
 
 		case SDL_MOUSEWHEEL: {
 			if (show) {
-				scroll += 5 * ev->wheel.preciseY;
+				// scroll += 5 * ev->wheel.preciseY; @Todo: figure out how to scroll nicely on laptops?
+				scroll += 35 * ev->wheel.y;
 			}
 			break;
 		}
@@ -80,7 +83,12 @@ void Console::event(SDL_Event* ev) {
 
 void Console::execute() {
 	if ((cmd[0] == 'h' && cmd[1] == 0) || strcmp(cmd, "help") == 0) {
-		char buf[] = "The fog is coming\n";
+		char buf[] = R"(Commands:
+skip - Skips boss's phase
+full_power - Get full power
+life - Get a life
+kill_player - Kills the player
+)";
 		write(buf, sizeof(buf) - 1);
 	} else if (strcmp(cmd, "skip") == 0) {
 		if (!(w->boss.flags & FLAG_INSTANCE_DEAD)) {
@@ -88,14 +96,17 @@ void Console::execute() {
 			w->boss.wait_timer = 0;
 		}
 	} else if (strcmp(cmd, "full_power") == 0) {
-		g->stats.power = MAX_POWER;
+		get_power(MAX_POWER);
 	} else if (strcmp(cmd, "life") == 0) {
-		g->stats.lives++;
-		g->stats.lives = min(g->stats.lives, 8);
+		get_lives(1);
 	} else if (strcmp(cmd, "kill_player") == 0) {
 		w->player.state = PLAYER_STATE_DYING;
 		w->player.timer = PLAYER_DEATH_TIME;
 		play_sound(snd_pichuun);
+	} else {
+		write("Unknown command \"");
+		write(cmd);
+		write("\"\n");
 	}
 }
 
@@ -133,6 +144,12 @@ void Console::write(const char* buf, size_t size) {
 		write(buf[i]);
 	}
 #endif
+}
+
+void Console::write(const char* buf) {
+	for (const char* ptr = buf; *ptr; ptr++) {
+		write(*ptr);
+	}
 }
 
 void Console::draw(float delta) {

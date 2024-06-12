@@ -78,6 +78,7 @@ static Create_Sprite create_sprites[] = {
 	{"spr_reimu_orb"         , "characters.png",   64, 144, 16, 16,  8,  8,  3,  3},
 
 	{"spr_pickup"            , "projectiles.png",   0, 608, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
+	{"spr_particle_graze"    , "graze.png",         0,   0,  8,  8,  4,  4,  4,  4, 0.25f},
 
 	{"spr_lazer"             , "projectiles.png",   0,   0, 16, 16,  8,  0, 16, 16, 0.00f,  0, 16, 16},
 	{"spr_bullet_arrow"      , "projectiles.png",   0,  16, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},

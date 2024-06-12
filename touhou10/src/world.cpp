@@ -9,6 +9,19 @@
 
 World* w;
 
+static const Particle_Type part_type_graze = {
+	/* speed_min      = */ 4,
+	/* speed_max      = */ 6,
+	/* speed_incr     = */ -0.25f,
+	/* direction_min  = */ 0,
+	/* direction_max  = */ 360,
+	/* direction_incr = */ 0,
+	/* lifespan_min   = */ 10,
+	/* lifespan_max   = */ 15,
+	/* sprite_index   = */ spr_particle_graze,
+	/* color          = */ {1, 1, 1, 0.5f},
+};
+
 void World::init() {
 	player_init(&player);
 
@@ -65,19 +78,19 @@ void World::destroy() {
 	object_cleanup(&player);
 }
 
-static bool player_collides_with_bullet(Player* p, Bullet* b) {
+static bool player_collides_with_bullet(Player* p, float player_radius, Bullet* b) {
 	bool result = false;
 
 	switch (b->bullet_type) {
 		case BULLET_TYPE_BULLET: {
-			result = circle_vs_circle(p->x, p->y, p->radius, b->x, b->y, b->radius);
+			result = circle_vs_circle(p->x, p->y, player_radius, b->x, b->y, b->radius);
 			break;
 		}
 
 		case BULLET_TYPE_LAZER: {
 			float rect_center_x = b->x + lengthdir_x(b->lazer.length / 2.0f, b->dir);
 			float rect_center_y = b->y + lengthdir_y(b->lazer.length / 2.0f, b->dir);
-			result = circle_vs_rotated_rect(p->x, p->y, p->radius, rect_center_x, rect_center_y, b->lazer.thickness, b->lazer.length, b->dir);
+			result = circle_vs_rotated_rect(p->x, p->y, player_radius, rect_center_x, rect_center_y, b->lazer.thickness, b->lazer.length, b->dir);
 			break;
 		}
 	}
@@ -132,7 +145,15 @@ void World::physics_update(float delta) {
 
 	// Player vs bullets
 	For (b, bullets) {
-		if (player_collides_with_bullet(&player, b)) {
+		if (player_collides_with_bullet(&player, player.GetCharacter()->graze_radius, b)) {
+			if (player.state == PLAYER_STATE_NORMAL && !b->grazed) {
+				get_graze(1);
+				part_sys.create_particle({player.x, player.y}, part_type_graze);
+				b->grazed = true;
+			}
+		}
+
+		if (player_collides_with_bullet(&player, player.radius, b)) {
 			if (player.state == PLAYER_STATE_NORMAL) {
 				if (player.iframes <= 0) {
 					player.state = PLAYER_STATE_DYING;
@@ -183,40 +204,36 @@ void World::physics_update(float delta) {
 			if (player.state == PLAYER_STATE_NORMAL) {
 				switch (p->pickup_type) {
 					case PICKUP_TYPE_POWER:
-						g->stats.power++;
-						g->stats.power = min(g->stats.power, MAX_POWER);
-						g->stats.score += 10;
+						get_power(1);
+						get_score(10);
 						break;
 
 					case PICKUP_TYPE_POINT:
-						g->stats.points++;
+						get_points(1);
 						break;
 
 					case PICKUP_TYPE_POWER_BIG:
-						g->stats.power += 8;
-						g->stats.power = min(g->stats.power, MAX_POWER);
+						get_power(8);
 						break;
 
 					case PICKUP_TYPE_POINT_BIG:
-						g->stats.points += 8;
+						get_points(8);
 						break;
 
 					case PICKUP_TYPE_BOMB:
-						g->stats.bombs++;
-						g->stats.bombs = min(g->stats.bombs, 8);
+						get_bombs(1);
 						break;
 
 					case PICKUP_TYPE_LIFE:
-						g->stats.lives++;
-						g->stats.lives = min(g->stats.lives, 8);
+						get_lives(1);
 						break;
 
 					case PICKUP_TYPE_SCORE:
-						g->stats.score += 10;
+						get_score(10);
 						break;
 
 					case PICKUP_TYPE_FULL_POWER:
-						g->stats.power = MAX_POWER;
+						get_power(MAX_POWER);
 						break;
 				}
 
@@ -320,7 +337,7 @@ void World::update(float delta) {
 				e->update_callback(e, delta);
 			}
 
-			object_animate(e, delta);
+			e->frame_index = object_animate(e->sprite_index, e->frame_index, delta);
 		}
 
 		For (b, bullets) {
@@ -828,4 +845,69 @@ void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc) {
 	o->spd = sqrtf(dist * acc * 2.0f);
 	o->acc = -acc;
 	o->dir = point_direction(o->x, o->y, target_x, target_y);
+}
+
+void get_score(int score) {
+	g->stats.score += score;
+}
+
+void get_lives(int lives) {
+	while (lives--) {
+		if (g->stats.lives < 8) {
+			g->stats.lives++;
+			play_sound(snd_extend);
+		} else {
+			get_bombs(1);
+		}
+	}
+}
+
+void get_bombs(int bombs) {
+	while (bombs--) {
+		if (g->stats.bombs < 8) {
+			g->stats.bombs++;
+		}
+	}
+}
+
+void get_power(int power) {
+	while (power--) {
+		if (g->stats.power < 128) {
+			g->stats.power++;
+			switch (g->stats.power) {
+				case 8:
+				case 16:
+				case 32:
+				case 48:
+				case 64:
+				case 80:
+				case 96:
+				case 128: play_sound(snd_powerup); break;
+			}
+		}
+	}
+}
+
+void get_graze(int graze) {
+	g->stats.graze += graze;
+	play_sound(snd_graze);
+}
+
+void get_points(int points) {
+	while (points--) {
+		g->stats.points++;
+		if (g->stats.points >= 800) {
+			if (g->stats.points % 200 == 0) {
+				get_lives(1);
+			}
+		} else {
+			switch (g->stats.points) {
+				case 50:
+				case 125:
+				case 200:
+				case 300:
+				case 450: get_lives(1); break;
+			}
+		}
+	}
 }

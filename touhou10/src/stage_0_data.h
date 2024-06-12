@@ -41,7 +41,7 @@ static void Stage_0_Script(mco_coro* co) {
 
 	Wait(co, 60);
 
-#if 0
+#if 1
 	{
 		Repeat (50) {
 			spawn_spinner();

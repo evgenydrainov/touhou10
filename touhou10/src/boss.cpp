@@ -43,7 +43,7 @@ void boss_update(Boss* b, float delta) {
 
 	b->dir = wrapf(b->dir, 360.0f);
 
-	object_animate(b, delta);
+	b->frame_index = object_animate(b->sprite_index, b->frame_index, delta);
 
 	BossData* data = b->GetData();
 

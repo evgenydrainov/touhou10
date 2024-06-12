@@ -6,7 +6,7 @@ struct Console {
 	bool show;
 	char cmd[32];
 	size_t caret;
-	char text[256];
+	static char text[1024];
 	size_t text_pos;
 	float scroll;
 	char prev_cmd[32];
@@ -17,6 +17,7 @@ struct Console {
 	void execute();
 	void write(char ch);
 	void write(const char* buf, size_t size);
+	void write(const char* buf);
 
 	void draw(float delta);
 };

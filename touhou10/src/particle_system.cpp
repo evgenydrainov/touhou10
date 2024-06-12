@@ -23,6 +23,7 @@ void Particle_System::create_particle(glm::vec2 pos, const Particle_Type& type) 
 	p.direction_incr = type.direction_incr;
 	p.lifespan       = lifespan;
 	p.sprite_index   = type.sprite_index;
+	p.color          = type.color;
 
 	particles.add(p);
 }
@@ -40,12 +41,14 @@ void Particle_System::update(float delta) {
 		p->speed     += p->speed_incr     * delta;
 		p->direction += p->direction_incr * delta;
 
+		p->frame_index = object_animate(p->sprite_index, p->frame_index, delta);
+
 		p->lifetime += delta;
 	}
 }
 
 void Particle_System::draw(float delta) {
 	For (p, particles) {
-		r->draw_sprite(GetSprite(p->sprite_index), 0, p->pos);
+		r->draw_sprite(GetSprite(p->sprite_index), (int)p->frame_index, p->pos, {1, 1}, 0, p->color);
 	}
 }

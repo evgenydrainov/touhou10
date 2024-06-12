@@ -4,6 +4,9 @@
 #include "assets.h"
 #include <minicoro/minicoro.h>
 
+// 
+// High 32 bits: ObjType, low 32 bits: id
+// 
 typedef u64 instance_id;
 
 enum ObjType : u64 {
@@ -35,6 +38,8 @@ struct Object {
 	u32 sprite_index;
 	float frame_index;
 
+	bool grazed;
+
 	Sprite* GetSprite() {
 		return ::GetSprite(sprite_index);
 	}
@@ -45,7 +50,7 @@ struct Object {
 };
 
 void object_init(Object* o, ObjType type);
-void object_animate(Object* o, float delta);
+float object_animate(u32 sprite_index, float frame_index, float delta);
 
 #define PLAYER_STATE_ENUM(X) \
 	X(PLAYER_STATE_NORMAL) \

@@ -31,6 +31,13 @@ void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc);
 
 void drop_pickup(float x, float y, PickupType type);
 
+void get_score(int score);
+void get_lives(int lives);
+void get_bombs(int bombs);
+void get_power(int power);
+void get_graze(int graze);
+void get_points(int points);
+
 struct World {
 	Player player;
 	Boss boss;

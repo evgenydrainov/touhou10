@@ -13,6 +13,7 @@ enum {
 	spr_reimu_shot_orb,
 	spr_reimu_orb,
 	spr_pickup,
+	spr_particle_graze,
 	spr_lazer,
 	spr_bullet_arrow,
 	spr_bullet_outline,

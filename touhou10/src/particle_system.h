@@ -24,6 +24,8 @@ struct Particle {
 	float lifetime;
 	float lifespan;
 	u32 sprite_index;
+	float frame_index;
+	glm::vec4 color;
 };
 
 struct Particle_Type {
@@ -36,6 +38,7 @@ struct Particle_Type {
 	float lifespan_min;
 	float lifespan_max;
 	u32 sprite_index;
+	glm::vec4 color;
 };
 
 struct Particle_System {
