@@ -7,13 +7,11 @@
 // Some common stuff.
 // 
 
-#if defined(_DEBUG) || defined(DEBUG)
-  #define TH_DEBUG 1
-#else
-  #define TH_DEBUG 0
+#if !defined(TH_DEBUG)
+#error "You have to define TH_DEBUG as 1 or 0 whether this is a debug build."
 #endif
 
-typedef uint8_t u8;
+typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
@@ -34,7 +32,7 @@ struct Rectf {
 
 #define ArrayLength(a) (sizeof(a) / sizeof(a[0]))
 
-#define Kilobytes(x) ((x) * (size_t)1024)
+#define Kilobytes(x) (size_t)((x) * (size_t)1024)
 #define Megabytes(x) Kilobytes((x) * (size_t)1024)
 #define Gigabytes(x) Megabytes((x) * (size_t)1024)
 
@@ -48,11 +46,17 @@ struct Rectf {
     #define Assert(cond) while (!(cond)) __builtin_trap()
   #endif
 #else
-  #define Assert(cond)
+  //
+  // @Todo?
+  // I feel like assertions shouldn't be excluded from release build.
+  //
+  #define Assert(cond) while (!(cond)) _Assertion_Failed(__FILE__, __LINE__, #cond)
 #endif
 
+void _Assertion_Failed(const char* file, int line, const char* condition);
+
 // 
-// Language extensions.
+// "Language extensions".
 // 
 
 #define For(it, arr) for (auto it = arr.begin(); it != arr.end(); it++)

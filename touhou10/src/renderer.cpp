@@ -154,14 +154,14 @@ void Renderer::init() {
 		// Use arena temporarily to generate indices
 		// 
 		{
-			const size_t memory_for_indices = BATCH_MAX_INDICES * sizeof(u32);
+			const size_t memory_for_indices  = BATCH_MAX_INDICES * sizeof(u32);
 			const size_t memory_for_vertices = BATCH_MAX_VERTICES * sizeof(Vertex);
 			static_assert(memory_for_indices <= memory_for_vertices, "there's not gonna be enough memory in the arena");
 		}
 
 		size_t arena_pos = ArenaGetPos(&g->arena);
 
-		u32* indices = PushArray(&g->arena, u32, BATCH_MAX_INDICES);
+		auto indices = PushArray<u32>(&g->arena, BATCH_MAX_INDICES);
 
 		u32 offset = 0;
 		for (size_t i = 0; i < BATCH_MAX_INDICES; i += 6) {
@@ -178,7 +178,7 @@ void Renderer::init() {
 
 		// 3. copy our index array in a element buffer for OpenGL to use
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices.data, GL_STATIC_DRAW);
 
 		ArenaSetPosBack(&g->arena, arena_pos);
 
@@ -194,7 +194,7 @@ void Renderer::init() {
 
 		glBindVertexArray(0);
 
-		batch_vertices = array_from_arena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
+		batch_vertices = ArrayAllocFromArena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
 	}
 
 	model = {1.0f};

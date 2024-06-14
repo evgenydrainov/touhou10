@@ -27,11 +27,11 @@ void World::init() {
 
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
-	enemies    = array_from_arena<Enemy>        (&g->arena, MAX_ENEMIES);
-	bullets    = array_from_arena<Bullet>       (&g->arena, MAX_BULLETS);
-	p_bullets  = array_from_arena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
-	pickups    = array_from_arena<Pickup>       (&g->arena, MAX_PICKUPS);
-	animations = array_from_arena<Animation>    (&g->arena, MAX_PICKUPS);
+	enemies    = ArrayAllocFromArena<Enemy>        (&g->arena, MAX_ENEMIES);
+	bullets    = ArrayAllocFromArena<Bullet>       (&g->arena, MAX_BULLETS);
+	p_bullets  = ArrayAllocFromArena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
+	pickups    = ArrayAllocFromArena<Pickup>       (&g->arena, MAX_PICKUPS);
+	animations = ArrayAllocFromArena<Animation>    (&g->arena, MAX_PICKUPS);
 
 	part_sys.init();
 
@@ -39,6 +39,8 @@ void World::init() {
 		mco_desc desc = mco_desc_init(GetStageData(stage_index)->script, 0);
 		mco_create(&co, &desc);
 	}
+
+	temp_arena_for_boss = ArenaAllocFromArena(&g->arena, TEMP_STORAGE_FOR_BOSS);
 }
 
 void World::destroy() {

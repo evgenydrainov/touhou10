@@ -10,7 +10,24 @@ static uintptr_t align_forward(uintptr_t ptr, size_t align) {
 	return (ptr + (align - 1)) & ~(align - 1);
 }
 
-static void *arena_alloc_aligned(Arena *a, size_t size, size_t alignment) {
+Arena ArenaAlloc(size_t size) {
+	Arena a = {};
+	a.base = malloc(size);
+	a.size = size;
+	return a;
+}
+
+Arena ArenaAllocFromArena(Arena* a, size_t size) {
+	void* base = ArenaPush(a, size);
+	return {base, size};
+}
+
+void ArenaRelease(Arena *a) {
+	free(a->base);
+	*a = {};
+}
+
+void *ArenaPush(Arena *a, size_t size, size_t alignment) {
 	uintptr_t curr_ptr = (uintptr_t)a->base + (uintptr_t)a->offset;
 	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t)a->base;
@@ -22,30 +39,6 @@ static void *arena_alloc_aligned(Arena *a, size_t size, size_t alignment) {
 	a->offset = offset + size;
 
 	return ptr;
-}
-
-Arena ArenaAlloc(size_t size) {
-	Arena a = {};
-	a.base = malloc(size);
-	a.size = size;
-	return a;
-}
-
-void ArenaRelease(Arena *a) {
-	free(a->base);
-	*a = {};
-}
-
-#define DEFAULT_ALIGNMENT (2 * sizeof(void *))
-
-void *ArenaPush(Arena *a, size_t size) {
-	return arena_alloc_aligned(a, size, DEFAULT_ALIGNMENT);
-}
-
-void *ArenaPushZero(Arena *a, size_t size) {
-	void* result = ArenaPush(a, size);
-	memset(result, 0, size);
-	return result;
 }
 
 void ArenaPop(Arena *a, size_t size) {

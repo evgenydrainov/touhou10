@@ -3,6 +3,40 @@
 #include "common.h"
 #include "arena.h"
 
+// 
+// "Array view".
+// 
+template <typename T>
+struct Array {
+	T* data;
+	size_t count;
+
+	T& operator[](size_t i) {
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() { return data; }
+	T* end()   { return data + count; }
+};
+
+
+// 
+// This returns an "array view". If you want to
+// allocate an empty array from an arena and then append to it,
+// then use "ArrayAllocFromArena"
+// 
+template <typename T>
+static Array<T> PushArray(Arena* a, size_t count) {
+	T* data = (T*) ArenaPush(a, sizeof(T) * count);
+	return {data, count};
+}
+
+
+// 
+// The difference from "Array" is that this one also holds a capacity.
+// I don't know how to name theese.
+// 
 template <typename T>
 struct Arena_Backed_Array {
 	T* data;
@@ -14,13 +48,8 @@ struct Arena_Backed_Array {
 		return data[i];
 	}
 
-	T* begin() {
-		return data;
-	}
-
-	T* end() {
-		return data + count;
-	}
+	T* begin() { return data; }
+	T* end()   { return data + count; }
 
 	T* add(const T& val) {
 		Assert(count < capacity);
@@ -46,10 +75,7 @@ struct Arena_Backed_Array {
 };
 
 template <typename T>
-static Arena_Backed_Array<T> array_from_arena(Arena* a, size_t capacity) {
-	void* data = PushArray(a, T, capacity);
-	Arena_Backed_Array<T> result = {};
-	result.data = (T*) data;
-	result.capacity = capacity;
-	return result;
+static Arena_Backed_Array<T> ArrayAllocFromArena(Arena* a, size_t capacity) {
+	T* data = PushStructN(a, T, capacity);
+	return {data, 0, capacity};
 }

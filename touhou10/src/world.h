@@ -23,6 +23,7 @@
 #define MAX_POWER 128
 
 #define MAX_ANIMATIONS 1'000
+#define TEMP_STORAGE_FOR_BOSS Kilobytes(10)
 
 struct World;
 extern World* w;
@@ -47,18 +48,14 @@ struct World {
 	Arena_Backed_Array<Pickup> pickups;
 
 	u32 stage_index;
-
 	u64 next_instance_id = 1;
-
 	mco_coro* co;
-
 	xoshiro128plus random{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 
 	float boss_spellcard_background_alpha;
-
 	Arena_Backed_Array<Animation> animations;
-
 	Particle_System part_sys;
+	Arena temp_arena_for_boss;
 
 	bool show_hitboxes;
 	size_t coro_memory;

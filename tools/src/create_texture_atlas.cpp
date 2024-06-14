@@ -19,8 +19,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include <assert.h>
-
 #ifdef _WIN32
 #include <direct.h>
 #else
@@ -30,6 +28,16 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+
+
+
+// @Copy
+void _Assertion_Failed(const char* file, int line, const char* condition) {
+	char buf[256];
+	stb_snprintf(buf, sizeof(buf), "%s:%d:\n%s", file, line, condition);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion failed", buf, nullptr);
+	exit(1);
+}
 
 
 
@@ -173,7 +181,7 @@ int main(int argc, char* argv[]) {
 
 	int res = stbrp_pack_rects(&context, rects.data(), rects.size());
 
-	assert(res);
+	Assert(res);
 	printf("result: %d\n", res);
 
 
@@ -197,8 +205,8 @@ int main(int argc, char* argv[]) {
 		int sprite_index = rect.id / 10000;
 		int frame_index = rect.id % 10000;
 
-		assert(sprite_index >= 0);
-		assert(sprite_index < ArrayLength(create_sprites));
+		Assert(sprite_index >= 0);
+		Assert(sprite_index < ArrayLength(create_sprites));
 
 		Create_Sprite* s = &create_sprites[sprite_index];
 
@@ -217,7 +225,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		assert(surf);
+		Assert(surf);
 
 		SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
 

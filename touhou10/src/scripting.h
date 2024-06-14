@@ -105,21 +105,79 @@ static Bullet* ShootLazer(Object* o,
 template <typename Func>
 static void ShootRadial(int count, float dir_diff, const Func& func) {
 	for (int i = 0; i < count; i++) {
-		float mul = -(float)(count - 1) / 2.0f + (float)i;
-		Bullet* b = func();
-		b->dir += dir_diff * mul;
+		float mul = -(count - 1) / 2.0f + i;
+
+		auto res = func();
+
+		if constexpr (std::is_same_v<decltype(res), Bullet*>) {
+			Bullet* b = res;
+
+			b->dir += dir_diff * mul;
+
+		} else if constexpr (std::is_same_v<decltype(res), Array<instance_id>>) {
+			For (it, res) {
+				Bullet* b = w->find_bullet(*it);
+				Assert(b);
+
+				b->dir += dir_diff * mul;
+			}
+
+		} else {
+			Assert(false);
+		}
 	}
 }
 
-template <size_t N, typename Func>
-static void ShootRadialArr(int count, float dir_diff, const Func& func) {
+// 
+// "A" stands for alloc.
+// 
+// Allocates from temporary arena (w->temp_arena_for_boss). You have to
+// clear it once in a while in your script if you use functions that allocate.
+// 
+template <typename Func>
+static Array<instance_id> ShootRadialA(int count, float dir_diff, const Func& func) {
+
+	// 
+	// @Hack?
+	// I use ArenaPush here to get an aligned pointer
+	// 
+	instance_id* bullet_ids = (instance_id*) ArenaPush(&w->temp_arena_for_boss, 0);
+	size_t num_bullet_ids = 0;
+
 	for (int i = 0; i < count; i++) {
-		float mul = -(float)(count - 1) / 2.0f + (float)i;
-		std::array<Bullet*, N> res = func();
-		for (Bullet* b : res) {
+		float mul = -(count - 1) / 2.0f + i;
+
+		auto res = func();
+
+		if constexpr (std::is_same_v<decltype(res), Bullet*>) {
+			Bullet* b = res;
+
 			b->dir += dir_diff * mul;
+
+			// Make sure there is no alignment.
+			ArenaPush(&w->temp_arena_for_boss, sizeof(instance_id), 1);
+			bullet_ids[num_bullet_ids] = b->id;
+			num_bullet_ids++;
+
+		} else if constexpr (std::is_same_v<decltype(res), Array<instance_id>>) {
+			For (it, res) {
+				Bullet* b = w->find_bullet(*it);
+				Assert(b);
+
+				b->dir += dir_diff * mul;
+
+				// Make sure there is no alignment.
+				ArenaPush(&w->temp_arena_for_boss, sizeof(instance_id), 1);
+				bullet_ids[num_bullet_ids] = b->id;
+				num_bullet_ids++;
+			}
+
+		} else {
+			Assert(false);
 		}
 	}
+
+	return {bullet_ids, num_bullet_ids};
 }
 
 static float DirToPlayer(Object* o) {

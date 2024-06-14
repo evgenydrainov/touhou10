@@ -4,7 +4,7 @@
 #include "cpml.h"
 
 void Particle_System::init() {
-	particles = array_from_arena<Particle>(&g->arena, MAX_PARTICLES);
+	particles = ArrayAllocFromArena<Particle>(&g->arena, MAX_PARTICLES);
 }
 
 void Particle_System::destroy() {}

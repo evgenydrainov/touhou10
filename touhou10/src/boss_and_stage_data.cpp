@@ -7,8 +7,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <array>
-
 #include "scripting.h"
 
 #include "boss_data_cirno.h"

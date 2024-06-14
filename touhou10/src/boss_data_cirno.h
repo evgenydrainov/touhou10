@@ -111,9 +111,12 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 #else
 static void Cirno_Nonspell_0(mco_coro* co) {
 	while (true) {
-		ShootRadial(10, 4, [&]() {
-			Wait(co, 1);
-			return Shoot(self, 4, DirToPlayer(self), 0, spr_bullet_pellet, 6);
+		ArenaClear(&w->temp_arena_for_boss);
+
+		ShootRadialA(5, 10, [&]() {
+			return ShootRadialA(2, 1, [&]() {
+				return Shoot(self, 3, DirToPlayer(self), 0, spr_bullet_pellet, 6);
+			});
 		});
 
 		Wait(co, 60);

@@ -16,6 +16,14 @@ static GLADapiproc glad_load_func(const char* name) {
 	return (GLADapiproc) SDL_GL_GetProcAddress(name);
 }
 
+// @Copy
+void _Assertion_Failed(const char* file, int line, const char* condition) {
+	char buf[256];
+	stb_snprintf(buf, sizeof(buf), "%s:%d:\n%s", file, line, condition);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion failed", buf, g->window);
+	exit(1);
+}
+
 #if TH_DEBUG
 static void GLAPIENTRY glDebugOutput(GLenum source,
 									 GLenum type,
@@ -137,7 +145,8 @@ void Game::init() {
 			+ MAX_ENEMIES        * sizeof(Enemy)
 			+ MAX_PICKUPS        * sizeof(Pickup)
 			+ MAX_ANIMATIONS     * sizeof(Animation)
-			+ MAX_PARTICLES      * sizeof(Particle);
+			+ MAX_PARTICLES      * sizeof(Particle)
+			+ TEMP_STORAGE_FOR_BOSS;
 
 		const size_t all_memory =
 			memory_for_renderer
@@ -426,14 +435,16 @@ void Game::draw(float delta) {
 							 "pickups: %zu / %zu\n"
 							 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
 							 "coroutine memory: " Size_Fmt "\n"
-							 "animations: %zu / %zu\n",
+							 "animations: %zu / %zu\n"
+							 "temp arena for boss: " Size_Fmt " / " Size_Fmt "\n",
 							 w->bullets.count, w->bullets.capacity,
 							 w->enemies.count, w->enemies.capacity,
 							 w->p_bullets.count, w->p_bullets.capacity,
 							 w->pickups.count, w->pickups.capacity,
 							 w->next_instance_id, (u64)UINT32_MAX,
 							 Size_Arg(w->coro_memory),
-							 w->animations.count, w->animations.capacity);
+							 w->animations.count, w->animations.capacity,
+							 Size_Arg(w->temp_arena_for_boss.offset), Size_Arg(w->temp_arena_for_boss.size));
 				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
 
 #define Object_Fmt "id: %" PRIX64 "\n"
