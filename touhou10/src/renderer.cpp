@@ -70,9 +70,13 @@ void Renderer::init() {
 		u32 shader_stage_0_bg_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_stage_0_bg_fragment_text);
 		Defer { glDeleteShader(shader_stage_0_bg_fragment); };
 
-		shader_texture_program    = link_program(shader_texture_vertex,    shader_texture_fragment);
-		shader_color_program      = link_program(shader_texture_vertex,    shader_color_fragment);
-		shader_stage_0_bg_program = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
+		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_sharp_bilinear_fragment_text);
+		Defer { glDeleteShader(shader_sharp_bilinear_fragment); };
+
+		shader_texture_program        = link_program(shader_texture_vertex,    shader_texture_fragment);
+		shader_color_program          = link_program(shader_texture_vertex,    shader_color_fragment);
+		shader_stage_0_bg_program     = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
+		shader_sharp_bilinear_program = link_program(shader_texture_vertex,    shader_sharp_bilinear_fragment);
 	}
 
 
@@ -218,6 +222,7 @@ void Renderer::destroy() {
 	glDeleteBuffers(1, &quad_vbo);
 	glDeleteVertexArrays(1, &quad_vao);
 
+	glDeleteProgram(shader_sharp_bilinear_program);
 	glDeleteProgram(shader_stage_0_bg_program);
 	glDeleteProgram(shader_color_program);
 	glDeleteProgram(shader_texture_program);
@@ -228,6 +233,10 @@ void Renderer::draw_texture(Texture* t, Rect src,
 							glm::vec2 origin, float angle, glm::vec4 color, glm::bvec2 flip) {
 
 	Assert(t);
+
+#if 1
+	pos = glm::floor(pos);
+#endif
 
 	if (src.w == 0 && src.h == 0) {
 		src.w = t->width;
@@ -244,13 +253,13 @@ void Renderer::draw_texture(Texture* t, Rect src,
 	{
 		float x1 = -origin.x;
 		float y1 = -origin.y;
-		float x2 = (float)src.w - origin.x;
-		float y2 = (float)src.h - origin.y;
+		float x2 = src.w - origin.x;
+		float y2 = src.h - origin.y;
 
-		float u1 = (float)src.x / (float)t->width;
-		float v1 = (float)src.y / (float)t->height;
-		float u2 = (float)(src.x + src.w) / (float)t->width;
-		float v2 = (float)(src.y + src.h) / (float)t->height;
+		float u1 =  src.x          / (float)t->width;
+		float v1 =  src.y          / (float)t->height;
+		float u2 = (src.x + src.w) / (float)t->width;
+		float v2 = (src.y + src.h) / (float)t->height;
 
 		if (flip.x) {
 			float temp = u1;
@@ -445,7 +454,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 
 	switch (valign) {
 		case VALIGN_MIDDLE:
-			y -= floorf(measure_text(font, text).y / 2.0f);
+			y -= measure_text(font, text).y / 2.0f;
 			break;
 		case VALIGN_BOTTOM:
 			y -= measure_text(font, text).y;
@@ -457,7 +466,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 
 	switch (halign) {
 		case HALIGN_CENTER:
-			ch_x -= floorf(measure_text(font, text, true).x / 2.0f);
+			ch_x -= measure_text(font, text, true).x / 2.0f;
 			break;
 		case HALIGN_RIGHT:
 			ch_x -= measure_text(font, text, true).x;
@@ -467,7 +476,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 	int ch;
 	for (const char* ptr = text; (ch = *ptr); ptr++) {
 		if (33 <= ch && ch <= 127) {
-			draw_sprite(font, ch - 32, {ch_x, ch_y});
+			draw_sprite(font, ch - 32, {floorf(ch_x), floorf(ch_y)});
 		}
 
 		ch_x += (float)font->width;
@@ -478,7 +487,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 
 			switch (halign) {
 				case HALIGN_CENTER:
-					ch_x -= floorf(measure_text(font, ptr + 1, true).x / 2.0f);
+					ch_x -= measure_text(font, ptr + 1, true).x / 2.0f;
 					break;
 				case HALIGN_RIGHT:
 					ch_x -= measure_text(font, ptr + 1, true).x;

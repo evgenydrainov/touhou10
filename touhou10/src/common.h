@@ -8,7 +8,7 @@
 // 
 
 #if !defined(TH_DEBUG)
-#error "You have to define TH_DEBUG as 1 or 0 whether this is a debug build."
+#error "You have to define TH_DEBUG as 1 or 0 whether this is a debug build. (-DTH_DEBUG=1)"
 #endif
 
 typedef uint8_t  u8;

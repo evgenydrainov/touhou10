@@ -53,6 +53,7 @@ struct Renderer {
 	u32 shader_texture_program;
 	u32 shader_color_program;
 	u32 shader_stage_0_bg_program;
+	u32 shader_sharp_bilinear_program;
 
 	u32 current_texture_shader;
 	u32 current_color_shader;

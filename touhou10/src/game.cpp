@@ -106,8 +106,8 @@ void Game::init() {
 		glBindTexture(GL_TEXTURE_2D, game_texture);
 		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_LINEAR for sharp bilinear shader
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -127,7 +127,7 @@ void Game::init() {
 	{
 		static_assert(NUM_TEXTURES == 7, "");
 
-		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png");
+		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                    true);
 		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                 true);
 		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png", true);
 		texture_data[tex_background]                  = load_texture("textures/background.png");
@@ -342,14 +342,13 @@ void Game::update(float delta) {
 }
 
 void Game::draw(float delta) {
-
 	double time = GetTime();
 
-	int draw_calls = r->draw_calls;
+	int draw_calls   = r->draw_calls;
 	size_t max_batch = r->max_batch;
 
 	r->draw_calls = 0;
-	r->max_batch = 0;
+	r->max_batch  = 0;
 
 	// 
 	// Render the game to a framebuffer.
@@ -387,11 +386,34 @@ void Game::draw(float delta) {
 		float game_texture_y = floorf((backbuffer_height - GAME_H * scale) / 2.0f);
 
 		{
+			u32 program = r->shader_sharp_bilinear_program;
+			u32 old_texture_shader = r->current_texture_shader;
+
+			r->current_texture_shader = program;
+			glUseProgram(program);
+
 			Texture t = {};
 			t.ID = game_texture;
 			t.width  = GAME_W;
 			t.height = GAME_H;
+
+			{
+				int u_source_size = glGetUniformLocation(program, "u_SourceSize");
+				glUniform2f(u_source_size, t.width, t.height);
+			}
+
+			{
+				float int_scale = max(floorf(scale), 1.0f);
+
+				int u_scale = glGetUniformLocation(program, "u_Scale");
+				glUniform2f(u_scale, int_scale, int_scale);
+			}
+
 			r->draw_texture(&t, {}, {game_texture_x, game_texture_y}, {scale, scale}, {}, 0, color_white, {false, true});
+
+			r->break_batch();
+
+			r->current_texture_shader = old_texture_shader;
 		}
 
 		auto world_to_screen_x = [&](float x) {
@@ -626,8 +648,8 @@ Texture load_texture(const char* fname, bool filter) {
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR : GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		Assert(num_channels == 4);
 

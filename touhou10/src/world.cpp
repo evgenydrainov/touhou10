@@ -209,34 +209,13 @@ void World::physics_update(float delta) {
 						get_power(1);
 						get_score(10);
 						break;
-
-					case PICKUP_TYPE_POINT:
-						get_points(1);
-						break;
-
-					case PICKUP_TYPE_POWER_BIG:
-						get_power(8);
-						break;
-
-					case PICKUP_TYPE_POINT_BIG:
-						get_points(8);
-						break;
-
-					case PICKUP_TYPE_BOMB:
-						get_bombs(1);
-						break;
-
-					case PICKUP_TYPE_LIFE:
-						get_lives(1);
-						break;
-
-					case PICKUP_TYPE_SCORE:
-						get_score(10);
-						break;
-
-					case PICKUP_TYPE_FULL_POWER:
-						get_power(MAX_POWER);
-						break;
+					case PICKUP_TYPE_POINT:      get_points(1);        break;
+					case PICKUP_TYPE_POWER_BIG:  get_power(8);         break;
+					case PICKUP_TYPE_POINT_BIG:  get_points(8);        break;
+					case PICKUP_TYPE_BOMB:       get_bombs(1);         break;
+					case PICKUP_TYPE_LIFE:       get_lives(1);         break;
+					case PICKUP_TYPE_SCORE:      get_score(10);        break;
+					case PICKUP_TYPE_FULL_POWER: get_power(MAX_POWER); break;
 				}
 
 				play_sound(snd_pickup);
@@ -250,6 +229,14 @@ void World::physics_update(float delta) {
 
 static bool out_of_bounds(float x, float y, float off = 50.0f) {
 	if (x < -off || y < -off || x > PLAY_AREA_W + off || y > PLAY_AREA_H + off) {
+		return true;
+	}
+	return false;
+}
+
+// Ignore the upper bound for pickups
+static bool out_of_bounds_ignore_upper(float x, float y, float off = 50.0f) {
+	if (x < -off || x > PLAY_AREA_W + off || y > PLAY_AREA_H + off) {
 		return true;
 	}
 	return false;
@@ -273,7 +260,7 @@ void drop_pickup(float x, float y, PickupType type) {
 	w->pickups.add(p);
 }
 
-static void drop_pickups(int drops, float x, float y) {
+static void enemy_drop_pickups(int drops, float x, float y) {
 	// 
 	// All possible enemy drops
 	// 
@@ -319,7 +306,7 @@ void World::update(float delta) {
 			}
 
 			if (e->hp <= 0) {
-				drop_pickups(e->drops, e->x, e->y);
+				enemy_drop_pickups(e->drops, e->x, e->y);
 
 				if (e->death_callback) {
 					e->death_callback(e);
@@ -422,7 +409,7 @@ void World::update(float delta) {
 		}
 
 		For (p, pickups) {
-			if (out_of_bounds(p->x, p->y)) {
+			if (out_of_bounds_ignore_upper(p->x, p->y)) {
 				object_cleanup(p);
 				Remove(p, pickups);
 				continue;
@@ -564,7 +551,13 @@ void World::draw(float delta) {
 	glViewport(0, 0, GAME_W, GAME_H);
 	r->proj = glm::ortho(0.0f, (float)GAME_W, (float)GAME_H, 0.0f);
 
-	r->draw_texture(GetTexture(tex_background));
+	// Draw background
+	{
+		Rect src = {0, 0, GAME_W, GAME_H};
+		r->draw_texture(GetTexture(tex_background), src);
+
+		r->break_batch();
+	}
 
 	// 
 	// Draw UI.
@@ -604,10 +597,14 @@ void World::draw(float delta) {
 		y += 16;
 	}
 
+	// Draw enemy label
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		float x = PLAY_AREA_X + boss.x;
 		float y = PLAY_AREA_Y + PLAY_AREA_H;
-		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y});
+
+		glm::vec4 color = {1, 1, 1, 0.5f};
+
+		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
 	}
 
 	r->break_batch();
@@ -683,7 +680,9 @@ void World::draw(float delta) {
 		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
 
 		if (p->y < 0) {
-			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8});
+			glm::vec4 color = {1, 1, 1, 0.5f};
+
+			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8}, {1, 1}, 0, color);
 		}
 	}
 
