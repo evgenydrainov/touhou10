@@ -125,7 +125,7 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 7, "");
+		static_assert(NUM_TEXTURES == 8, "");
 
 		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                    true);
 		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                 true);
@@ -133,6 +133,7 @@ void Game::init() {
 		texture_data[tex_background]                  = load_texture("textures/background.png");
 		texture_data[tex_white]                       = load_texture("textures/white.png");
 		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png");
+		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png");
 		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
 	}
 
@@ -399,7 +400,7 @@ void Game::draw(float delta) {
 
 			{
 				int u_source_size = glGetUniformLocation(program, "u_SourceSize");
-				glUniform2f(u_source_size, t.width, t.height);
+				glUniform2f(u_source_size, (float)t.width, (float)t.height);
 			}
 
 			{

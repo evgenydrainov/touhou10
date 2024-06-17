@@ -56,6 +56,7 @@ struct World {
 	Arena_Backed_Array<Animation> animations;
 	Particle_System part_sys;
 	Arena temp_arena_for_boss;
+	float delta_multiplier = 1;
 
 	bool show_hitboxes;
 	size_t coro_memory;
@@ -64,8 +65,8 @@ struct World {
 	void destroy();
 
 	void physics_update(float delta);
-	void update(float delta);
-	void draw(float delta);
+	void update(float delta_not_modified);
+	void draw(float delta_not_modified);
 
 	instance_id get_instance_id(ObjType type);
 

@@ -281,7 +281,9 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 	}
 }
 
-void World::update(float delta) {
+void World::update(float delta_not_modified) {
+
+	float delta = delta_not_modified * delta_multiplier;
 
 	// Update
 	{
@@ -546,7 +548,9 @@ void World::update(float delta) {
 
 }
 
-void World::draw(float delta) {
+void World::draw(float delta_not_modified) {
+
+	float delta = delta_not_modified * delta_multiplier;
 
 	glViewport(0, 0, GAME_W, GAME_H);
 	r->proj = glm::ortho(0.0f, (float)GAME_W, (float)GAME_H, 0.0f);
@@ -635,7 +639,14 @@ void World::draw(float delta) {
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		Boss* b = &boss;
 
-		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y});
+		float x = b->x;
+		float y = b->y;
+
+		if (b->spd <= BOSS_MOVE_THRESHOLD_VISUAL) {
+			y += 2 * sinf(SDL_GetTicks() / 200.0f);
+		}
+
+		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {x, y});
 	}
 
 	For (e, enemies) {

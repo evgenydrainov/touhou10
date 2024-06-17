@@ -249,3 +249,8 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 
 	return w->enemies.add(e);
 }
+
+// Returns number of frames
+static int seconds(float sec) {
+	return (int) (sec * 60.0f);
+}

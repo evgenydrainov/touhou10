@@ -47,7 +47,7 @@ void boss_update(Boss* b, float delta) {
 
 	BossData* data = b->GetData();
 
-	if (b->spd > 0.01f) {
+	if (b->spd > BOSS_MOVE_THRESHOLD_VISUAL) {
 		if (90.0f <= b->dir && b->dir < 270.0f) {
 			if (b->sprite_index != data->spr_left) {
 				b->sprite_index = data->spr_left;
@@ -86,6 +86,7 @@ void boss_start_phase(Boss* b) {
 		Animation a = {};
 		a.data = &anim_boss_spellcard;
 		a.speed = 0.75f;
+		anim_boss_spellcard.sprite_tracks[0].texture_index = b->GetData()->portrait_texture; // @Hack
 		w->animations.add(a);
 	} else {
 		b->wait_timer = BOSS_PHASE_START_TIME_NONSPELL;

@@ -99,6 +99,8 @@ void player_draw(Player* p, float delta);
 
 DEFINE_NAMED_ENUM(BossState, BOSS_STATE_ENUM)
 
+#define BOSS_MOVE_THRESHOLD_VISUAL 0.01f
+
 struct Boss : Object {
 	u32 boss_index;
 	BossState state;

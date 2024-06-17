@@ -106,6 +106,10 @@ static Create_Sprite create_sprites[] = {
 
 	{"spr_boss_daiyousei_idle","Enemies.png",     288, 496, 48, 48, 24, 24,  1,  1, 0.00f,  0, 48, 48},
 
+	{"spr_boss_youmu_idle",    "boss_youmu.png",  176, 160, 48, 64, 24, 32,  4,  4, 0.10f},
+	{"spr_boss_youmu_left",    "boss_youmu.png",  176, 224, 48, 64, 24, 32,  4,  4, 0.15f,  3},
+	{"spr_boss_youmu_right",   "boss_youmu.png",  176, 288, 48, 64, 24, 32,  4,  4, 0.15f,  3},
+
 	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
 	{"spr_fairy_0",            "Enemies.png",     288, 288, 32, 32, 16, 16, 8,   8, 0.10f},
 	{"spr_fairy_1",            "Enemies.png",     288, 320, 32, 32, 16, 16, 8,   8, 0.10f},

@@ -50,6 +50,7 @@ struct xoshiro128plus {
 
 	// 
 	// [a, b)
+	// Lower bound inclusive, upper bound exclusive.
 	// 
 	float rangef(float a, float b) {
 		uint32_t x = next();

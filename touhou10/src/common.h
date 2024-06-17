@@ -61,7 +61,7 @@ void _Assertion_Failed(const char* file, int line, const char* condition);
 
 #define For(it, arr) for (auto it = arr.begin(); it != arr.end(); it++)
 #define Remove(it, arr) (it = arr.remove(it), it--)
-#define Repeat(n) for (int CONCAT(_i_, __LINE__) = (n); CONCAT(_i_, __LINE__)--;)
+#define Repeat(n) for (int CONCAT(_i_, __LINE__) = (int)(n); CONCAT(_i_, __LINE__)--;)
 
 #define CONCAT_INTERNAL(x, y) x##y
 #define CONCAT(x, y) CONCAT_INTERNAL(x, y)

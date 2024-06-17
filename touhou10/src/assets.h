@@ -26,6 +26,7 @@ enum {
 	tex_background,
 	tex_white,
 	tex_boss_cirno_portrait,
+	tex_boss_youmu_portrait,
 	tex_spellcard_attack_anim_label,
 
 	NUM_TEXTURES,
@@ -136,6 +137,7 @@ struct BossData {
 	u32 spr_left;
 	u32 spr_right;
 	void (*draw_spellcard_background)(float delta);
+	u32 portrait_texture; // @Temp? The portrait used in spellcard animation.
 };
 
 #define BOSS_INDEX_ENUM(X) \

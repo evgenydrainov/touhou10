@@ -52,10 +52,17 @@ struct Arena_Backed_Array {
 	T* end()   { return data + count; }
 
 	T* add(const T& val) {
-		Assert(count < capacity);
+		Assert(count <= capacity);
+
+		// Replace the last element instead of crashing?
+		if (count == capacity) {
+			count--;
+		}
+
 		data[count] = val;
 		T* result = &data[count];
 		count++;
+
 		return result;
 	}
 
