@@ -163,7 +163,7 @@ void Renderer::init() {
 			static_assert(memory_for_indices <= memory_for_vertices, "there's not gonna be enough memory in the arena");
 		}
 
-		size_t arena_pos = ArenaGetPos(&g->arena);
+		size_t arena_pos = g->arena.count;
 
 		auto indices = PushArray<u32>(&g->arena, BATCH_MAX_INDICES);
 
@@ -184,7 +184,7 @@ void Renderer::init() {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch_ebo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices.data, GL_STATIC_DRAW);
 
-		ArenaSetPosBack(&g->arena, arena_pos);
+		g->arena.count = arena_pos;
 
 		// 4. then set the vertex attributes pointers
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)); // position
@@ -449,8 +449,8 @@ void Renderer::draw_circle(glm::vec2 pos, float radius, glm::vec4 color, int pre
 	}
 }
 
-glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
-							  HAlign halign, VAlign valign) {
+glm::vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
+							  HAlign halign, VAlign valign, glm::vec4 color) {
 
 	switch (valign) {
 		case VALIGN_MIDDLE:
@@ -473,10 +473,11 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 			break;
 	}
 
-	int ch;
-	for (const char* ptr = text; (ch = *ptr); ptr++) {
+	for (size_t i = 0; i < text.count; i++) {
+		int ch = text[i];
+
 		if (33 <= ch && ch <= 127) {
-			draw_sprite(font, ch - 32, {floorf(ch_x), floorf(ch_y)});
+			draw_sprite(font, ch - 32, {floorf(ch_x), floorf(ch_y)}, {1, 1}, 0, color);
 		}
 
 		ch_x += (float)font->width;
@@ -487,10 +488,10 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 
 			switch (halign) {
 				case HALIGN_CENTER:
-					ch_x -= measure_text(font, ptr + 1, true).x / 2.0f;
+					ch_x -= measure_text(font, {text.data + i + 1, text.count - i - 1}, true).x / 2.0f;
 					break;
 				case HALIGN_RIGHT:
-					ch_x -= measure_text(font, ptr + 1, true).x;
+					ch_x -= measure_text(font, {text.data + i + 1, text.count - i - 1}, true).x;
 					break;
 			}
 		}
@@ -499,16 +500,16 @@ glm::vec2 Renderer::draw_text(Sprite* font, const char* text, float x, float y,
 	return {ch_x, ch_y};
 }
 
-glm::vec2 Renderer::measure_text(Sprite* font, const char* text, bool only_one_line) {
-
+glm::vec2 Renderer::measure_text(Sprite* font, String text, bool only_one_line) {
 	float w = 0;
 	float h = (float)font->height;
 
 	float ch_x = 0;
 	float ch_y = 0;
 
-	int ch;
-	for (const char* ptr = text; (ch = *ptr); ptr++) {
+	for (size_t i = 0; i < text.count; i++) {
+		int ch = text[i];
+
 		if (33 <= ch && ch <= 127) {
 			w = max(w, ch_x + (float)font->width);
 			h = max(h, ch_y + (float)font->height);

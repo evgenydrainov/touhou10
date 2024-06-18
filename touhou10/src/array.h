@@ -8,7 +8,7 @@
 // 
 template <typename T>
 struct Array {
-	T* data;
+	T*     data;
 	size_t count;
 
 	T& operator[](size_t i) {
@@ -39,7 +39,7 @@ static Array<T> PushArray(Arena* a, size_t count) {
 // 
 template <typename T>
 struct Arena_Backed_Array {
-	T* data;
+	T*     data;
 	size_t count;
 	size_t capacity;
 
@@ -83,6 +83,6 @@ struct Arena_Backed_Array {
 
 template <typename T>
 static Arena_Backed_Array<T> ArrayAllocFromArena(Arena* a, size_t capacity) {
-	T* data = PushStructN(a, T, capacity);
+	T* data = PushStructN<T>(a, capacity);
 	return {data, 0, capacity};
 }

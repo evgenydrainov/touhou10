@@ -200,8 +200,15 @@ void Game::init() {
 	r = &renderer;
 	r->init();
 
+	// 
+	// Arena will be reset to this position when game state changes.
+	// 
+	arena_pos_save = arena.count;
+
 	w = &world;
-	w->init();
+
+	state = STATE_TITLE_SCREEN;
+	title_screen.init();
 
 	music = Mix_LoadMUS("music/dbu_the_foolish_girl.mp3");
 	Mix_PlayMusic(music, -1);
@@ -211,7 +218,10 @@ void Game::destroy() {
 
 	Mix_FreeMusic(music);
 
-	w->destroy();
+	switch (state) {
+		case STATE_TITLE_SCREEN: title_screen.destroy(); break;
+		case STATE_PLAYING:      w->destroy();           break;
+	}
 
 	r->destroy();
 
@@ -334,10 +344,38 @@ void Game::update(float delta) {
 	double time = GetTime();
 
 	if (!skip_frame) {
-		w->update(delta);
+		switch (state) {
+			case STATE_TITLE_SCREEN: title_screen.update(delta); break;
+			case STATE_PLAYING:      w->update(delta);           break;
+		}
 	}
 
 	console.update(delta);
+
+	if (next_state != STATE_NONE) {
+		switch (state) {
+			case STATE_TITLE_SCREEN: title_screen.destroy(); break;
+			case STATE_PLAYING:      w->destroy();           break;
+		}
+
+		state      = next_state;
+		next_state = STATE_NONE;
+
+		// Restore arena position
+		arena.count = arena_pos_save;
+
+		switch (state) {
+			case STATE_TITLE_SCREEN:
+				title_screen = {};
+				title_screen.init();
+				break;
+
+			case STATE_PLAYING:
+				*w = {};
+				w->init();
+				break;
+		}
+	}
 
 	update_took = GetTime() - time;
 }
@@ -361,8 +399,12 @@ void Game::draw(float delta) {
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Projection matrix will change after this call
-		w->draw(delta);
+		switch (state) {
+			case STATE_TITLE_SCREEN: title_screen.draw(delta); break;
+			case STATE_PLAYING:
+				w->draw(delta); // Projection matrix will change after this call
+				break;
+		}
 	}
 
 	int backbuffer_width;
@@ -426,48 +468,48 @@ void Game::draw(float delta) {
 		};
 
 		if (show_debug_info) {
-			char buf[256];
-			stb_snprintf(buf, sizeof(buf),
-						 "fps: %.2f\n"
-						 "update: %.2fms\n"
-						 "draw: %.2fms\n"
-						 "arena: " Size_Fmt " / " Size_Fmt "\n"
-						 "frame arena: " Size_Fmt " / " Size_Fmt "\n"
-						 "draw calls: %d\n"
-						 "max batch: %zu / %zu\n"
+			Static_String<256> buf;
+			Sprintf(&buf,
+					"fps: %.2f\n"
+					"update: %.2fms\n"
+					"draw: %.2fms\n"
+					"arena: " Size_Fmt " / " Size_Fmt "\n"
+					"frame arena: " Size_Fmt " / " Size_Fmt "\n"
+					"draw calls: %d\n"
+					"max batch: %zu / %zu\n"
 #if TH_DEBUG
-						 "COMPILED WITH DEBUG\n"
+					"COMPILED WITH DEBUG\n"
 #endif
-						 "__cplusplus=%ld\n",
-						 fps,
-						 update_took * 1000.0,
-						 draw_took * 1000.0,
-						 Size_Arg(arena.offset), Size_Arg(arena.size),
-						 Size_Arg(frame_arena.offset), Size_Arg(frame_arena.size),
-						 draw_calls,
-						 max_batch, BATCH_MAX_VERTICES,
-						 __cplusplus);
+					"__cplusplus=%ld\n",
+					fps,
+					update_took * 1000.0,
+					draw_took * 1000.0,
+					Size_Arg(arena.count),       Size_Arg(arena.capacity),
+					Size_Arg(frame_arena.count), Size_Arg(frame_arena.capacity),
+					draw_calls,
+					max_batch, BATCH_MAX_VERTICES,
+					__cplusplus);
 			glm::vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
 
-			/*if (in play state)*/ {
-				char buf[256];
-				stb_snprintf(buf, sizeof(buf),
-							 "bullets: %zu / %zu\n"
-							 "enemies: %zu / %zu\n"
-							 "player bullets: %zu / %zu\n"
-							 "pickups: %zu / %zu\n"
-							 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
-							 "coroutine memory: " Size_Fmt "\n"
-							 "animations: %zu / %zu\n"
-							 "temp arena for boss: " Size_Fmt " / " Size_Fmt "\n",
-							 w->bullets.count, w->bullets.capacity,
-							 w->enemies.count, w->enemies.capacity,
-							 w->p_bullets.count, w->p_bullets.capacity,
-							 w->pickups.count, w->pickups.capacity,
-							 w->next_instance_id, (u64)UINT32_MAX,
-							 Size_Arg(w->coro_memory),
-							 w->animations.count, w->animations.capacity,
-							 Size_Arg(w->temp_arena_for_boss.offset), Size_Arg(w->temp_arena_for_boss.size));
+			if (state == STATE_PLAYING) {
+				Static_String<256> buf;
+				Sprintf(&buf,
+						"bullets: %zu / %zu\n"
+						"enemies: %zu / %zu\n"
+						"player bullets: %zu / %zu\n"
+						"pickups: %zu / %zu\n"
+						"next instance id: %" PRIX64 " / %" PRIX64 "\n"
+						"coroutine memory: " Size_Fmt "\n"
+						"animations: %zu / %zu\n"
+						"temp arena for boss: " Size_Fmt " / " Size_Fmt "\n",
+						w->bullets.count,   w->bullets.capacity,
+						w->enemies.count,   w->enemies.capacity,
+						w->p_bullets.count, w->p_bullets.capacity,
+						w->pickups.count,   w->pickups.capacity,
+						w->next_instance_id, (u64)UINT32_MAX,
+						Size_Arg(w->coro_memory),
+						w->animations.count, w->animations.capacity,
+						Size_Arg(w->temp_arena_for_boss.count), Size_Arg(w->temp_arena_for_boss.capacity));
 				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
 
 #define Object_Fmt "id: %" PRIX64 "\n"
@@ -477,20 +519,20 @@ void Game::draw(float delta) {
 				{
 					Player* p = &w->player;
 
-					char buf[256];
-					stb_snprintf(buf, sizeof(buf),
-								 Object_Fmt
-								 "state: %s\n"
-								 "focused: %d\n"
-								 "iframes: %f\n"
-								 "timer: %f\n"
-								 "bomb_timer: %f\n",
-								 Object_Arg(p),
-								 GetPlayerStateName(p->state),
-								 p->focused,
-								 p->iframes,
-								 p->timer,
-								 p->bomb_timer);
+					Static_String<256> buf;
+					Sprintf(&buf,
+							Object_Fmt
+							"state: %s\n"
+							"focused: %d\n"
+							"iframes: %f\n"
+							"timer: %f\n"
+							"bomb_timer: %f\n",
+							Object_Arg(p),
+							GetPlayerStateName(p->state),
+							p->focused,
+							p->iframes,
+							p->timer,
+							p->bomb_timer);
 					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(p->x), world_to_screen_y(p->y));
 				}
 
@@ -498,22 +540,22 @@ void Game::draw(float delta) {
 
 					Boss* b = &w->boss;
 
-					char buf[256];
-					stb_snprintf(buf, sizeof(buf),
-								 Object_Fmt
-								 "boss_index: %s\n"
-								 "state: %s\n"
-								 "phase_index: %d\n"
-								 "hp: %f\n"
-								 "timer: %f\n"
-								 "wait_timer: %f\n",
-								 Object_Arg(b),
-								 GetBossIndexName((BossIndex)b->boss_index),
-								 GetBossStateName(b->state),
-								 b->phase_index,
-								 b->hp,
-								 b->timer,
-								 b->wait_timer);
+					Static_String<256> buf;
+					Sprintf(&buf,
+							Object_Fmt
+							"boss_index: %s\n"
+							"state: %s\n"
+							"phase_index: %d\n"
+							"hp: %f\n"
+							"timer: %f\n"
+							"wait_timer: %f\n",
+							Object_Arg(b),
+							GetBossIndexName((BossIndex)b->boss_index),
+							GetBossStateName(b->state),
+							b->phase_index,
+							b->hp,
+							b->timer,
+							b->wait_timer);
 					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(b->x), world_to_screen_y(b->y));
 				}
 			}

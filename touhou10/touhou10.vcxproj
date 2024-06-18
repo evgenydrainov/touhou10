@@ -184,7 +184,6 @@
   <ItemGroup>
     <ClCompile Include="src\animation.cpp" />
     <ClCompile Include="src\anim_data_boss_spellcard_anim.cpp" />
-    <ClCompile Include="src\arena.cpp" />
     <ClCompile Include="src\assets.cpp" />
     <ClCompile Include="src\boss.cpp" />
     <ClCompile Include="src\boss_and_stage_data.cpp" />
@@ -204,6 +203,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\title_screen.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -227,6 +227,8 @@
     <ClInclude Include="src\stage_0_data.h" />
     <ClInclude Include="src\stage_1_data.h" />
     <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\strings.h" />
+    <ClInclude Include="src\title_screen.h" />
     <ClInclude Include="src\world.h" />
     <ClInclude Include="src\xoshiro128plus.h" />
   </ItemGroup>

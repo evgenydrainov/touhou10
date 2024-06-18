@@ -148,13 +148,67 @@ static void Stage_0_Draw_Background(float delta) {
 		glBindVertexArray(0);
 	}
 
+	// Init
+	static glm::vec3 cam_pos = {0, 10, 0};
+	static float pitch = 0;
+	static float yaw   = 0;
+
+	// Capture mouse
+	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+		SDL_SetRelativeMouseMode((SDL_bool) !SDL_GetRelativeMouseMode());
+	}
+
+	int mouse_x = 0;
+	int mouse_y = 0;
+
+	SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+
+	// Move if captured
+	if (SDL_GetRelativeMouseMode()) {
+		pitch -= mouse_y / 5.0f;
+		yaw   += mouse_x / 5.0f;
+
+		float spd = 0.5f;
+
+		if (is_key_held(SDL_SCANCODE_W)) {
+			cam_pos.x += spd * cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+			cam_pos.y += spd * sinf(glm::radians(pitch));
+			cam_pos.z += spd * sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+		}
+
+		if (is_key_held(SDL_SCANCODE_S)) {
+			cam_pos.x -= spd * cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+			cam_pos.y -= spd * sinf(glm::radians(pitch));
+			cam_pos.z -= spd * sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+		}
+
+		if (is_key_held(SDL_SCANCODE_A)) {
+			cam_pos.z += spd * sinf(glm::radians(yaw - 90));
+			cam_pos.x += spd * cosf(glm::radians(yaw - 90));
+		}
+
+		if (is_key_held(SDL_SCANCODE_D)) {
+			cam_pos.z += spd * sinf(glm::radians(yaw + 90));
+			cam_pos.x += spd * cosf(glm::radians(yaw + 90));
+		}
+	}
+
+	pitch = clamp(pitch, -89.0f, 89.0f);
+	yaw   = wrapf(yaw, 360.0f);
+
+	glm::vec3 direction;
+	direction.x = cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+	direction.y = sinf(glm::radians(pitch));
+	direction.z = sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+
 	{
 		u32 program = r->shader_stage_0_bg_program;
 
 		glUseProgram(program);
 
 		glm::mat4 model = {1};
-		glm::mat4 view = glm::lookAt(glm::vec3{0, 10, 0}, glm::vec3{0, 0, -10}, glm::vec3{0, 1, 0});
+		// glm::mat4 view = glm::lookAt(glm::vec3{0, 10, 0}, glm::vec3{0, 0, -10}, glm::vec3{0, 1, 0});
+		glm::mat4 view = glm::lookAt(cam_pos, cam_pos + direction, glm::vec3{0, 1, 0});
 		glm::mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
 
 		glm::mat4 MVP = (proj * view) * model;

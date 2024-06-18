@@ -18,7 +18,7 @@
 
 static_assert(NUM_BOSSES == 3, "");
 
-BossData boss_data[] = {
+BossData boss_data[NUM_BOSSES] = {
 	{
 		/* .name                      = */ "Cirno",
 		/* .phases                    = */ boss_cirno_phases,
@@ -60,7 +60,9 @@ BossData* GetBossData(u32 boss_index) {
 	return &boss_data[boss_index];
 }
 
-StageData stage_data[] = {
+static_assert(STAGE_COUNT == 2, "");
+
+StageData stage_data[STAGE_COUNT] = {
 	{
 		/* .script          = */ Stage_0_Script,
 		/* .draw_background = */ Stage_0_Draw_Background,

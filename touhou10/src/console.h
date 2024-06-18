@@ -1,23 +1,26 @@
 #pragma once
 
-#include <SDL.h>
+#include "common.h"
+#include "strings.h"
+
+union SDL_Event;
 
 struct Console {
 	bool show;
-	char cmd[32];
-	size_t caret;
-	static char text[1024];
-	size_t text_pos;
+
+	Static_String<32> user_input_line;
+	Static_String<32> user_input_line_prev;
+
+	static Static_String<1024> history;
+
 	float scroll;
-	char prev_cmd[32];
-	size_t prev_caret;
 
 	void update(float delta);
 	void event(SDL_Event* ev);
 	void execute();
+
 	void write(char ch);
-	void write(const char* buf, size_t size);
-	void write(const char* buf);
+	void write(String str);
 
 	void draw(float delta);
 };

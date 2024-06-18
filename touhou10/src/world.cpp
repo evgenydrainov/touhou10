@@ -5,7 +5,6 @@
 
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb/stb_sprintf.h>
 
 World* w;
 
@@ -31,12 +30,12 @@ void World::init() {
 	bullets    = ArrayAllocFromArena<Bullet>       (&g->arena, MAX_BULLETS);
 	p_bullets  = ArrayAllocFromArena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
 	pickups    = ArrayAllocFromArena<Pickup>       (&g->arena, MAX_PICKUPS);
-	animations = ArrayAllocFromArena<Animation>    (&g->arena, MAX_PICKUPS);
+	animations = ArrayAllocFromArena<Animation>    (&g->arena, MAX_ANIMATIONS);
 
 	part_sys.init();
 
 	{
-		mco_desc desc = mco_desc_init(GetStageData(stage_index)->script, 0);
+		mco_desc desc = mco_desc_init(GetStageData(g->stage_index)->script, 0);
 		mco_create(&co, &desc);
 	}
 
@@ -570,33 +569,33 @@ void World::draw(float delta_not_modified) {
 		float x = PLAY_AREA_X + PLAY_AREA_W + 16;
 		float y = PLAY_AREA_Y + 32;
 
-		char buf[64];
+		Static_String<64> buf;
 
-		stb_snprintf(buf, sizeof(buf), "HiScore %d", 0);
+		Sprintf(&buf, "HiScore %d", 0);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		stb_snprintf(buf, sizeof(buf), "Score %d", g->stats.score);
+		Sprintf(&buf, "Score %d", g->stats.score);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16 * 2;
 
-		stb_snprintf(buf, sizeof(buf), "Player %d", g->stats.lives);
+		Sprintf(&buf, "Player %d", g->stats.lives);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		stb_snprintf(buf, sizeof(buf), "Bomb %d", g->stats.bombs);
+		Sprintf(&buf, "Bomb %d", g->stats.bombs);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16 * 2;
 
-		stb_snprintf(buf, sizeof(buf), "Power %d", g->stats.power);
+		Sprintf(&buf, "Power %d", g->stats.power);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		stb_snprintf(buf, sizeof(buf), "Graze %d", g->stats.graze);
+		Sprintf(&buf, "Graze %d", g->stats.graze);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 
-		stb_snprintf(buf, sizeof(buf), "Point %d", g->stats.points);
+		Sprintf(&buf, "Point %d", g->stats.points);
 		r->draw_text(GetSprite(spr_font_main), buf, x, y);
 		y += 16;
 	}
@@ -617,7 +616,7 @@ void World::draw(float delta_not_modified) {
 	r->proj = glm::ortho(0.0f, (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.0f);
 
 	if (boss_spellcard_background_alpha < 1) {
-		StageData* stage = GetStageData(stage_index);
+		StageData* stage = GetStageData(g->stage_index);
 		if (stage->draw_background) {
 			stage->draw_background(delta);
 		}
@@ -768,15 +767,15 @@ void World::draw(float delta_not_modified) {
 
 		// Draw phase count
 		{
-			char buf[10];
-			stb_snprintf(buf, sizeof(buf), "%d", data->phase_count - b->phase_index - 1);
+			Static_String<10> buf;
+			Sprintf(&buf, "%d", data->phase_count - b->phase_index - 1);
 			r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
 		}
 
 		// Draw timer
 		{
-			char buf[10];
-			stb_snprintf(buf, sizeof(buf), "%d", (int)b->timer / 60);
+			Static_String<10> buf;
+			Sprintf(&buf, "%d", (int)b->timer / 60);
 			r->draw_text(GetSprite(spr_font_main), buf, PLAY_AREA_W, 0, HALIGN_RIGHT);
 		}
 

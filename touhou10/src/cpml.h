@@ -88,3 +88,8 @@ static float lengthdir_y(float len, float dir) {
 static float wrapf(float a, float b) {
 	return fmodf((fmodf(a, b) + b), b);
 }
+
+template <typename T>
+static T wrap(T a, T b) {
+	return ((a % b) + b) % b;
+}

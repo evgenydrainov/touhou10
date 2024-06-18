@@ -6,6 +6,7 @@
 #include "arena.h"
 #include "renderer.h"
 #include "world.h"
+#include "title_screen.h"
 #include "console.h"
 
 #define GAME_W 640
@@ -36,6 +37,13 @@ struct Stats {
 };
 
 struct Game {
+
+	enum State {
+		STATE_NONE,
+		STATE_TITLE_SCREEN,
+		STATE_PLAYING,
+	};
+
 	SDL_Window* window;
 
 	Renderer renderer;
@@ -45,11 +53,20 @@ struct Game {
 
 	SDL_GLContext gl_context;
 
-	World world;
+	State state;
+	State next_state;
+
+	union {
+		Title_Screen title_screen = {};
+		World world;
+	};
+
 	Stats stats;
+	u32 stage_index;
 
 	Arena arena;
 	Arena frame_arena;
+	size_t arena_pos_save;
 
 	Mix_Music* music;
 

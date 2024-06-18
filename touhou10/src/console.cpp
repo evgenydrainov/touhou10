@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-char Console::text[1024];
+Static_String<1024> Console::history;
 
 void Console::update(float delta) {
 	if (!show) {
@@ -22,34 +22,33 @@ void Console::event(SDL_Event* ev) {
 			if (show) {
 				if (scancode == SDL_SCANCODE_GRAVE) {
 					show = false;
-				} else if (scancode == SDL_SCANCODE_BACKSPACE) {
-					if (caret > 0) {
-						cmd[caret - 1] = 0;
-						caret--;
-					}
-				} else if (scancode == SDL_SCANCODE_RETURN) {
-					static_assert(sizeof(prev_cmd) == sizeof(cmd), "");
-					memcpy(prev_cmd, cmd, sizeof(cmd));
-					prev_caret = caret;
 
-					write(cmd, caret);
+				} else if (scancode == SDL_SCANCODE_BACKSPACE) {
+					if (user_input_line.count > 0) {
+						user_input_line.count--;
+					}
+
+				} else if (scancode == SDL_SCANCODE_RETURN) {
+					user_input_line_prev = user_input_line;
+
+					write(user_input_line);
 					write('\n');
+
 					execute();
-					cmd[0] = 0;
-					caret = 0;
+
+					user_input_line.count = 0;
+
 				} else if (scancode == SDL_SCANCODE_UP) {
-					static_assert(sizeof(prev_cmd) == sizeof(cmd), "");
-					memcpy(cmd, prev_cmd, sizeof(cmd));
-					caret = prev_caret;
+					user_input_line = user_input_line_prev;
+
 				} else if (scancode == SDL_SCANCODE_DOWN) {
-					cmd[0] = 0;
-					caret = 0;
+					user_input_line.count = 0;
+
 				}
 			} else {
 				if (scancode == SDL_SCANCODE_GRAVE) {
 					show = true;
-					cmd[0] = 0;
-					caret = 0;
+					user_input_line.count = 0;
 					scroll = 0;
 				}
 			}
@@ -61,10 +60,8 @@ void Console::event(SDL_Event* ev) {
 
 			if (show) {
 				if (ch != '`' && ch >= 32 && ch <= 127) {
-					if (caret < ArrayLength(cmd) - 1) {
-						cmd[caret] = ch;
-						cmd[caret + 1] = 0;
-						caret++;
+					if (user_input_line.count < user_input_line.capacity) {
+						user_input_line.data[user_input_line.count++] = ch;
 					}
 				}
 			}
@@ -82,73 +79,84 @@ void Console::event(SDL_Event* ev) {
 }
 
 void Console::execute() {
-	if ((cmd[0] == 'h' && cmd[1] == 0) || strcmp(cmd, "help") == 0) {
-		char buf[] = R"(Commands:
+	String str = user_input_line;
+
+	String command = eat_next_token(&str);
+
+	if (command == "h" || command == "help") {
+		String s = R"(Commands:
 skip - Skips boss's phase
 full_power - Get full power
 life - Get a life
 kill_player - Kills the player
 )";
-		write(buf, sizeof(buf) - 1);
-	} else if (strcmp(cmd, "skip") == 0) {
-		if (!(w->boss.flags & FLAG_INSTANCE_DEAD)) {
-			w->boss.timer = 0;
-			w->boss.wait_timer = 0;
-		}
-	} else if (strcmp(cmd, "full_power") == 0) {
-		get_power(MAX_POWER);
-	} else if (strcmp(cmd, "life") == 0) {
-		get_lives(1);
-	} else if (strcmp(cmd, "kill_player") == 0) {
-		w->player.state = PLAYER_STATE_DYING;
-		w->player.timer = PLAYER_DEATH_TIME;
-		play_sound(snd_pichuun);
-	} else {
-		write("Unknown command \"");
-		write(cmd);
-		write("\"\n");
+
+		write(s);
+		return;
 	}
+
+	if (command == "stage") {
+		bool done;
+		u32 stage_index = string_to_u32(eat_next_token(&str), &done);
+
+		if (done && stage_index < STAGE_COUNT) {
+			g->stage_index = stage_index;
+			g->next_state = Game::STATE_PLAYING;
+		}
+		return;
+	}
+
+	if (command == "title") {
+		g->next_state = Game::STATE_TITLE_SCREEN;
+		return;
+	}
+
+	if (g->state == Game::STATE_PLAYING) {
+		if (command == "skip") {
+			if (!(w->boss.flags & FLAG_INSTANCE_DEAD)) {
+				w->boss.timer = 0;
+				w->boss.wait_timer = 0;
+			}
+			return;
+		}
+
+		if (command == "full_power") {
+			get_power(MAX_POWER);
+			return;
+		}
+
+		if (command == "life") {
+			get_lives(1);
+			return;
+		}
+
+		if (command == "kill_player") {
+			w->player.state = PLAYER_STATE_DYING;
+			w->player.timer = PLAYER_DEATH_TIME;
+			play_sound(snd_pichuun);
+			return;
+		}
+	}
+
+	write("Unknown command \"");
+	write(command);
+	write("\"\n");
 }
 
 void Console::write(char ch) {
-	if (text_pos >= ArrayLength(text) - 1) {
-		for (size_t i = 0; i < ArrayLength(text) - 1; i++) {
-			text[i] = text[i + 1];
+	if (history.count == history.capacity) {
+		for (size_t i = 0; i < history.count - 1; i++) {
+			history[i] = history[i + 1];
 		}
-		text_pos--;
+		history.count--;
 	}
 
-	text[text_pos] = ch;
-	text[text_pos + 1] = 0;
-	text_pos++;
+	history.data[history.count++] = ch;
 }
 
-void Console::write(const char* buf, size_t size) {
-#if 0
-	if (text_pos + size + 1 > ArrayLength(text)) {
-		size_t need = text_pos + size + 1 - ArrayLength(text);
-
-		if (need <= ArrayLength(text)) {
-			size_t move = ArrayLength(text) - need;
-			todo();
-		}
-	}
-
-	if (text_pos + size + 1 <= ArrayLength(text)) {
-		memcpy(text + text_pos, buf, size);
-		text[text_pos + size] = 0;
-		text_pos += size;
-	}
-#else
-	for (size_t i = 0; i < size; i++) {
-		write(buf[i]);
-	}
-#endif
-}
-
-void Console::write(const char* buf) {
-	for (const char* ptr = buf; *ptr; ptr++) {
-		write(*ptr);
+void Console::write(String str) {
+	for (size_t i = 0; i < str.count; i++) {
+		write(str[i]);
 	}
 }
 
@@ -174,7 +182,7 @@ void Console::draw(float delta) {
 	glEnable(GL_SCISSOR_TEST);
 
 	// Draw text
-	r->draw_text(GetSprite(spr_font_main), text, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+	r->draw_text(GetSprite(spr_font_main), history, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
 
 	// Draw shell thing
 	r->draw_text(GetSprite(spr_font_main), ">", x, y, HALIGN_LEFT, VALIGN_BOTTOM);
@@ -182,7 +190,7 @@ void Console::draw(float delta) {
 	x += 16;
 
 	// Draw current cmd
-	r->draw_text(GetSprite(spr_font_main), cmd, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+	r->draw_text(GetSprite(spr_font_main), user_input_line, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
 
 	r->break_batch();
 	glDisable(GL_SCISSOR_TEST);

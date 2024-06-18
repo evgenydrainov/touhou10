@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
 		blit(0,        s->height, s->width, 1); // bottom
 		blit(s->width, s->height, 1,        1); // bottom right
 
-		printf("packed %s frame %d\n", s->name, frame_index);
+		printf("Packed %s frame %d.\n", s->name, frame_index);
 
 		SpriteFrame frame = {};
 		frame.u = rect.x + 1;

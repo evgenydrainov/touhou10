@@ -2,13 +2,15 @@
 
 #include "common.h"
 #include "array.h"
+#include "strings.h"
+
 #include <glm/glm.hpp>
 
-constexpr size_t BATCH_MAX_QUADS = 10'000;
-constexpr size_t VERTICES_PER_QUAD = 4;
-constexpr size_t INDICES_PER_QUAD = 6;
+constexpr size_t BATCH_MAX_QUADS    = 10'000;
+constexpr size_t VERTICES_PER_QUAD  = 4;
+constexpr size_t INDICES_PER_QUAD   = 6;
 constexpr size_t BATCH_MAX_VERTICES = (BATCH_MAX_QUADS * VERTICES_PER_QUAD);
-constexpr size_t BATCH_MAX_INDICES = (BATCH_MAX_QUADS * INDICES_PER_QUAD);
+constexpr size_t BATCH_MAX_INDICES  = (BATCH_MAX_QUADS * INDICES_PER_QUAD);
 
 struct Renderer;
 struct Texture;
@@ -22,11 +24,12 @@ struct Vertex {
 	glm::vec2 uv;
 };
 
-constexpr glm::vec4 color_white = {1.0f, 1.0f, 1.0f, 1.0f};
-constexpr glm::vec4 color_black = {0.0f, 0.0f, 0.0f, 1.0f};
-constexpr glm::vec4 color_red   = {1.0f, 0.0f, 0.0f, 1.0f};
-constexpr glm::vec4 color_green = {0.0f, 1.0f, 0.0f, 1.0f};
-constexpr glm::vec4 color_blue  = {0.0f, 0.0f, 1.0f, 1.0f};
+constexpr glm::vec4 color_white  = { 1.00f, 1.00f, 1.00f, 1.00f };
+constexpr glm::vec4 color_black  = { 0.00f, 0.00f, 0.00f, 1.00f };
+constexpr glm::vec4 color_red    = { 1.00f, 0.00f, 0.00f, 1.00f };
+constexpr glm::vec4 color_green  = { 0.00f, 1.00f, 0.00f, 1.00f };
+constexpr glm::vec4 color_blue   = { 0.00f, 0.00f, 1.00f, 1.00f };
+constexpr glm::vec4 color_yellow = { 1.00f, 1.00f, 0.00f, 1.00f };
 
 enum HAlign {
 	HALIGN_LEFT,
@@ -99,10 +102,10 @@ struct Renderer {
 
 	void draw_circle(glm::vec2 pos, float radius, glm::vec4 color = color_white, int precision = 6);
 
-	glm::vec2 draw_text(Sprite* font, const char* text, float x, float y,
-						HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP);
+	glm::vec2 draw_text(Sprite* font, String text, float x, float y,
+						HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, glm::vec4 color = color_white);
 
-	glm::vec2 measure_text(Sprite* font, const char* text, bool only_one_line = false);
+	glm::vec2 measure_text(Sprite* font, String text, bool only_one_line = false);
 
 	void break_batch();
 

@@ -47,7 +47,6 @@ struct World {
 	Arena_Backed_Array<PlayerBullet> p_bullets;
 	Arena_Backed_Array<Pickup> pickups;
 
-	u32 stage_index;
 	u64 next_instance_id = 1;
 	mco_coro* co;
 	xoshiro128plus random{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};

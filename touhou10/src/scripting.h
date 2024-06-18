@@ -156,8 +156,7 @@ static Array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 
 			// Make sure there is no alignment.
 			ArenaPush(&w->temp_arena_for_boss, sizeof(instance_id), 1);
-			bullet_ids[num_bullet_ids] = b->id;
-			num_bullet_ids++;
+			bullet_ids[num_bullet_ids++] = b->id;
 
 		} else if constexpr (std::is_same_v<decltype(res), Array<instance_id>>) {
 			For (it, res) {
@@ -168,8 +167,7 @@ static Array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 
 				// Make sure there is no alignment.
 				ArenaPush(&w->temp_arena_for_boss, sizeof(instance_id), 1);
-				bullet_ids[num_bullet_ids] = b->id;
-				num_bullet_ids++;
+				bullet_ids[num_bullet_ids++] = b->id;
 			}
 
 		} else {

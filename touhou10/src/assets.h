@@ -3,6 +3,7 @@
 #include "common.h"
 #include "sprite_indices.h"
 #include "animation.h"
+#include "strings.h"
 
 #include <minicoro/minicoro.h>
 #include <SDL_mixer.h>
@@ -53,8 +54,8 @@ struct Sprite {
 	int frame_count;
 	int xorigin;
 	int yorigin;
-	int loop_frame;
-	float anim_spd;
+	int loop_frame; // The frame from which animation will loop.
+	float anim_spd; // Animation speed
 	int width;
 	int height;
 };
@@ -116,7 +117,7 @@ enum PhaseType {
 };
 
 struct BossPhase {
-	const char* name;
+	String name;
 	float hp;
 	float time;
 	PhaseType type;
@@ -162,7 +163,9 @@ struct StageData {
 	void (*draw_background)(float delta);
 };
 
-extern StageData stage_data[];
+#define STAGE_COUNT 2
+
+extern StageData stage_data[STAGE_COUNT];
 
 StageData* GetStageData(u32 stage_index);
 
