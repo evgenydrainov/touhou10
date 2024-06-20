@@ -127,6 +127,7 @@ void Game::init() {
 	{
 		static_assert(NUM_TEXTURES == 8, "");
 
+		// @Leak
 		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                    true);
 		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                 true);
 		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png", true);
@@ -177,6 +178,7 @@ void Game::init() {
 
 		static_assert(NUM_SOUNDS == 16, "");
 
+		// @Leak
 		sound_data[snd_boss_die]         = Mix_LoadWAV("sounds/boss_die.wav");
 		sound_data[snd_char_reimu_shoot] = Mix_LoadWAV("sounds/char_reimu_shoot.wav");
 		sound_data[snd_enemy_die]        = Mix_LoadWAV("sounds/enemy_die.wav");
@@ -216,7 +218,10 @@ void Game::init() {
 
 void Game::destroy() {
 
-	Mix_FreeMusic(music);
+	if (music) {
+		Mix_FreeMusic(music);
+		music = nullptr;
+	}
 
 	switch (state) {
 		case STATE_TITLE_SCREEN: title_screen.destroy(); break;
@@ -325,9 +330,12 @@ void Game::run() {
 
 		update(delta);
 
-		draw(delta);
+		// @Temp Don't draw if minimized?
+		if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
+			draw(delta);
 
-		SDL_GL_SwapWindow(window);
+			SDL_GL_SwapWindow(window);
+		}
 
 		double time_left = frame_end_time - GetTime();
 		if (time_left > 0.0) {
@@ -383,8 +391,8 @@ void Game::update(float delta) {
 void Game::draw(float delta) {
 	double time = GetTime();
 
-	int draw_calls   = r->draw_calls;
-	size_t max_batch = r->max_batch;
+	int    draw_calls = r->draw_calls;
+	size_t max_batch  = r->max_batch;
 
 	r->draw_calls = 0;
 	r->max_batch  = 0;

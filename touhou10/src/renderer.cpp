@@ -474,9 +474,15 @@ glm::vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
 	}
 
 	for (size_t i = 0; i < text.count; i++) {
-		int ch = text[i];
+		u8 ch = (u8) text[i];
 
-		if (33 <= ch && ch <= 127) {
+		// If char isn't valid, set to '?'
+		if (!((ch >= 32 && ch <= 127) || ch == '\n')) {
+			ch = '?';
+		}
+
+		// If char isn't whitespace, draw it
+		if (!(ch == ' ' || ch == '\n')) {
 			draw_sprite(font, ch - 32, {floorf(ch_x), floorf(ch_y)}, {1, 1}, 0, color);
 		}
 
@@ -508,9 +514,13 @@ glm::vec2 Renderer::measure_text(Sprite* font, String text, bool only_one_line) 
 	float ch_y = 0;
 
 	for (size_t i = 0; i < text.count; i++) {
-		int ch = text[i];
+		u8 ch = (u8) text[i];
 
-		if (33 <= ch && ch <= 127) {
+		if (!((ch >= 32 && ch <= 127) || ch == '\n')) {
+			ch = '?';
+		}
+
+		if (!(ch == ' ' || ch == '\n')) {
 			w = max(w, ch_x + (float)font->width);
 			h = max(h, ch_y + (float)font->height);
 		}

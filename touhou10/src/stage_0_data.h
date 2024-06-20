@@ -150,11 +150,11 @@ static void Stage_0_Draw_Background(float delta) {
 
 	// Init
 	static glm::vec3 cam_pos = {0, 10, 0};
-	static float pitch = 0;
-	static float yaw   = 0;
+	static float pitch = -45;
+	static float yaw   = -90;
 
 	// Capture mouse
-	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+	if (is_key_pressed(SDL_SCANCODE_F3)) {
 		SDL_SetRelativeMouseMode((SDL_bool) !SDL_GetRelativeMouseMode());
 	}
 
@@ -200,6 +200,9 @@ static void Stage_0_Draw_Background(float delta) {
 	direction.x = cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
 	direction.y = sinf(glm::radians(pitch));
 	direction.z = sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+
+	glClearColor(1, 1, 1, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	{
 		u32 program = r->shader_stage_0_bg_program;

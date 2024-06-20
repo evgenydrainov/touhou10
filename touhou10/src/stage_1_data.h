@@ -7,5 +7,6 @@ static void Stage_1_Script(mco_coro* co) {
 }
 
 static void Stage_1_Draw_Background(float delta) {
-	r->draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, color_black);
+	glClearColor(1, 1, 1, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
 }

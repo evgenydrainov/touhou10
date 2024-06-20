@@ -169,6 +169,34 @@ void World::physics_update(float delta) {
 		}
 	}
 
+	// Player vs enemies
+	For (e, enemies) {
+		if (circle_vs_circle(player.x, player.y, player.radius, e->x, e->y, e->radius)) {
+			if (player.state == PLAYER_STATE_NORMAL) {
+				if (player.iframes <= 0) {
+					player.state = PLAYER_STATE_DYING;
+					player.timer = PLAYER_DEATH_TIME;
+
+					play_sound(snd_pichuun);
+				}
+			}
+		}
+	}
+
+	// Player vs boss
+	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+		if (circle_vs_circle(player.x, player.y, player.radius, boss.x, boss.y, boss.radius)) {
+			if (player.state == PLAYER_STATE_NORMAL) {
+				if (player.iframes <= 0) {
+					player.state = PLAYER_STATE_DYING;
+					player.timer = PLAYER_DEATH_TIME;
+
+					play_sound(snd_pichuun);
+				}
+			}
+		}
+	}
+
 	// Boss vs player bullets
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		For (b, p_bullets) {
@@ -283,6 +311,15 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 void World::update(float delta_not_modified) {
 
 	float delta = delta_not_modified * delta_multiplier;
+
+	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS)
+		|| (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
+		paused = true;
+	}
+
+	if (paused) {
+		goto l_skip_update;
+	}
 
 	// Update
 	{
@@ -534,6 +571,12 @@ void World::update(float delta_not_modified) {
 		}
 	}
 
+l_skip_update:
+
+	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+		paused ^= true;
+	}
+
 	if (is_key_pressed(SDL_SCANCODE_H)) {
 		show_hitboxes ^= true;
 	}
@@ -614,6 +657,10 @@ void World::draw(float delta_not_modified) {
 
 	glViewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
 	r->proj = glm::ortho(0.0f, (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.0f);
+
+	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+	glEnable(GL_SCISSOR_TEST);
+	Defer { glDisable(GL_SCISSOR_TEST); };
 
 	if (boss_spellcard_background_alpha < 1) {
 		StageData* stage = GetStageData(g->stage_index);
@@ -783,6 +830,15 @@ void World::draw(float delta_not_modified) {
 		{
 			r->draw_text(GetSprite(spr_font_main), phase->name, PLAY_AREA_W, 16, HALIGN_RIGHT);
 		}
+	}
+
+	// 
+	// Draw pause menu
+	// 
+	if (paused) {
+		r->draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0, 0, 0, 0.5f});
+
+		r->draw_text(GetSprite(spr_font_main), "Paused", PLAY_AREA_W / 2.0f, PLAY_AREA_H / 2.0f, HALIGN_CENTER, VALIGN_MIDDLE);
 	}
 
 	r->break_batch();

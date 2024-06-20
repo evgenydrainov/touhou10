@@ -18,7 +18,7 @@ struct Static_String {
 	static constexpr size_t capacity = N;
 
 	char   data[N];
-	size_t count;
+	size_t count = 0; // Usually you want to leave the buffer uninitialized.
 
 	char& operator[](size_t i)       { Assert(i < count); return data[i]; }
 	char  operator[](size_t i) const { Assert(i < count); return data[i]; }

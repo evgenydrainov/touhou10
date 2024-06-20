@@ -105,6 +105,8 @@ void boss_end_phase(Boss* b) {
 		p->homing_target = w->player.id;
 	}
 
+	w->delta_multiplier = 1;
+
 	Assert(b->co);
 	mco_destroy(b->co);
 	b->co = nullptr;
