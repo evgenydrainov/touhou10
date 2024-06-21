@@ -1,0 +1,12 @@
+TODO:
+
+Grazing lazers
+Look into mco_running()
+
+Package format
+
+3D Models for stage backgrounds
+3D Lighting, fog for stage backgrounds
+
+Stage music, boss music
+Dialogue

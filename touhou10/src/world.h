@@ -41,11 +41,11 @@ void get_points(int points);
 
 struct World {
 	Player player;
-	Boss boss;
-	Arena_Backed_Array<Enemy> enemies;
-	Arena_Backed_Array<Bullet> bullets;
+	Boss   boss;
+	Arena_Backed_Array<Enemy>        enemies;
+	Arena_Backed_Array<Bullet>       bullets;
 	Arena_Backed_Array<PlayerBullet> p_bullets;
-	Arena_Backed_Array<Pickup> pickups;
+	Arena_Backed_Array<Pickup>       pickups;
 
 	u64 next_instance_id = 1;
 	mco_coro* co;
