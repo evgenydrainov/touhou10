@@ -88,7 +88,7 @@ l_midboss:
 
 	{
 		instance_id dai_chan = CreateBoss(BOSS_DAIYOUSEI_MIDBOSS)->id;
-		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == dai_chan) {
+		while (w->find_boss(dai_chan)) {
 			Wait(1);
 		}
 	}
@@ -99,7 +99,7 @@ l_boss:
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;
-		// while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == baka) {
+		// while (w->find_boss(baka)) {
 		// 	Wait(1);
 		// }
 	}

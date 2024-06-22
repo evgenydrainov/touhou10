@@ -898,6 +898,16 @@ Player* World::find_player(instance_id id) {
 	return result;
 }
 
+Boss* World::find_boss(instance_id id) {
+	Boss* result = nullptr;
+	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+		if (boss.id == id) {
+			result = &boss;
+		}
+	}
+	return result;
+}
+
 // @Todo
 Object* World::find_object(instance_id id) {
 	Object* result = nullptr;

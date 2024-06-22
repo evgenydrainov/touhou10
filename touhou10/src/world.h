@@ -72,6 +72,7 @@ struct World {
 
 	Bullet* find_bullet(instance_id id);
 	Player* find_player(instance_id id);
+	Boss*   find_boss(instance_id id);
 
 	Object* find_object(instance_id id);
 };
