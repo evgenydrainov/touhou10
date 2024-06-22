@@ -154,13 +154,13 @@ void World::physics_update(float delta) {
 					can_graze = player.lazer_graze_timer <= 0;
 					player.lazer_graze_timer -= delta;
 				} else {
-					can_graze = !b->grazed;
+					can_graze = !(b->flags & FLAG_BULLET_WAS_GRAZED);
 				}
 
 				if (can_graze) {
 					get_graze(1);
 					part_sys.create_particle({player.x, player.y}, part_type_graze);
-					b->grazed = true;
+					b->flags |= FLAG_BULLET_WAS_GRAZED;
 
 					if (b->bullet_type == BULLET_TYPE_LAZER) {
 						player.lazer_graze_timer += 8;

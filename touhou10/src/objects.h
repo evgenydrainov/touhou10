@@ -21,7 +21,8 @@ enum ObjType : u64 {
 enum {
 	FLAG_INSTANCE_DEAD = 1,
 
-	FLAG_BULLET_ROTATE = 1 << 1,
+	FLAG_BULLET_ROTATE     = 1 << 16,
+	FLAG_BULLET_WAS_GRAZED = 1 << 17,
 };
 
 struct Object {
@@ -37,8 +38,6 @@ struct Object {
 
 	u32 sprite_index;
 	float frame_index;
-
-	bool grazed;
 
 	Sprite* GetSprite() {
 		return ::GetSprite(sprite_index);
