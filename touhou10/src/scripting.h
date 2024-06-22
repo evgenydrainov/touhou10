@@ -18,18 +18,18 @@ static void co_check_stack_usage(mco_coro* co) {
 	log_info("coroutine stack usage: %zu", (stack_max - stack_addr));
 }
 
-static void Wait(mco_coro* co, int frames) {
+static void Wait(int frames) {
 	while (frames--) {
-		mco_yield(co);
+		mco_yield(mco_running());
 		// co_check_stack_usage(co);
 	}
 }
 
-static Bullet* ShootExt(Object* o,
-						float x, float y,
-						float spd, float dir, float acc,
-						u32 sprite_index, int frame_index,
-						u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
+static Bullet* ShootExtO(Object* o,
+						 float x, float y,
+						 float spd, float dir, float acc,
+						 u32 sprite_index, int frame_index,
+						 u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
 	Bullet b = {};
 
 	object_init(&b, OBJ_TYPE_BULLET);
@@ -67,17 +67,17 @@ static Bullet* ShootExt(Object* o,
 	return w->bullets.add(b);
 }
 
-static Bullet* Shoot(Object* o,
-					 float spd, float dir, float acc,
-					 u32 sprite_index, int frame_index,
-					 u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
-	return ShootExt(o, o->x, o->y, spd, dir, acc, sprite_index, frame_index, flags, script);
+static Bullet* ShootO(Object* o,
+					  float spd, float dir, float acc,
+					  u32 sprite_index, int frame_index,
+					  u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
+	return ShootExtO(o, o->x, o->y, spd, dir, acc, sprite_index, frame_index, flags, script);
 }
 
-static Bullet* ShootLazer(Object* o,
-						  float spd, float dir,
-						  float target_length, float thickness,
-						  int frame_index) {
+static Bullet* ShootLazerO(Object* o,
+						   float spd, float dir,
+						   float target_length, float thickness,
+						   int frame_index) {
 	// Don't divide by zero.
 	Assert(spd != 0);
 	Assert(target_length != 0);
@@ -101,6 +101,32 @@ static Bullet* ShootLazer(Object* o,
 
 	return w->bullets.add(b);
 }
+
+
+
+static Bullet* ShootExt(float x, float y,
+						float spd, float dir, float acc,
+						u32 sprite_index, int frame_index,
+						u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
+	mco_coro* co = mco_running();
+	return ShootExtO(self, x, y, spd, dir, acc, sprite_index, frame_index, flags, script);
+}
+
+static Bullet* Shoot(float spd, float dir, float acc,
+					 u32 sprite_index, int frame_index,
+					 u32 flags = 0, void (*script)(mco_coro*) = nullptr) {
+	mco_coro* co = mco_running();
+	return ShootO(self, spd, dir, acc, sprite_index, frame_index, flags, script);
+}
+
+static Bullet* ShootLazer(float spd, float dir,
+						  float target_length, float thickness,
+						  int frame_index) {
+	mco_coro* co = mco_running();
+	return ShootLazerO(self, spd, dir, target_length, thickness, frame_index);
+}
+
+
 
 template <typename Func>
 static void ShootRadial(int count, float dir_diff, const Func& func) {

@@ -4,10 +4,10 @@ static void Stage_0_Script(mco_coro* co) {
 
 	auto spawn_spinner = [&]() {
 		auto Script = [](mco_coro* co) {
-			Wait(co, 60);
+			Wait(60);
 			self->acc = -0.01f;
 			while (self->spd > 0) {
-				Wait(co, 1);
+				Wait(1);
 			}
 			self->dir = -self->dir;
 			self->acc = 0.01f;
@@ -17,15 +17,15 @@ static void Stage_0_Script(mco_coro* co) {
 			u32 r = w->random.next() % 3;
 			float dir = w->random.rangef(0.0f, 360.0f);
 			if (r == 0) {
-				Shoot(o, 2, dir,       0, spr_bullet_rice, 2);
-				Shoot(o, 2, dir +  90, 0, spr_bullet_rice, 2);
-				Shoot(o, 2, dir + 180, 0, spr_bullet_rice, 2);
-				Shoot(o, 2, dir + 270, 0, spr_bullet_rice, 2);
+				ShootO(o, 2, dir,       0, spr_bullet_rice, 2);
+				ShootO(o, 2, dir +  90, 0, spr_bullet_rice, 2);
+				ShootO(o, 2, dir + 180, 0, spr_bullet_rice, 2);
+				ShootO(o, 2, dir + 270, 0, spr_bullet_rice, 2);
 			} else if (r == 1) {
-				Shoot(o, 3, dir,       0, spr_bullet_kunai, 10);
-				Shoot(o, 3, dir +  90, 0, spr_bullet_kunai, 10);
-				Shoot(o, 3, dir + 180, 0, spr_bullet_kunai, 10);
-				Shoot(o, 3, dir + 270, 0, spr_bullet_kunai, 10);
+				ShootO(o, 3, dir,       0, spr_bullet_kunai, 10);
+				ShootO(o, 3, dir +  90, 0, spr_bullet_kunai, 10);
+				ShootO(o, 3, dir + 180, 0, spr_bullet_kunai, 10);
+				ShootO(o, 3, dir + 270, 0, spr_bullet_kunai, 10);
 			}
 		};
 
@@ -39,16 +39,16 @@ static void Stage_0_Script(mco_coro* co) {
 		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
-	Wait(co, 60);
+	Wait(60);
 
 #if 1
 	{
 		Repeat (50) {
 			spawn_spinner();
-			Wait(co, 5);
+			Wait(5);
 		}
 
-		Wait(co, 180);
+		Wait(180);
 
 		for (int j = 1; j <= 4; j++) {
 			for (int i = 1; i <= 18; i++) {
@@ -64,29 +64,29 @@ static void Stage_0_Script(mco_coro* co) {
 					spawn_spinner();
 				}
 
-				Wait(co, 20);
+				Wait(20);
 			}
 
-			Wait(co, 60);
+			Wait(60);
 		}
 
-		Wait(co, 180);
+		Wait(180);
 	}
 #endif
 
 	{
 		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;
 		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == dai_chan) {
-			Wait(co, 1);
+			Wait(1);
 		}
 	}
 
-	Wait(co, 60);
+	Wait(60);
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;
 		// while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == baka) {
-		// 	Wait(co, 1);
+		// 	Wait(1);
 		// }
 	}
 

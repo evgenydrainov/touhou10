@@ -4,7 +4,7 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 
 	auto shoot = [&](int N, float x, float y, float dir, u32 sprite_index, int frame_index) {
 		ShootRadial(N, 180 / (float)N, [&]() {
-			return ShootExt(self, x, y, 1.15f, dir, 0, sprite_index, frame_index);
+			return ShootExt(x, y, 1.15f, dir, 0, sprite_index, frame_index);
 		});
 	};
 
@@ -15,10 +15,10 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 			float y = start_y;
 
 			for (int i = 0; i < 4; i++) {
-				ShootExt(self, x, y, lerp(2.0f, 4.5f, i / 3.0f), point_direction(x, y, target_x, target_y), 0, sprite_index, frame_index);
+				ShootExt(x, y, lerp(2.0f, 4.5f, i / 3.0f), point_direction(x, y, target_x, target_y), 0, sprite_index, frame_index);
 			}
 
-			Wait(co, 2);
+			Wait(2);
 		}
 	};
 
@@ -46,21 +46,21 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 					shoot(N2, x + lengthdir_x(off, dir - 90.0f), y + lengthdir_y(off, dir - 90.0f), dir, spr_bullet_filled, 7);
 				}
 
-				Wait(co, 4);
+				Wait(4);
 			}
 
-			Wait(co, 180);
+			Wait(180);
 		}
 
 		Repeat (2) {
 			slash(self->x, self->y, w->player.x, w->player.y, spr_bullet_arrow, 6);
 
-			Wait(co, 50);
+			Wait(50);
 
 			slash(self->x - 50.0f, self->y, w->player.x - 70.0f, w->player.y, spr_bullet_arrow, 2);
 			slash(self->x + 50.0f, self->y, w->player.x + 70.0f, w->player.y, spr_bullet_arrow, 2);
 
-			Wait(co, 60);
+			Wait(60);
 		}
 	}
 }
@@ -71,14 +71,14 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		// NOTE: Object::dir automatically wraps around 360.
 		Repeat (360 / 3) {
 			self->dir += 3;
-			Wait(co, 1);
+			Wait(1);
 		}
 
 		float target_spd = w->random.rangef(2.50f, 3.50f);
 		float acc = 0.05f;
 		while (self->spd != target_spd) {
 			self->spd = approach(self->spd, target_spd, acc);
-			Wait(co, 1);
+			Wait(1);
 		}
 	};
 
@@ -88,8 +88,8 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		float dir2 = w->random.rangef(0, 360);
 		for (int i = 0; i < N; i++) {
 			float t = i / (float)N;
-			ShootExt(self, x, y, 1.3f, dir1 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);
-			ShootExt(self, x, y, 0.8f, dir2 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);
+			ShootExt(x, y, 1.3f, dir1 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);
+			ShootExt(x, y, 0.8f, dir2 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);
 		}
 	};
 
@@ -100,24 +100,24 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 			float x = lerp(xstart, xend, t);
 			shoot(x, y);
 
-			Wait(co, 4);
+			Wait(4);
 		}
 	};
 
 	auto slide_to = [&](float x, float y) {
 		LaunchTowardsPoint(self, x, y, 0.02f);
 		while (self->spd > 0) {
-			Wait(co, 1);
+			Wait(1);
 		}
 	};
 
 	auto change_delta = [&](float target_delta, float change) {
 		while (w->delta_multiplier != target_delta) {
 			w->delta_multiplier = approach(w->delta_multiplier, target_delta, change);
-			Wait(co, 1);
+			Wait(1);
 		}
 
-		Wait(co, 60);
+		Wait(60);
 	};
 
 	slide_to(60, 140);
@@ -128,22 +128,22 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		self->x = PLAY_AREA_W - 60;
 
 		slash(0, PLAY_AREA_W, self->y);
-		Wait(co, seconds(2.6f));
+		Wait(seconds(2.6f));
 
 		w->delta_multiplier = 0.25f;
 
-		Wait(co, seconds(2.1f));
+		Wait(seconds(2.1f));
 
 		change_delta(1, 1.0f / 60.0f);
 
 		self->x = 60;
 
 		slash(PLAY_AREA_W, 0, self->y);
-		Wait(co, seconds(2.6f));
+		Wait(seconds(2.6f));
 
 		w->delta_multiplier = 0.25f;
 
-		Wait(co, seconds(2.1f));
+		Wait(seconds(2.1f));
 	}
 }
 

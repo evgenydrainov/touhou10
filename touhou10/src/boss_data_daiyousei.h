@@ -26,63 +26,63 @@ static void Daiyousei_Nonspell_0(mco_coro* co) {
 				float spd = lerp(1.5f, 3.0f, i / (float)n);
 				float a   = lerp(1.1f, 1.5f, i / (float)n);
 
-				Shoot(self, spd,     dir, 0, spr_bullet_kunai, color);
-				Shoot(self, spd * a, dir, 0, spr_bullet_kunai, color);
+				Shoot(spd,     dir, 0, spr_bullet_kunai, color);
+				Shoot(spd * a, dir, 0, spr_bullet_kunai, color);
 
-				Wait(co, 1);
+				Wait(1);
 			}
 
-			Wait(co, 100);
+			Wait(100);
 
 			tp();
 
-			Wait(co, 100);
+			Wait(100);
 		}
 
 		Repeat (20) {
 			ShootRadial(3, 40, [&]() {
-				return Shoot(self, 2.25f, DirToPlayer(self), 0, spr_bullet_pellet, 6);
+				return Shoot(2.25f, DirToPlayer(self), 0, spr_bullet_pellet, 6);
 			});
 
 			/*
 			ShootRadialArr<2>(3, 40, [&]() {
 				auto script = [](mco_coro* co) {
-					Wait(co, 30);
+					Wait(30);
 					self->spd = 4;
 					self->acc = 0;
 					self->dir = DirToPlayer(self);
 				};
 
 				return std::array<Bullet*, 2> {
-					Shoot(self, 4,        DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script),
-					Shoot(self, 4 * 1.2f, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script),
+					Shoot(4,        DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script),
+					Shoot(4 * 1.2f, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script),
 				};
 			});
 			*/
 
 			auto script = [](mco_coro* co) {
-				Wait(co, 30);
+				Wait(30);
 				self->spd = 4;
 				self->acc = 0;
 				self->dir = DirToPlayer(self);
 			};
 
 			ShootRadial(3, 40, [&]() {
-				return Shoot(self, 4, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script);
+				return Shoot(4, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script);
 			});
 
 			ShootRadial(3, 40, [&]() {
-				return Shoot(self, 4 * 1.2f, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script);
+				return Shoot(4 * 1.2f, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script);
 			});
 
-			Wait(co, 10);
+			Wait(10);
 		}
 
-		Wait(co, 100);
+		Wait(100);
 
 		tp();
 
-		Wait(co, 100);
+		Wait(100);
 	}
 }
 #else

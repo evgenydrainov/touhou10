@@ -1,7 +1,7 @@
 #pragma once
 
 static void Stage_1_Script(mco_coro* co) {
-	Wait(co, 60);
+	Wait(60);
 
 	CreateBoss(MIDBOSS_YOUMU);
 }
