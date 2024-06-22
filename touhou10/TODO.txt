@@ -1,7 +1,6 @@
 TODO:
 
 Grazing lazers
-Look into mco_running()
 
 Package format
 
