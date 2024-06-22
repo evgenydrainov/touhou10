@@ -3,7 +3,7 @@
 static void Stage_1_Script(mco_coro* co) {
 	Wait(60);
 
-	CreateBoss(MIDBOSS_YOUMU);
+	CreateBoss(BOSS_YOUMU_MIDBOSS);
 }
 
 static void Stage_1_Draw_Background(float delta) {

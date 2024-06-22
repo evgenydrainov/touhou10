@@ -87,7 +87,7 @@ static void Stage_0_Script(mco_coro* co) {
 l_midboss:
 
 	{
-		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;
+		instance_id dai_chan = CreateBoss(BOSS_DAIYOUSEI_MIDBOSS)->id;
 		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == dai_chan) {
 			Wait(1);
 		}

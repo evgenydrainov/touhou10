@@ -1,7 +1,10 @@
 #pragma once
 
 #if 1
-static void Daiyousei_Nonspell_0(mco_coro* co) {
+// 
+// "M" for Midboss.
+// 
+static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 
 	auto tp = [&]() {
 		self->x = w->random.rangef(32.0f, PLAY_AREA_W - 32.0f);
@@ -86,17 +89,17 @@ static void Daiyousei_Nonspell_0(mco_coro* co) {
 	}
 }
 #else
-static void Daiyousei_Nonspell_0(mco_coro* co) {
+static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 	check_stack_usage(co);
 }
 #endif
 
-static BossPhase boss_daiyousei_phases[] = {
+static BossPhase boss_daiyousei_midboss_phases[] = {
 	{
 		/* .name   = */ "Nonspell 0",
 		/* .hp     = */ 1000,
 		/* .time   = */ 60,
 		/* .type   = */ PHASE_NONSPELL,
-		/* .script = */ Daiyousei_Nonspell_0,
+		/* .script = */ M_Daiyousei_Nonspell_0,
 	},
 };

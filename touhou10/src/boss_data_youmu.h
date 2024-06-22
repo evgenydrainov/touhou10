@@ -1,5 +1,8 @@
 #pragma once
 
+// 
+// "M" for Midboss.
+// 
 static void M_Youmu_Nonspell_0(mco_coro* co) {
 
 	auto shoot = [&](int N, float x, float y, float dir, u32 sprite_index, int frame_index) {
@@ -147,7 +150,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 	}
 }
 
-static BossPhase midboss_youmu_phases[] = {
+static BossPhase boss_youmu_midboss_phases[] = {
 	{
 		/* .name   = */ "Nonspell 0",
 		/* .hp     = */ 1000,
