@@ -25,8 +25,10 @@ void Title_Screen::update(float delta) {
 	if (is_key_pressed(SDL_SCANCODE_Z)) {
 		switch (cursor) {
 			case 0:
-				g->stage_index = 0;
-				g->next_state = Game::STATE_PLAYING;
+				g->stage_index     = 0;
+				g->skip_to_boss    = false;
+				g->skip_to_midboss = false;
+				g->next_state      = Game::STATE_PLAYING;
 				break;
 		}
 	}

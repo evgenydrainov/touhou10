@@ -100,8 +100,17 @@ kill_player - Kills the player
 		u32 stage_index = string_to_u32(eat_next_token(&str), &done);
 
 		if (done && stage_index < STAGE_COUNT) {
-			g->stage_index = stage_index;
-			g->next_state = Game::STATE_PLAYING;
+			g->stage_index     = stage_index;
+			g->skip_to_boss    = false;
+			g->skip_to_midboss = false;
+			g->next_state      = Game::STATE_PLAYING;
+
+			String token = eat_next_token(&str);
+			if (token == "boss") {
+				g->skip_to_boss = true;
+			} else if (token == "midboss") {
+				g->skip_to_midboss = true;
+			}
 		}
 		return;
 	}

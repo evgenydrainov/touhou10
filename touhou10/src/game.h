@@ -63,6 +63,8 @@ struct Game {
 
 	Stats stats;
 	u32 stage_index;
+	bool skip_to_boss;
+	bool skip_to_midboss;
 
 	Arena arena;
 	Arena frame_arena;

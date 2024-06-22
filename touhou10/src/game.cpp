@@ -534,13 +534,15 @@ void Game::draw(float delta) {
 							"focused: %d\n"
 							"iframes: %f\n"
 							"timer: %f\n"
-							"bomb_timer: %f\n",
+							"bomb_timer: %f\n"
+							"lazer_graze_timer: %f\n",
 							Object_Arg(p),
 							GetPlayerStateName(p->state),
 							p->focused,
 							p->iframes,
 							p->timer,
-							p->bomb_timer);
+							p->bomb_timer,
+							p->lazer_graze_timer);
 					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(p->x), world_to_screen_y(p->y));
 				}
 

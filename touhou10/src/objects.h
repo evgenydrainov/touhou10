@@ -72,6 +72,7 @@ struct Player : Object {
 	float iframes;
 	float timer;
 	float bomb_timer;
+	float lazer_graze_timer;
 
 	u32 character_index;
 	float hitbox_alpha;

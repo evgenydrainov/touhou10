@@ -1,6 +1,8 @@
 TODO:
 
-Grazing lazers
+Pause Menu Juice
+Player God Mode
+Don't pause if lost focus when debugging
 
 Package format
 
@@ -9,3 +11,4 @@ Package format
 
 Stage music, boss music
 Dialogue
+Enemy death animation

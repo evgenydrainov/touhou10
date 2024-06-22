@@ -39,6 +39,16 @@ static void Stage_0_Script(mco_coro* co) {
 		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
+
+	if (g->skip_to_boss) {
+		goto l_boss;
+	}
+
+	if (g->skip_to_midboss) {
+		goto l_midboss;
+	}
+
+
 	Wait(60);
 
 #if 1
@@ -74,6 +84,8 @@ static void Stage_0_Script(mco_coro* co) {
 	}
 #endif
 
+l_midboss:
+
 	{
 		instance_id dai_chan = CreateBoss(MIDBOSS_DAIYOUSEI)->id;
 		while (!(w->boss.flags & FLAG_INSTANCE_DEAD) && w->boss.id == dai_chan) {
@@ -82,6 +94,8 @@ static void Stage_0_Script(mco_coro* co) {
 	}
 
 	Wait(60);
+
+l_boss:
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;

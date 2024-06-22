@@ -147,10 +147,25 @@ void World::physics_update(float delta) {
 	// Player vs bullets
 	For (b, bullets) {
 		if (player_collides_with_bullet(&player, player.GetCharacter()->graze_radius, b)) {
-			if (player.state == PLAYER_STATE_NORMAL && !b->grazed) {
-				get_graze(1);
-				part_sys.create_particle({player.x, player.y}, part_type_graze);
-				b->grazed = true;
+			if (player.state == PLAYER_STATE_NORMAL) {
+
+				bool can_graze;
+				if (b->bullet_type == BULLET_TYPE_LAZER) {
+					can_graze = player.lazer_graze_timer <= 0;
+					player.lazer_graze_timer -= delta;
+				} else {
+					can_graze = !b->grazed;
+				}
+
+				if (can_graze) {
+					get_graze(1);
+					part_sys.create_particle({player.x, player.y}, part_type_graze);
+					b->grazed = true;
+
+					if (b->bullet_type == BULLET_TYPE_LAZER) {
+						player.lazer_graze_timer += 8;
+					}
+				}
 			}
 		}
 
