@@ -356,9 +356,13 @@ void Game::run() {
 		// @Temp Don't draw if minimized?
 		if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
 			draw(delta);
-
-			SDL_GL_SwapWindow(window);
 		}
+
+		// 
+		// If you don't swap the window when window is minimized,
+		// then you won't be able to alt-tab from it in fullscreen.
+		// 
+		SDL_GL_SwapWindow(window);
 
 		double time_left = frame_end_time - GetTime();
 		if (time_left > 0.0) {
