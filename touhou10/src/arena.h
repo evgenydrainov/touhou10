@@ -49,7 +49,7 @@ static u8* ArenaPush(Arena* a, size_t size, size_t alignment = Arena::DEFAULT_AL
 	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t)a->data;
 
-	Assert(offset + size <= a->capacity);
+	Assert(offset + size <= a->capacity && "Arena ran out of space");
 
 	u8* ptr = a->data + offset;
 	a->count = offset + size;

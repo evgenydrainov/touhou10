@@ -3,8 +3,7 @@ TODO:
 Pause Menu Juice
 Player God Mode
 Don't pause if lost focus when debugging
-
-Package format
+delta_multiplier shouldn't apply to boss
 
 3D Models for stage backgrounds
 3D Lighting, fog for stage backgrounds

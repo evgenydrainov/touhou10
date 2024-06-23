@@ -1,7 +1,6 @@
 #pragma once
 
-// 
-// Add more tools later.
-// 
+#include "common.h"
 
-#define CREATE_TEXTURE_ATLAS
+// #define CREATE_TEXTURE_ATLAS
+// #define CREATE_PACKAGE

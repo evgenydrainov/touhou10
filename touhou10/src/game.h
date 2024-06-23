@@ -8,6 +8,7 @@
 #include "world.h"
 #include "title_screen.h"
 #include "console.h"
+#include "package.h"
 
 #define GAME_W 640
 #define GAME_H 480
@@ -20,7 +21,8 @@
 struct Game;
 extern Game* g;
 
-Texture load_texture(const char* fname, bool filter = false);
+Texture    load_texture(String fname, bool filter = false);
+Mix_Chunk* load_sound(String fname);
 
 double GetTime();
 
@@ -44,22 +46,23 @@ struct Game {
 		STATE_PLAYING,
 	};
 
-	SDL_Window* window;
-
-	Renderer renderer;
-
-	u32 game_fbo;
-	u32 game_texture;
-
-	SDL_GLContext gl_context;
-
-	State state;
-	State next_state;
-
 	union {
 		Title_Screen title_screen = {};
 		World world;
 	};
+
+	Renderer renderer;
+	Console console;
+	Package package;
+
+	SDL_Window* window;
+	SDL_GLContext gl_context;
+
+	u32 game_fbo;
+	u32 game_texture;
+
+	State state;
+	State next_state;
 
 	Stats stats;
 	u32 stage_index;
@@ -84,8 +87,6 @@ struct Game {
 	bool show_debug_info;
 	bool frame_advance;
 	bool skip_frame;
-
-	Console console;
 
 	void init();
 	void destroy();

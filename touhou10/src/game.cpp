@@ -123,6 +123,55 @@ void Game::init() {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_texture, 0);
 	}
 
+	// Setup arena
+	{
+		const size_t memory_for_package =
+			Package::MAX_ENTRIES * sizeof(Package::Entry)
+			+ Package::MEMORY_FOR_FILENAMES;
+
+		const size_t memory_for_renderer = BATCH_MAX_VERTICES * sizeof(Vertex);
+
+		const size_t memory_for_world =
+			MAX_BULLETS          * sizeof(Bullet)
+			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
+			+ MAX_ENEMIES        * sizeof(Enemy)
+			+ MAX_PICKUPS        * sizeof(Pickup)
+			+ MAX_ANIMATIONS     * sizeof(Animation)
+			+ MAX_PARTICLES      * sizeof(Particle)
+			+ TEMP_STORAGE_FOR_BOSS;
+
+		const size_t all_memory =
+			memory_for_package
+			+ memory_for_renderer
+			+ memory_for_world
+			+ Kilobytes(10); // Add some for alignment
+
+		arena = ArenaAlloc(all_memory);
+
+		// frame_arena = ArenaAlloc(1000);
+	}
+
+	Mix_Init(MIX_INIT_MP3);
+
+	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
+
+	{
+		float master_volume = 0.50f;
+		float sound_volume  = 0.50f;
+		float music_volume  = 0.75f;
+
+		Mix_Volume(-1,  (int)(MIX_MAX_VOLUME * (master_volume * sound_volume)));
+		Mix_VolumeMusic((int)(MIX_MAX_VOLUME * (master_volume * music_volume)));
+	}
+
+	double loading_time = GetTime();
+
+	package.init(&arena);
+	package.load("package.dat");
+
+	log_info("Read package header in %fms.", (GetTime() - loading_time) * 1000.0);
+	loading_time = GetTime();
+
 	// load textures
 	{
 		static_assert(NUM_TEXTURES == 8, "");
@@ -138,40 +187,8 @@ void Game::init() {
 		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
 	}
 
-	{
-		const size_t memory_for_renderer = BATCH_MAX_VERTICES * sizeof(Vertex);
-
-		const size_t memory_for_world =
-			  MAX_BULLETS        * sizeof(Bullet)
-			+ MAX_PLAYER_BULLETS * sizeof(PlayerBullet)
-			+ MAX_ENEMIES        * sizeof(Enemy)
-			+ MAX_PICKUPS        * sizeof(Pickup)
-			+ MAX_ANIMATIONS     * sizeof(Animation)
-			+ MAX_PARTICLES      * sizeof(Particle)
-			+ TEMP_STORAGE_FOR_BOSS;
-
-		const size_t all_memory =
-			memory_for_renderer
-			+ memory_for_world
-			+ Kilobytes(10); // Add some for alignment
-
-		arena = ArenaAlloc(all_memory);
-	}
-
-	// frame_arena = ArenaAlloc(1000);
-
-	Mix_Init(MIX_INIT_MP3);
-
-	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
-
-	{
-		float master_volume = 0.50f;
-		float sound_volume  = 0.50f;
-		float music_volume  = 0.75f;
-
-		Mix_Volume(-1,  (int)(MIX_MAX_VOLUME * (master_volume * sound_volume)));
-		Mix_VolumeMusic((int)(MIX_MAX_VOLUME * (master_volume * music_volume)));
-	}
+	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);
+	loading_time = GetTime();
 
 	// load sounds
 	{
@@ -179,25 +196,29 @@ void Game::init() {
 		static_assert(NUM_SOUNDS == 16, "");
 
 		// @Leak
-		sound_data[snd_boss_die]         = Mix_LoadWAV("sounds/boss_die.wav");
-		sound_data[snd_char_reimu_shoot] = Mix_LoadWAV("sounds/char_reimu_shoot.wav");
-		sound_data[snd_enemy_die]        = Mix_LoadWAV("sounds/enemy_die.wav");
-		sound_data[snd_enemy_hurt]       = Mix_LoadWAV("sounds/enemy_hurt.wav");
-		sound_data[snd_enemy_shoot]      = Mix_LoadWAV("sounds/enemy_shoot.wav");
-		sound_data[snd_extend]           = Mix_LoadWAV("sounds/extend.wav");
-		sound_data[snd_graze]            = Mix_LoadWAV("sounds/graze.wav");
-		sound_data[snd_lazer]            = Mix_LoadWAV("sounds/lazer.wav");
-		sound_data[snd_menu_cancel]      = Mix_LoadWAV("sounds/menu_cancel.wav");
-		sound_data[snd_menu_navigate]    = Mix_LoadWAV("sounds/menu_navigate.wav");
-		sound_data[snd_menu_ok]          = Mix_LoadWAV("sounds/menu_ok.wav");
-		sound_data[snd_pause]            = Mix_LoadWAV("sounds/pause.wav");
-		sound_data[snd_pichuun]          = Mix_LoadWAV("sounds/pichuun.wav");
-		sound_data[snd_pickup]           = Mix_LoadWAV("sounds/pickup.wav");
-		sound_data[snd_powerup]          = Mix_LoadWAV("sounds/powerup.wav");
-		sound_data[snd_spellcard]        = Mix_LoadWAV("sounds/spellcard.wav");
+		sound_data[snd_boss_die]         = load_sound("sounds/boss_die.wav");
+		sound_data[snd_char_reimu_shoot] = load_sound("sounds/char_reimu_shoot.wav");
+		sound_data[snd_enemy_die]        = load_sound("sounds/enemy_die.wav");
+		sound_data[snd_enemy_hurt]       = load_sound("sounds/enemy_hurt.wav");
+		sound_data[snd_enemy_shoot]      = load_sound("sounds/enemy_shoot.wav");
+		sound_data[snd_extend]           = load_sound("sounds/extend.wav");
+		sound_data[snd_graze]            = load_sound("sounds/graze.wav");
+		sound_data[snd_lazer]            = load_sound("sounds/lazer.wav");
+		sound_data[snd_menu_cancel]      = load_sound("sounds/menu_cancel.wav");
+		sound_data[snd_menu_navigate]    = load_sound("sounds/menu_navigate.wav");
+		sound_data[snd_menu_ok]          = load_sound("sounds/menu_ok.wav");
+		sound_data[snd_pause]            = load_sound("sounds/pause.wav");
+		sound_data[snd_pichuun]          = load_sound("sounds/pichuun.wav");
+		sound_data[snd_pickup]           = load_sound("sounds/pickup.wav");
+		sound_data[snd_powerup]          = load_sound("sounds/powerup.wav");
+		sound_data[snd_spellcard]        = load_sound("sounds/spellcard.wav");
 
 		Mix_VolumeChunk(sound_data[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
 	}
+
+	log_info("Loaded sounds in %fms.", (GetTime() - loading_time) * 1000.0);
+
+	package.close();
 
 	r = &renderer;
 	r->init();
@@ -229,6 +250,8 @@ void Game::destroy() {
 	}
 
 	r->destroy();
+
+	package.destroy();
 
 	Mix_CloseAudio();
 	Mix_Quit();
@@ -637,33 +660,6 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 }
 #endif
 
-static u8* read_entire_file(const char* fname, size_t* out_size) {
-	u8* result = nullptr;
-
-	FILE* f = nullptr;
-#ifdef _WIN32
-	fopen_s(&f, fname, "rb");
-#else
-	f = fopen(fname, "rb");
-#endif
-	Defer { if (f) fclose(f); };
-
-	if (f) {
-		fseek(f, 0, SEEK_END);
-		size_t size = (size_t) ftell(f);
-
-		result = (u8*) malloc(size);
-		Assert(result);
-
-		fseek(f, 0, SEEK_SET);
-		fread(result, size, 1, f);
-
-		*out_size = size;
-	}
-
-	return result;
-}
-
 static bool is_png(u8* filedata, size_t filesize) {
 	static u8 magic[] = {137, 80, 78, 71, 13, 10, 26, 10};
 	if (filesize < sizeof(magic)) {
@@ -690,7 +686,7 @@ static bool is_qoi(u8* filedata, size_t filesize) {
 	return true;
 }
 
-Texture load_texture(const char* fname, bool filter) {
+Texture load_texture(String fname, bool filter) {
 
 	auto create_texture = [&](void* pixel_data, int width, int height, int num_channels) -> Texture {
 		u32 texture;
@@ -714,8 +710,7 @@ Texture load_texture(const char* fname, bool filter) {
 	Texture result = {};
 
 	size_t filesize;
-	u8* filedata = read_entire_file(fname, &filesize);
-	Defer { if (filedata) free(filedata); };
+	u8* filedata = g->package.get_file(fname, &filesize);
 
 	if (filedata) {
 		if (is_png(filedata, filesize)) {
@@ -738,14 +733,34 @@ Texture load_texture(const char* fname, bool filter) {
 	}
 
 	if (result.ID != 0) {
-		log_info("Loaded texture %s", fname);
+		log_info("Loaded texture " Str_Fmt, Str_Arg(fname));
 	} else {
-		log_info("Couldn't load texture %s", fname);
+		log_info("Couldn't load texture " Str_Fmt, Str_Arg(fname));
 
 		// Create a 1x1 stub texture
 		static u32 white[1 * 1] = {0xffffffff};
 
 		result = create_texture(white, 1, 1, 4);
+	}
+
+	return result;
+}
+
+Mix_Chunk* load_sound(String fname) {
+	Mix_Chunk* result = nullptr;
+
+	size_t filesize;
+	u8* filedata = g->package.get_file(fname, &filesize);
+
+	if (filedata) {
+		// Goddammit SDL.
+		Assert(filesize <= INT_MAX);
+		SDL_RWops* src = SDL_RWFromConstMem(filedata, (int) filesize);
+		result = Mix_LoadWAV_RW(src, 1);
+
+		log_info("Loaded sound " Str_Fmt, Str_Arg(fname));
+	} else {
+		log_info("Couldn't load sound " Str_Fmt, Str_Arg(fname));
 	}
 
 	return result;
