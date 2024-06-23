@@ -34,6 +34,28 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 									 const void *userParam);
 #endif
 
+
+static_assert(NUM_SOUNDS == 16, "");
+static String sounds_filenames[] = {
+	"sounds/boss_die.wav",
+	"sounds/char_reimu_shoot.wav",
+	"sounds/enemy_die.wav",
+	"sounds/enemy_hurt.wav",
+	"sounds/enemy_shoot.wav",
+	"sounds/extend.wav",
+	"sounds/graze.wav",
+	"sounds/lazer.wav",
+	"sounds/menu_cancel.wav",
+	"sounds/menu_navigate.wav",
+	"sounds/menu_ok.wav",
+	"sounds/pause.wav",
+	"sounds/pichuun.wav",
+	"sounds/pickup.wav",
+	"sounds/powerup.wav",
+	"sounds/spellcard.wav",
+};
+
+
 void Game::init() {
 	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
@@ -196,22 +218,9 @@ void Game::init() {
 		static_assert(NUM_SOUNDS == 16, "");
 
 		// @Leak
-		sound_data[snd_boss_die]         = load_sound("sounds/boss_die.wav");
-		sound_data[snd_char_reimu_shoot] = load_sound("sounds/char_reimu_shoot.wav");
-		sound_data[snd_enemy_die]        = load_sound("sounds/enemy_die.wav");
-		sound_data[snd_enemy_hurt]       = load_sound("sounds/enemy_hurt.wav");
-		sound_data[snd_enemy_shoot]      = load_sound("sounds/enemy_shoot.wav");
-		sound_data[snd_extend]           = load_sound("sounds/extend.wav");
-		sound_data[snd_graze]            = load_sound("sounds/graze.wav");
-		sound_data[snd_lazer]            = load_sound("sounds/lazer.wav");
-		sound_data[snd_menu_cancel]      = load_sound("sounds/menu_cancel.wav");
-		sound_data[snd_menu_navigate]    = load_sound("sounds/menu_navigate.wav");
-		sound_data[snd_menu_ok]          = load_sound("sounds/menu_ok.wav");
-		sound_data[snd_pause]            = load_sound("sounds/pause.wav");
-		sound_data[snd_pichuun]          = load_sound("sounds/pichuun.wav");
-		sound_data[snd_pickup]           = load_sound("sounds/pickup.wav");
-		sound_data[snd_powerup]          = load_sound("sounds/powerup.wav");
-		sound_data[snd_spellcard]        = load_sound("sounds/spellcard.wav");
+		for (int i = 0; i < NUM_SOUNDS; i++) {
+			sound_data[i] = load_sound(sounds_filenames[i]);
+		}
 
 		Mix_VolumeChunk(sound_data[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
 	}
@@ -525,6 +534,33 @@ void Game::draw(float delta) {
 					max_batch, BATCH_MAX_VERTICES,
 					__cplusplus);
 			glm::vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
+			pos.y += 8;
+
+			// Audio Debug
+			{
+				auto find_chunk_filename = [&](Mix_Chunk* chunk) -> String {
+					for (int i = 0; i < NUM_SOUNDS; i++) {
+						if (sound_data[i] == chunk) {
+							return sounds_filenames[i];
+						}
+					}
+					return "none";
+				};
+
+				int nchannels = Mix_AllocateChannels(-1);
+				for (int i = 0; i < nchannels; i++) {
+					Mix_Chunk* chunk = Mix_GetChunk(i);
+					String filename = find_chunk_filename(chunk);
+
+					Static_String<64> buf;
+					Sprintf(&buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
+
+					glm::vec4 color = Mix_Playing(i) ? color_white : glm::vec4{0.5f, 0.5f, 0.5f, 1};
+					pos = r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
+				}
+
+				pos.y += 8;
+			}
 
 			if (state == STATE_PLAYING) {
 				Static_String<256> buf;
@@ -545,7 +581,8 @@ void Game::draw(float delta) {
 						Size_Arg(w->coro_memory),
 						w->animations.count, w->animations.capacity,
 						Size_Arg(w->temp_arena_for_boss.count), Size_Arg(w->temp_arena_for_boss.capacity));
-				r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
+				pos = r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
+				pos.y += 8;
 
 #define Object_Fmt "id: %" PRIX64 "\n"
 
