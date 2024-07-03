@@ -7,6 +7,7 @@ delta_multiplier shouldn't apply to boss
 
 3D Models for stage backgrounds
 3D Lighting, fog for stage backgrounds
+Score popups
 
 Stage music, boss music
 Dialogue
