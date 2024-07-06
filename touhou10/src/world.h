@@ -61,6 +61,20 @@ struct World {
 	bool show_hitboxes;
 	size_t coro_memory;
 
+	struct D3D {
+		glm::vec3 cam_pos;
+		float pitch;
+		float yaw;
+
+		glm::vec3 get_camera_forward();
+		glm::vec3 get_up_vector() { return {0, 1, 0}; }
+
+		glm::mat4 get_view_mat();
+		glm::mat4 get_proj_mat();
+
+		glm::mat4 get_mvp();
+	} d3d;
+
 	void init();
 	void destroy();
 

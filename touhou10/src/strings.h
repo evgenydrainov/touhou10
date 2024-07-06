@@ -63,10 +63,14 @@ static bool is_whitespace(char ch) {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
 }
 
+static bool is_numeric(char ch) {
+	return ch >= '0' && ch <= '9';
+}
+
 static bool is_identifier(char ch) {
 	return (ch >= 'a' && ch <= 'z')
 		|| (ch >= 'A' && ch <= 'Z')
-		|| (ch >= '0' && ch <= '9')
+		|| is_numeric(ch)
 		|| ch == '_';
 }
 
@@ -75,6 +79,30 @@ static void eat_whitespace(String* str) {
 		str->data++;
 		str->count--;
 	}
+}
+
+static String eat_non_whitespace(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && !is_whitespace(*str->data)) {
+		str->data++;
+		str->count--;
+		result.count++;
+	}
+
+	return result;
+}
+
+static String eat_numeric(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && is_numeric(*str->data)) {
+		str->data++;
+		str->count--;
+		result.count++;
+	}
+
+	return result;
 }
 
 static String eat_identifier(String* str) {
@@ -94,6 +122,24 @@ static String eat_next_token(String* str) {
 	return eat_identifier(str);
 }
 
+static String eat_line(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && *str->data != '\n') {
+		str->data++;
+		str->count--;
+		result.count++;
+	}
+
+	// Skip newline character.
+	if (str->count > 0) {
+		str->data++;
+		str->count--;
+	}
+
+	return result;
+}
+
 static u32 string_to_u32(String str, bool* done = nullptr) {
 	if (str.count == 0) {
 		if (done) *done = false;
@@ -103,17 +149,70 @@ static u32 string_to_u32(String str, bool* done = nullptr) {
 	u32 result = 0;
 
 	for (size_t i = 0; i < str.count; i++) {
-		if (str[i] >= '0' && str[i] <= '9') {
-			result *= 10;
-			result += str[i] - '0';
-		} else {
+		if (!is_numeric(str[i])) {
 			if (done) *done = false;
 			return 0;
 		}
+
+		result *= 10;
+		result += str[i] - '0';
 	}
 
 	if (done) *done = true;
 	return result;
+}
+
+static float string_to_f32(String str, bool* done = nullptr) {
+	if (str.count == 0) {
+		if (done) *done = false;
+		return 0;
+	}
+
+	float negative = 1;
+
+	while (str.count > 0 && *str.data == '-') {
+		negative = -negative;
+		str.data++;
+		str.count--;
+	}
+
+	float result = 0;
+
+	while (str.count > 0 && *str.data != '.') {
+		if (!is_numeric(*str.data)) {
+			if (done) *done = false;
+			return 0;
+		}
+
+		result *= 10;
+		result += *str.data - '0';
+
+		str.data++;
+		str.count--;
+	}
+
+	if (str.count > 0 && *str.data == '.') {
+		str.data++;
+		str.count--;
+
+		float f = 0.1f;
+
+		while (str.count > 0) {
+			if (!is_numeric(*str.data)) {
+				if (done) *done = false;
+				return 0;
+			}
+
+			result += (*str.data - '0') * f;
+			f /= 10;
+
+			str.data++;
+			str.count--;
+		}
+	}
+
+	if (done) *done = true;
+	return result * negative;
 }
 
 template <size_t N>
@@ -126,4 +225,13 @@ static void Sprintf(Static_String<N>* str, const char* fmt, ...) {
 
 	Assert(result > 0);
 	str->count = (size_t) result;
+}
+
+static void advance(String* str, size_t i = 1) {
+	if (i > str->count) {
+		i = str->count;
+	}
+
+	str->count -= i;
+	str->data += i;
 }

@@ -29,6 +29,7 @@ enum {
 	tex_boss_cirno_portrait,
 	tex_boss_youmu_portrait,
 	tex_spellcard_attack_anim_label,
+	tex_pcb_youmu_stairs,
 
 	NUM_TEXTURES,
 };
@@ -160,6 +161,7 @@ BossData* GetBossData(u32 boss_index);
 
 struct StageData {
 	void (*script)(mco_coro*);
+	void (*init_background)();
 	void (*draw_background)(float delta);
 };
 

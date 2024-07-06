@@ -198,6 +198,8 @@
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\shader_data.cpp" />
     <ClCompile Include="src\sprite_data.cpp" />
+    <ClCompile Include="src\stage_0_data.cpp" />
+    <ClCompile Include="src\stage_1_data.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -226,8 +228,6 @@
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scripting.h" />
     <ClInclude Include="src\sprite_indices.h" />
-    <ClInclude Include="src\stage_0_data.h" />
-    <ClInclude Include="src\stage_1_data.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\strings.h" />
     <ClInclude Include="src\title_screen.h" />

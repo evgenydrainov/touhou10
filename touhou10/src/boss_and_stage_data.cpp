@@ -1,8 +1,5 @@
 #include "assets.h"
 
-#include "game.h"
-#include "cpml.h"
-
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,8 +10,13 @@
 #include "boss_data_daiyousei.h"
 #include "boss_data_youmu.h"
 
-#include "stage_0_data.h"
-#include "stage_1_data.h"
+void Stage_0_Script(mco_coro* co);
+void Stage_0_Init_Background();
+void Stage_0_Draw_Background(float delta);
+
+void Stage_1_Script(mco_coro* co);
+void Stage_1_Init_Background();
+void Stage_1_Draw_Background(float delta);
 
 static_assert(NUM_BOSSES == 3, "");
 
@@ -65,10 +67,12 @@ static_assert(STAGE_COUNT == 2, "");
 StageData stage_data[STAGE_COUNT] = {
 	{
 		/* .script          = */ Stage_0_Script,
+		/* .init_background = */ Stage_0_Init_Background,
 		/* .draw_background = */ Stage_0_Draw_Background,
 	},
 	{
 		/* .script          = */ Stage_1_Script,
+		/* .init_background = */ Stage_1_Init_Background,
 		/* .draw_background = */ Stage_1_Draw_Background,
 	},
 };

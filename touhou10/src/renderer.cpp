@@ -608,3 +608,37 @@ void Renderer::break_batch() {
 	batch_texture = 0;
 	mode = MODE_NONE;
 }
+
+u32 create_vertex_array_obj(Vertex* vertices, size_t num_vertices,
+							u32* indices, size_t num_indices,
+							u32* out_vbo, u32* out_ebo) {
+	u32 vao = 0;
+	u32 vbo = 0;
+	u32 ebo = 0;
+
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	if (indices) glGenBuffers(1, &ebo);
+
+	glBindVertexArray(vao);
+	Defer { glBindVertexArray(0); };
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(vertices[0]), vertices, GL_STATIC_DRAW);
+
+	if (indices) {
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_indices * sizeof(indices[0]), indices, GL_STATIC_DRAW);
+	}
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+	glEnableVertexAttribArray(2);
+
+	if (out_vbo) *out_vbo = vbo;
+	if (out_ebo) *out_ebo = ebo;
+	return vao;
+}

@@ -32,6 +32,7 @@ static String files_to_pack[] = {
 	"textures/boss_cirno_portrait.png",
 	"textures/boss_youmu_portrait.png",
 	"textures/cirno_spellcard_background.png",
+	"textures/pcb_youmu_stairs.png",
 	"textures/spellcard_attack_anim_label.png",
 	"textures/stage_0_bg.png",
 	"textures/white.png",
@@ -52,6 +53,8 @@ static String files_to_pack[] = {
 	"sounds/pickup.wav",
 	"sounds/powerup.wav",
 	"sounds/spellcard.wav",
+
+	"models/pcb_youmu_stairs.obj",
 };
 
 
@@ -129,6 +132,7 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < ArrayLength(files_to_pack); i++) {
 			Loaded_File file = {};
 
+			Assert(files_to_pack[i].data[files_to_pack[i].count] == 0);
 			file.filedata = read_entire_file(files_to_pack[i].data, &file.filesize);
 			Assert(file.filedata);
 
@@ -172,6 +176,8 @@ int main(int argc, char* argv[]) {
 			fwrite(&num_files, sizeof num_files, 1, f);
 		}
 
+		printf("Written Header.\n");
+
 		// 
 		// Table of Contents
 		// 
@@ -195,11 +201,15 @@ int main(int argc, char* argv[]) {
 			fwrite(files_to_pack[i].data, filename_length, 1, f);
 		}
 
+		printf("Written Table of Contents.\n");
+
 		// 
 		// Filedata
 		// 
 		for (int i = 0; i < ArrayLength(files_to_pack); i++) {
 			fwrite(loaded_files[i].filedata, loaded_files[i].filesize, 1, f);
+
+			printf("Written " Str_Fmt "\n", Str_Arg(files_to_pack[i]));
 		}
 	}
 

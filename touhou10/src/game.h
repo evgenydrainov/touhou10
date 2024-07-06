@@ -23,6 +23,7 @@ extern Game* g;
 
 Texture    load_texture(String fname, bool filter = false);
 Mix_Chunk* load_sound(String fname);
+u32        load_3d_model_from_obj_file(String fname, int* out_num_vertices);
 
 double GetTime();
 
@@ -60,6 +61,7 @@ struct Game {
 
 	u32 game_fbo;
 	u32 game_texture;
+	u32 game_depth_texture;
 
 	State state;
 	State next_state;

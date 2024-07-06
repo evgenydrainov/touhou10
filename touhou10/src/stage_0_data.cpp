@@ -1,6 +1,9 @@
 #pragma once
 
-static void Stage_0_Script(mco_coro* co) {
+#include "scripting.h"
+#include <glad/gl.h>
+
+void Stage_0_Script(mco_coro* co) {
 
 	auto spawn_spinner = [&]() {
 		auto Script = [](mco_coro* co) {
@@ -109,20 +112,18 @@ l_boss:
 #endif
 }
 
-static void Stage_0_Draw_Background(float delta) {
-	static u32 quad_vao;
-	static u32 quad_vbo;
-	static u32 quad_ebo;
+static u32 quad_vao;
+static u32 quad_vbo;
+static u32 quad_ebo;
+
+void Stage_0_Init_Background() {
+	w->d3d.cam_pos = {0, 10, 0};
+	w->d3d.pitch   = -45;
+	w->d3d.yaw     = -90;
 
 	if (!quad_vao) {
 		Assert(!quad_vbo);
 		Assert(!quad_ebo);
-
-		glGenVertexArrays(1, &quad_vao);
-		glGenBuffers(1, &quad_vbo);
-		glGenBuffers(1, &quad_ebo);
-
-		glBindVertexArray(quad_vao);
 
 		float x1 = -100;
 		float z1 = -100;
@@ -141,80 +142,17 @@ static void Stage_0_Draw_Background(float delta) {
 			{{x1, 0, z2}, {1, 1, 1, 1}, {u1, v2}},
 		};
 
-		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
 		u32 indices[] = {
 			0, 1, 2,
 			2, 3, 0,
 		};
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-		glEnableVertexAttribArray(2);
-
-		glBindVertexArray(0);
+		// @Leak
+		quad_vao = create_vertex_array_obj(vertices, ArrayLength(vertices), indices, ArrayLength(indices), &quad_vbo, &quad_ebo);
 	}
+}
 
-	// Init
-	static glm::vec3 cam_pos = {0, 10, 0};
-	static float pitch = -45;
-	static float yaw   = -90;
-
-	// Capture mouse
-	if (is_key_pressed(SDL_SCANCODE_F3)) {
-		SDL_SetRelativeMouseMode((SDL_bool) !SDL_GetRelativeMouseMode());
-	}
-
-	int mouse_x = 0;
-	int mouse_y = 0;
-
-	SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
-
-	// Move if captured
-	if (SDL_GetRelativeMouseMode()) {
-		pitch -= mouse_y / 5.0f;
-		yaw   += mouse_x / 5.0f;
-
-		float spd = 0.5f;
-
-		if (is_key_held(SDL_SCANCODE_W)) {
-			cam_pos.x += spd * cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-			cam_pos.y += spd * sinf(glm::radians(pitch));
-			cam_pos.z += spd * sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-		}
-
-		if (is_key_held(SDL_SCANCODE_S)) {
-			cam_pos.x -= spd * cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-			cam_pos.y -= spd * sinf(glm::radians(pitch));
-			cam_pos.z -= spd * sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-		}
-
-		if (is_key_held(SDL_SCANCODE_A)) {
-			cam_pos.z += spd * sinf(glm::radians(yaw - 90));
-			cam_pos.x += spd * cosf(glm::radians(yaw - 90));
-		}
-
-		if (is_key_held(SDL_SCANCODE_D)) {
-			cam_pos.z += spd * sinf(glm::radians(yaw + 90));
-			cam_pos.x += spd * cosf(glm::radians(yaw + 90));
-		}
-	}
-
-	pitch = clamp(pitch, -89.0f, 89.0f);
-	yaw   = wrapf(yaw, 360.0f);
-
-	glm::vec3 direction;
-	direction.x = cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-	direction.y = sinf(glm::radians(pitch));
-	direction.z = sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-
+void Stage_0_Draw_Background(float delta) {
 	glClearColor(1, 1, 1, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -223,18 +161,13 @@ static void Stage_0_Draw_Background(float delta) {
 
 		glUseProgram(program);
 
-		glm::mat4 model = {1};
-		// glm::mat4 view = glm::lookAt(glm::vec3{0, 10, 0}, glm::vec3{0, 0, -10}, glm::vec3{0, 1, 0});
-		glm::mat4 view = glm::lookAt(cam_pos, cam_pos + direction, glm::vec3{0, 1, 0});
-		glm::mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
-
-		glm::mat4 MVP = (proj * view) * model;
+		glm::mat4 MVP = w->d3d.get_mvp();
 
 		int u_MVP = glGetUniformLocation(program, "u_MVP");
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 		int u_Time = glGetUniformLocation(program, "u_Time");
-		glUniform1f(u_Time, (float)SDL_GetTicks() / 1000.0f);
+		glUniform1f(u_Time, SDL_GetTicks() / 1000.0f);
 
 		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_stage_0_bg)->ID);
 		glBindVertexArray(quad_vao);

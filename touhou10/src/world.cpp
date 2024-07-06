@@ -34,15 +34,22 @@ void World::init() {
 
 	part_sys.init();
 
+	StageData* stage = GetStageData(g->stage_index);
+
 	{
-		mco_desc desc = mco_desc_init(GetStageData(g->stage_index)->script, 0);
+		mco_desc desc = mco_desc_init(stage->script, 0);
 		mco_create(&co, &desc);
 	}
 
 	temp_arena_for_boss = ArenaAllocFromArena(&g->arena, TEMP_STORAGE_FOR_BOSS);
+
+	Assert(stage->init_background);
+	stage->init_background();
 }
 
 void World::destroy() {
+
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 
 	if (co) {
 		mco_destroy(co);
@@ -588,14 +595,17 @@ void World::update(float delta_not_modified) {
 
 l_skip_update:
 
+	// Pause
 	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
 		paused ^= true;
 	}
 
+	// Show hitboxes
 	if (is_key_pressed(SDL_SCANCODE_H)) {
 		show_hitboxes ^= true;
 	}
 
+	// Skip boss phase
 	if (is_key_pressed(SDL_SCANCODE_B)) {
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 			boss.timer = 0;
@@ -603,6 +613,77 @@ l_skip_update:
 		}
 	}
 
+	// 3D Free Camera
+	{
+		if (is_key_pressed(SDL_SCANCODE_F3)) {
+			SDL_SetRelativeMouseMode((SDL_bool) !SDL_GetRelativeMouseMode());
+		}
+
+		int mouse_x = 0;
+		int mouse_y = 0;
+
+		SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
+
+		if (SDL_GetRelativeMouseMode()) {
+			d3d.pitch -= mouse_y / 5.0f;
+			d3d.yaw   += mouse_x / 5.0f;
+
+			float spd = 0.5f;
+
+			if (is_key_held(SDL_SCANCODE_LSHIFT)) {
+				spd /= 4;
+			}
+
+			if (is_key_held(SDL_SCANCODE_W)) {
+				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+				d3d.cam_pos.y += spd * sinf(glm::radians(d3d.pitch));
+				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+			}
+
+			if (is_key_held(SDL_SCANCODE_S)) {
+				d3d.cam_pos.x -= spd * cosf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+				d3d.cam_pos.y -= spd * sinf(glm::radians(d3d.pitch));
+				d3d.cam_pos.z -= spd * sinf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+			}
+
+			if (is_key_held(SDL_SCANCODE_A)) {
+				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw - 90));
+				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw - 90));
+			}
+
+			if (is_key_held(SDL_SCANCODE_D)) {
+				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw + 90));
+				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw + 90));
+			}
+		}
+
+		d3d.pitch = clamp(d3d.pitch, -89.0f, 89.0f);
+		d3d.yaw   = wrapf(d3d.yaw, 360.0f);
+	}
+
+}
+
+glm::vec3 World::D3D::get_camera_forward() {
+	glm::vec3 forward;
+	forward.x = cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+	forward.y = sinf(glm::radians(pitch));
+	forward.z = sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+	return forward;
+}
+
+glm::mat4 World::D3D::get_view_mat() {
+	glm::mat4 view = glm::lookAt(cam_pos, cam_pos + get_camera_forward(), get_up_vector());
+	return view;
+}
+
+glm::mat4 World::D3D::get_proj_mat() {
+	glm::mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
+	return proj;
+}
+
+glm::mat4 World::D3D::get_mvp() {
+	glm::mat4 MVP = (get_proj_mat() * get_view_mat());
+	return MVP;
 }
 
 void World::draw(float delta_not_modified) {

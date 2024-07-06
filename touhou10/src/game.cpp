@@ -117,13 +117,15 @@ void Game::init() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glDisable(GL_DEPTH_TEST);
+
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
 	// Create game framebuffer
 	{
-		glGenTextures(1, &game_texture);
+		glGenTextures(1, &game_texture); // @Leak
 
 		glBindTexture(GL_TEXTURE_2D, game_texture);
 		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
@@ -135,14 +137,29 @@ void Game::init() {
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, GAME_W, GAME_H, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 	}
+
+	{
+		glGenTextures(1, &game_depth_texture); // @Leak
+
+		glBindTexture(GL_TEXTURE_2D, game_depth_texture);
+		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, GAME_W, GAME_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	}
 	
 	{
-		glGenFramebuffers(1, &game_fbo);
+		glGenFramebuffers(1, &game_fbo); // @Leak
 
 		glBindFramebuffer(GL_FRAMEBUFFER, game_fbo);
 		Defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
 
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_texture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_texture,       0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, game_depth_texture, 0);
 	}
 
 	// Setup arena
@@ -196,7 +213,7 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 8, "");
+		static_assert(NUM_TEXTURES == 9, "");
 
 		// @Leak
 		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                    true);
@@ -207,6 +224,7 @@ void Game::init() {
 		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png");
 		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png");
 		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
+		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png", true);
 	}
 
 	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);
@@ -806,6 +824,123 @@ Mix_Chunk* load_sound(String fname) {
 
 	return result;
 }
+
+u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
+	Arena arena = ArenaAlloc(Kilobytes(700));
+	Defer { ArenaRelease(&arena); };
+
+	auto positions = ArrayAllocFromArena<glm::vec3> (&arena, 10'000);
+	auto uvs       = ArrayAllocFromArena<glm::vec2> (&arena, 10'000);
+	auto normals   = ArrayAllocFromArena<glm::vec3> (&arena, 10'000);
+	auto vertices  = ArrayAllocFromArena<Vertex>    (&arena, 10'000);
+
+	g->package.open();
+	Defer { g->package.close(); };
+
+	size_t filesize;
+	u8* filedata = g->package.get_file(fname, &filesize);
+
+	if (!filedata) {
+		*out_num_vertices = 0;
+		return create_vertex_array_obj(nullptr, 0); // Stub
+	}
+
+	String text = {(char*)filedata, filesize};
+
+	while (text.count > 0) {
+		String line = eat_line(&text);
+
+		if (line.count == 0) {
+			continue;
+		}
+
+		if (line[0] == '#') {
+			continue;
+		}
+
+		eat_whitespace(&line);
+		String s = eat_non_whitespace(&line);
+
+		if (s == "v") {
+			eat_whitespace(&line);
+			String x = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String y = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String z = eat_non_whitespace(&line);
+
+			glm::vec3 pos;
+			pos.x = string_to_f32(x);
+			pos.y = string_to_f32(y);
+			pos.z = string_to_f32(z);
+
+			positions.add(pos);
+		} else if (s == "vn") {
+			eat_whitespace(&line);
+			String x = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String y = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String z = eat_non_whitespace(&line);
+
+			glm::vec3 normal;
+			normal.x = string_to_f32(x);
+			normal.y = string_to_f32(y);
+			normal.z = string_to_f32(z);
+
+			normals.add(normal);
+		} else if (s == "vt") {
+			eat_whitespace(&line);
+			String u = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String v = eat_non_whitespace(&line);
+
+			glm::vec2 uv;
+			uv.x = string_to_f32(u);
+			uv.y = string_to_f32(v);
+
+			uvs.add(uv);
+		} else if (s == "f") {
+			eat_whitespace(&line);
+			String vert1 = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String vert2 = eat_non_whitespace(&line);
+
+			eat_whitespace(&line);
+			String vert3 = eat_non_whitespace(&line);
+
+			auto add_vert = [&](String vert) {
+				String pos = eat_numeric(&vert);
+				advance(&vert); // Skip '/'
+
+				String uv = eat_numeric(&vert);
+				advance(&vert); // Skip '/'
+
+				String normal = eat_numeric(&vert);
+
+				Vertex v;
+				v.pos = positions[string_to_u32(pos) - 1];
+				v.uv  = uvs[string_to_u32(uv) - 1];
+				v.color = color_white;
+
+				vertices.add(v);
+			};
+
+			add_vert(vert1);
+			add_vert(vert2);
+			add_vert(vert3);
+		}
+	}
+
+	*out_num_vertices = (int) vertices.count;
+	return create_vertex_array_obj(vertices.data, vertices.count);
+};
 
 void stop_sound(u32 sound_index) {
 	Mix_Chunk* chunk = GetSound(sound_index);

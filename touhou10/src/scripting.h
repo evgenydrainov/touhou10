@@ -1,5 +1,8 @@
 #pragma once
 
+#include "game.h"
+#include "cpml.h"
+
 #define self ((Object*)co->user_data)
 
 enum {

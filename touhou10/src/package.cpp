@@ -84,9 +84,9 @@ void Package::open() {
 		f = SDL_RWFromFile(filename, "rb");
 	}
 
-	if (!f) {
-		log_error("Couldn't open package %s", filename);
-	}
+	// if (!f) {
+	// 	log_error("Couldn't open package %s", filename);
+	// }
 
 	if (!temp_buffer_for_files) {
 		temp_buffer_for_files = (u8*) malloc(TEMP_BUFFER_FOR_FILES);
@@ -185,6 +185,7 @@ u8* Package::get_file(String name, size_t* out_size) {
 		}
 
 		if (!temp_buffer_for_files) {
+			log_error("Package must be open to read files.");
 			return nullptr;
 		}
 
@@ -192,6 +193,8 @@ u8* Package::get_file(String name, size_t* out_size) {
 		size_t filesize = (size_t) SDL_RWtell(src);
 
 		SDL_RWseek(src, 0, RW_SEEK_SET);
+
+		Assert(filesize <= TEMP_BUFFER_FOR_FILES);
 		SDL_RWread(src, temp_buffer_for_files, 1, filesize);
 
 		*out_size = filesize;

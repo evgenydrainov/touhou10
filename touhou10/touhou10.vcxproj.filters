@@ -75,6 +75,12 @@
     <ClCompile Include="src\package.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\stage_1_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stage_0_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h">
@@ -116,9 +122,6 @@
     <ClInclude Include="src\boss_data_daiyousei.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\stage_0_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\character_data_reimu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -135,9 +138,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\particle_system.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stage_1_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">

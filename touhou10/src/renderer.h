@@ -43,6 +43,10 @@ enum VAlign {
 	VALIGN_BOTTOM,
 };
 
+u32 create_vertex_array_obj(Vertex* vertices, size_t num_vertices,
+							u32* indices = nullptr, size_t num_indices = 0,
+							u32* out_vbo = nullptr, u32* out_ebo = nullptr);
+
 struct Renderer {
 
 	enum Mode {
