@@ -87,6 +87,8 @@ static Create_Sprite create_sprites[] = {
 
 	{"spr_bullet_small"      , "projectiles.png",   0, 240,  8,  8,  4,  4, 16,  8, 0.00f,  0,  8,  8},
 
+	{"spr_bullet_spawn_particle","projectiles.png", 0, 416, 32, 32, 16, 16,  8,  8},
+
 	{"spr_boss_cirno_idle"   , "boss_cirno.png",  176, 160, 64, 64, 32, 32,  4,  4, 0.15f,  0, 64, 64},
 	{"spr_boss_cirno_right"  , "boss_cirno.png",  176, 224, 64, 64, 32, 32,  4,  4, 0.15f,  3, 64, 64},
 	{"spr_boss_cirno_left"   , "boss_cirno.png",  176, 288, 64, 64, 32, 32,  4,  4, 0.15f,  3, 64, 64},
