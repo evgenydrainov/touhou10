@@ -31,7 +31,51 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 									 GLenum severity,
 									 GLsizei length,
 									 const char *message,
-									 const void *userParam);
+									 const void *userParam) {
+	// ignore non-significant error/warning codes
+	// if (id == 131169 || id == 131185 || id == 131218 || id == 131204) {
+	// 	return;
+	// }
+
+	log_info("---------------");
+	log_info("Debug message (%u): %s", id, message);
+
+	switch (source)
+	{
+		case GL_DEBUG_SOURCE_API:             log_info("Source: API"); break;
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   log_info("Source: Window System"); break;
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: log_info("Source: Shader Compiler"); break;
+		case GL_DEBUG_SOURCE_THIRD_PARTY:     log_info("Source: Third Party"); break;
+		case GL_DEBUG_SOURCE_APPLICATION:     log_info("Source: Application"); break;
+		case GL_DEBUG_SOURCE_OTHER:           log_info("Source: Other"); break;
+	}
+
+	switch (type)
+	{
+		case GL_DEBUG_TYPE_ERROR:               log_info("Type: Error"); break;
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: log_info("Type: Deprecated Behaviour"); break;
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  log_info("Type: Undefined Behaviour"); break;
+		case GL_DEBUG_TYPE_PORTABILITY:         log_info("Type: Portability"); break;
+		case GL_DEBUG_TYPE_PERFORMANCE:         log_info("Type: Performance"); break;
+		case GL_DEBUG_TYPE_MARKER:              log_info("Type: Marker"); break;
+		case GL_DEBUG_TYPE_PUSH_GROUP:          log_info("Type: Push Group"); break;
+		case GL_DEBUG_TYPE_POP_GROUP:           log_info("Type: Pop Group"); break;
+		case GL_DEBUG_TYPE_OTHER:               log_info("Type: Other"); break;
+	}
+
+	switch (severity)
+	{
+		case GL_DEBUG_SEVERITY_HIGH:         log_info("Severity: high"); break;
+		case GL_DEBUG_SEVERITY_MEDIUM:       log_info("Severity: medium"); break;
+		case GL_DEBUG_SEVERITY_LOW:          log_info("Severity: low"); break;
+		case GL_DEBUG_SEVERITY_NOTIFICATION: log_info("Severity: notification"); break;
+	}
+
+	// SDL_Window* win = SDL_GL_GetCurrentWindow();
+	// SDL_ShowSimpleMessageBox(0, "", message, win);
+
+	Assert(false);
+}
 #endif
 
 
@@ -88,13 +132,18 @@ void Game::init() {
 		log_info("Loaded GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 	}
 
+
 #if TH_DEBUG
-	if (GLAD_GL_ARB_debug_output) {
-		glDebugMessageCallbackARB(glDebugOutput, nullptr);
+	if (GLAD_GL_KHR_debug) {
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(glDebugOutput, nullptr);
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
 #endif
 
-	/*
+
+#if 0
 	{
 		int num_exts;
 		glGetIntegerv(GL_NUM_EXTENSIONS, &num_exts);
@@ -106,7 +155,7 @@ void Game::init() {
 			log_info("%s", ext);
 		}
 	}
-	*/
+#endif
 
 	SDL_GL_SetSwapInterval(0);
 
@@ -663,61 +712,6 @@ void Game::draw(float delta) {
 	draw_took = GetTime() - time;
 }
 
-#if TH_DEBUG
-static void GLAPIENTRY glDebugOutput(GLenum source,
-									 GLenum type,
-									 unsigned int id,
-									 GLenum severity,
-									 GLsizei length,
-									 const char *message,
-									 const void *userParam) {
-	// ignore non-significant error/warning codes
-	// if (id == 131169 || id == 131185 || id == 131218 || id == 131204) {
-	// 	return;
-	// }
-
-	log_info("---------------");
-	log_info("Debug message (%u):\n%s", id, message);
-
-	// SDL_Window* win = SDL_GL_GetCurrentWindow();
-	// SDL_ShowSimpleMessageBox(0, "", message, win);
-
-	Assert(false);
-
-	/*
-	switch (source)
-	{
-		case GL_DEBUG_SOURCE_API:             log_info("Source: API"); break;
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   log_info("Source: Window System"); break;
-		case GL_DEBUG_SOURCE_SHADER_COMPILER: log_info("Source: Shader Compiler"); break;
-		case GL_DEBUG_SOURCE_THIRD_PARTY:     log_info("Source: Third Party"); break;
-		case GL_DEBUG_SOURCE_APPLICATION:     log_info("Source: Application"); break;
-		case GL_DEBUG_SOURCE_OTHER:           log_info("Source: Other"); break;
-	}
-
-	switch (type)
-	{
-		case GL_DEBUG_TYPE_ERROR:               log_info("Type: Error"); break;
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: log_info("Type: Deprecated Behaviour"); break;
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  log_info("Type: Undefined Behaviour"); break;
-		case GL_DEBUG_TYPE_PORTABILITY:         log_info("Type: Portability"); break;
-		case GL_DEBUG_TYPE_PERFORMANCE:         log_info("Type: Performance"); break;
-		case GL_DEBUG_TYPE_MARKER:              log_info("Type: Marker"); break;
-		case GL_DEBUG_TYPE_PUSH_GROUP:          log_info("Type: Push Group"); break;
-		case GL_DEBUG_TYPE_POP_GROUP:           log_info("Type: Pop Group"); break;
-		case GL_DEBUG_TYPE_OTHER:               log_info("Type: Other"); break;
-	}
-
-	switch (severity)
-	{
-		case GL_DEBUG_SEVERITY_HIGH:         log_info("Severity: high"); break;
-		case GL_DEBUG_SEVERITY_MEDIUM:       log_info("Severity: medium"); break;
-		case GL_DEBUG_SEVERITY_LOW:          log_info("Severity: low"); break;
-		case GL_DEBUG_SEVERITY_NOTIFICATION: log_info("Severity: notification"); break;
-	}
-	*/
-}
-#endif
 
 static bool is_png(u8* filedata, size_t filesize) {
 	static u8 magic[] = {137, 80, 78, 71, 13, 10, 26, 10};
