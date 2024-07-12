@@ -1,5 +1,3 @@
-#pragma once
-
 #include "scripting.h"
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
