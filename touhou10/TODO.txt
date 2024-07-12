@@ -5,7 +5,6 @@ Player God Mode
 Don't pause if lost focus when debugging
 delta_multiplier shouldn't apply to boss
 
-3D Models for stage backgrounds
 3D Lighting, fog for stage backgrounds
 Score popups
 
