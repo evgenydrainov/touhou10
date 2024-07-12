@@ -25,11 +25,14 @@ add_executable(touhou10
 	src/game.cpp
 	src/main.cpp
 	src/objects.cpp
+	src/package.cpp
 	src/particle_system.cpp
 	src/player.cpp
 	src/renderer.cpp
 	src/shader_data.cpp
 	src/sprite_data.cpp
+	src/stage_0_data.cpp
+	src/stage_1_data.cpp
 	src/stdafx.cpp
 	src/title_screen.cpp
 	src/world.cpp)
