@@ -289,7 +289,7 @@ void Game::init() {
 			sound_data[i] = load_sound(sounds_filenames[i]);
 		}
 
-		Mix_VolumeChunk(sound_data[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
+		if (sound_data[snd_enemy_shoot]) Mix_VolumeChunk(sound_data[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
 	}
 
 	log_info("Loaded sounds in %fms.", (GetTime() - loading_time) * 1000.0);
