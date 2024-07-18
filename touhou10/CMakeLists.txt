@@ -1,11 +1,20 @@
 cmake_minimum_required(VERSION 3.7)
 project(touhou10)
 
-set(CMAKE_BUILD_TYPE Debug)
-add_compile_definitions(_DEBUG)
-add_compile_definitions(TH_DEBUG=1)
+# 
+# I've only tested this file on Linux.
+# On Windows, use the Visual Studio solution.
+# 
+
+add_compile_definitions(TH_DEBUG=$<CONFIG:Debug>)
+add_compile_definitions($<$<CONFIG:Debug>:_DEBUG>)
+add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
+add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
 find_package(SDL2 REQUIRED)
+MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
+MESSAGE(STATUS "INFO: SDL2_LIBRARIES is ${SDL2_LIBRARIES}")
+
 include_directories(touhou10 ${SDL2_INCLUDE_DIRS})
 
 include_directories(touhou10 ../external/glad/include)
