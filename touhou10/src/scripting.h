@@ -67,8 +67,6 @@ static Bullet* ShootExtO(Object* o,
 
 	play_sound(snd_enemy_shoot);
 
-	// w->part_sys.create_particle();
-
 	return w->bullets.add(b);
 }
 

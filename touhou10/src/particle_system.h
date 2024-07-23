@@ -16,29 +16,23 @@
 // 
 
 struct Particle {
-	glm::vec2 pos;
-	float speed;
-	float speed_incr;
-	float direction;
-	float direction_incr;
+	float x;
+	float y;
+	float spd;
+	float dir;
+	float acc;
+
 	float lifetime;
 	float lifespan;
+
 	u32 sprite_index;
 	float frame_index;
-	glm::vec4 color;
-};
 
-struct Particle_Type {
-	float speed_min;
-	float speed_max;
-	float speed_incr;
-	float direction_min;
-	float direction_max;
-	float direction_incr;
-	float lifespan_min;
-	float lifespan_max;
-	u32 sprite_index;
-	glm::vec4 color;
+	glm::vec4 color_from = {1, 1, 1, 1};
+	glm::vec4 color_to   = {1, 1, 1, 1};
+
+	glm::vec2 scale_from = {1, 1};
+	glm::vec2 scale_to   = {1, 1};
 };
 
 struct Particle_System {
@@ -46,8 +40,6 @@ struct Particle_System {
 
 	void init();
 	void destroy();
-
-	void create_particle(glm::vec2 pos, const Particle_Type& type);
 
 	void update(float delta);
 	void draw(float delta);

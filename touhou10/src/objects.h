@@ -143,12 +143,14 @@ enum BulletType {
 	BULLET_TYPE_LAZER,
 };
 
+#define BULLET_SPAWN_PARTICLE_LIFESPAN 10.0f
+
 struct Bullet : Object {
 	mco_coro* co;
 	instance_id owner;
 	BulletType bullet_type;
-	float lifetime; // TODO
-	float lifespan; // TODO
+	float lifetime;
+	float lifespan = 10.0f * 60.0f;
 
 	union {
 		struct {
@@ -156,7 +158,7 @@ struct Bullet : Object {
 			float thickness;
 			float time;
 			float length;
-			float timer;
+			float timer; // TODO: use lifetime?
 		} lazer;
 	};
 };

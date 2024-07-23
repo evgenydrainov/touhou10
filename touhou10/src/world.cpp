@@ -8,19 +8,6 @@
 
 World* w;
 
-static const Particle_Type part_type_graze = {
-	/* speed_min      = */ 4,
-	/* speed_max      = */ 6,
-	/* speed_incr     = */ -0.25f,
-	/* direction_min  = */ 0,
-	/* direction_max  = */ 360,
-	/* direction_incr = */ 0,
-	/* lifespan_min   = */ 10,
-	/* lifespan_max   = */ 15,
-	/* sprite_index   = */ spr_particle_graze,
-	/* color          = */ {1, 1, 1, 0.5f},
-};
-
 void World::init() {
 	player_init(&player);
 
@@ -126,13 +113,19 @@ void World::physics_update(float delta) {
 
 	For (b, bullets) {
 		switch (b->bullet_type) {
-			case BULLET_TYPE_LAZER:
-				// Fallthrough
-				if (b->lazer.timer < b->lazer.time) {
-					break;
+			case BULLET_TYPE_LAZER: {
+				if (b->lazer.timer >= b->lazer.time) {
+					object_move(b, delta);
 				}
+				break;
+			}
+
 			case BULLET_TYPE_BULLET: {
-				object_move(b, delta);
+				// if (b->lifetime < BULLET_SPAWN_PARTICLE_LIFESPAN) {
+				// 	object_move(b, delta / 10.0f);
+				// } else {
+					object_move(b, delta);
+				// }
 				break;
 			}
 		}
@@ -166,8 +159,22 @@ void World::physics_update(float delta) {
 
 				if (can_graze) {
 					get_graze(1);
-					part_sys.create_particle({player.x, player.y}, part_type_graze);
 					b->flags |= FLAG_BULLET_WAS_GRAZED;
+
+					{
+						Particle p = {};
+						p.x            = player.x;
+						p.y            = player.y;
+						p.spd          = g->random_visual.rangef(4, 6);
+						p.dir          = g->random_visual.rangef(0, 360);
+						p.acc          = -0.25f;
+						p.lifespan     = g->random_visual.rangef(10, 15);
+						p.sprite_index = spr_particle_graze;
+						p.color_from   = {1, 1, 1, 0.5f};
+						p.color_to     = p.color_from;
+
+						part_sys.particles.add(p);
+					}
 
 					if (b->bullet_type == BULLET_TYPE_LAZER) {
 						player.lazer_graze_timer += 8;
@@ -396,6 +403,12 @@ void World::update(float delta_not_modified) {
 				continue;
 			}
 
+			if (b->lifetime >= b->lifespan) {
+				object_cleanup(b);
+				Remove(b, bullets);
+				continue;
+			}
+
 			b->dir = wrapf(b->dir, 360.0f);
 
 			switch (b->bullet_type) {
@@ -409,6 +422,8 @@ void World::update(float delta_not_modified) {
 					break;
 				}
 			}
+
+			b->lifetime += delta;
 		}
 
 		For (b, p_bullets) {
@@ -810,11 +825,70 @@ void World::draw(float delta_not_modified) {
 	For (b, bullets) {
 		switch (b->bullet_type) {
 			case BULLET_TYPE_BULLET: {
-				float angle = 0.0f;
-				if (b->flags & FLAG_BULLET_ROTATE) {
-					angle = b->dir - 90.0f;
+				auto draw_spawn_particle = [&]() {
+					int frame_index = 0;
+
+					switch ((int)b->frame_index) {
+						case 0:
+						case 15:
+							frame_index = 0;
+							break;
+						case 1:
+						case 2:
+							frame_index = 1;
+							break;
+						case 3:
+						case 4:
+							frame_index = 2;
+							break;
+						case 5:
+						case 6:
+							frame_index = 3;
+							break;
+						case 7:
+						case 8:
+							frame_index = 4;
+							break;
+						case 9:
+						case 10:
+						case 11:
+							frame_index = 5;
+							break;
+						case 12:
+						case 13:
+						case 14:
+							frame_index = 6;
+							break;
+					}
+
+					glm::vec2 scale_from = {2, 2};
+					glm::vec2 scale_to   = {1, 1};
+
+					glm::vec4 color_from = {1, 1, 1, 0};
+					glm::vec4 color_to   = {1, 1, 1, 0.5f};
+
+					float f = b->lifetime / BULLET_SPAWN_PARTICLE_LIFESPAN;
+					glm::vec2 scale = lerp(scale_from, scale_to, f);
+					glm::vec4 color = lerp(color_from, color_to, f);
+
+					r->draw_sprite(GetSprite(spr_bullet_spawn_particle), frame_index, {b->x, b->y}, scale, 0, color);
+				};
+
+				auto draw_bullet = [&]() {
+					float angle = 0.0f;
+
+					if (b->flags & FLAG_BULLET_ROTATE) {
+						angle = b->dir - 90.0f;
+					}
+
+					r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
+				};
+
+				if (b->lifetime < BULLET_SPAWN_PARTICLE_LIFESPAN) {
+					draw_spawn_particle();
+				} else {
+					draw_bullet();
 				}
-				r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
 				break;
 			}
 
@@ -874,9 +948,9 @@ void World::draw(float delta_not_modified) {
 				}
 
 				case BULLET_TYPE_LAZER: {
-					float angle = b->dir + 90.0f;
+					float angle  = b->dir + 90.0f;
 					float xscale = b->lazer.thickness / 16.0f;
-					float yscale = b->lazer.length / 16.0f;
+					float yscale = b->lazer.length    / 16.0f;
 					r->draw_rectangle_ext({b->x, b->y}, {xscale, yscale}, {8.0f, 0.0f}, angle);
 					break;
 				}
