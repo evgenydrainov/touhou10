@@ -6,6 +6,10 @@ project(touhou10)
 # On Windows, use the Visual Studio solution.
 # 
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_compile_definitions(TH_DEBUG=$<CONFIG:Debug>)
 add_compile_definitions($<$<CONFIG:Debug>:_DEBUG>)
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
