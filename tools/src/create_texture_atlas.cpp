@@ -9,7 +9,7 @@
 #ifdef CREATE_TEXTURE_ATLAS
 
 
-#include "cpml.h"
+#include "../../touhou10/src/cpml.h"
 
 #include <stb/stb_image_write.h>
 #include <stb/stb_rect_pack.h>
@@ -280,6 +280,12 @@ int main(int argc, char* argv[]) {
 
 
 	FILE* f = fopen("src/sprite_data.cpp", "wb");
+
+	// 
+	// TODO: this file is encoded in CRLF and there's raw strings and
+	// normal strings with "\n". So, sprite_data.cpp should have
+	// mixed line endings. But it seems fine?
+	// 
 
 	fprintf(f, R"(// 
 // GENERATED
