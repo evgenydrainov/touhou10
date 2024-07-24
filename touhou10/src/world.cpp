@@ -226,6 +226,22 @@ void World::physics_update(float delta) {
 		}
 	}
 
+	auto create_player_bullet_afterimage = [&](PlayerBullet* b) {
+		Particle p = {};
+		p.x            = b->x;
+		p.y            = b->y;
+		p.sprite_index = (b->type == PLAYER_BULLET_REIMU_CARD) ? spr_reimu_shot_card_afterimage : spr_reimu_shot_orb_afterimage;
+		p.spd          = b->spd / 10.0f;
+		p.dir          = b->dir;
+		p.color_from   = {1, 1, 1, 0.5f};
+		p.color_to     = {1, 1, 1, 0};
+		p.scale_from   = {2.0f, 2.0f};
+		p.scale_to     = {2.5f, 2.5f};
+		p.lifespan     = 10;
+
+		part_sys.particles.add(p);
+	};
+
 	// Boss vs player bullets
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		For (b, p_bullets) {
@@ -235,6 +251,7 @@ void World::physics_update(float delta) {
 				}
 
 				play_sound(snd_enemy_hurt);
+				create_player_bullet_afterimage(b);
 
 				object_cleanup(b);
 				Remove(b, p_bullets);
@@ -249,6 +266,7 @@ void World::physics_update(float delta) {
 				e->hp -= b->dmg;
 
 				play_sound(snd_enemy_hurt);
+				create_player_bullet_afterimage(b);
 
 				object_cleanup(b);
 				Remove(b, p_bullets);
@@ -861,8 +879,8 @@ void World::draw(float delta_not_modified) {
 							break;
 					}
 
-					glm::vec2 scale_from = {2, 2};
-					glm::vec2 scale_to   = {1, 1};
+					glm::vec2 scale_from = {1.5f, 1.5f};
+					glm::vec2 scale_to   = {1.0f, 1.0f};
 
 					glm::vec4 color_from = {1, 1, 1, 0};
 					glm::vec4 color_to   = {1, 1, 1, 0.5f};
