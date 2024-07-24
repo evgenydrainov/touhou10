@@ -69,6 +69,8 @@ static Create_Sprite create_sprites[] = {
 	{"spr_enemy_label"       , "fonts.png",        16, 256, 48, 16, 24,  0,  1,  1},
 	{"spr_reimu_shot_card"   , "characters.png",    0, 144, 16, 16,  8,  8,  1,  1},
 	{"spr_reimu_shot_orb"    , "characters.png",   16, 144, 16, 16,  8,  8,  1,  1},
+	{"spr_reimu_shot_card_afterimage", "characters.png",32,144,16,16,8,  8,  1,  1},
+	{"spr_reimu_shot_orb_afterimage" , "characters.png",48,144,16,16,8,  8,  1,  1},
 
 	{"spr_reimu_orb"         , "characters.png",   64, 144, 16, 16,  8,  8,  3,  3},
 
