@@ -42,6 +42,12 @@ void get_points(int points);
 struct World {
 	Player player;
 	Boss   boss;
+
+	// 
+	// @Leak
+	// When array runs out of capacity and replaces the
+	// last object, it doesn't get cleaned up.
+	// 
 	Arena_Backed_Array<Enemy>        enemies;
 	Arena_Backed_Array<Bullet>       bullets;
 	Arena_Backed_Array<PlayerBullet> p_bullets;
