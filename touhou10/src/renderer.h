@@ -102,10 +102,10 @@ struct Renderer {
 
 	void draw_circle(vec2 pos, float radius, vec4 color = color_white, int precision = 6);
 
-	vec2 draw_text(Sprite* font, String text, float x, float y,
+	vec2 draw_text(Sprite* font, string text, float x, float y,
 				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
 
-	vec2 measure_text(Sprite* font, String text, bool only_one_line = false);
+	vec2 measure_text(Sprite* font, string text, bool only_one_line = false);
 
 	void break_batch();
 

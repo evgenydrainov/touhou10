@@ -91,13 +91,13 @@ void Console::event(SDL_Event* ev) {
 }
 
 void Console::execute() {
-	String str = user_input_line;
+	string str = user_input_line;
 
 	eat_whitespace(&str);
-	String command = eat_non_whitespace(&str);
+	string command = eat_non_whitespace(&str);
 
 	if (command == "h" || command == "help") {
-		String s = R"(Commands:
+		string s = R"(Commands:
 skip - Skips boss's phase
 full_power - Get full power
 life - Get a life
@@ -110,7 +110,7 @@ kill_player - Kills the player
 
 	if (command == "stage") {
 		eat_whitespace(&str);
-		String stage_index_str = eat_non_whitespace(&str);
+		string stage_index_str = eat_non_whitespace(&str);
 
 		bool done;
 		u32 stage_index = string_to_u32(stage_index_str, &done);
@@ -122,7 +122,7 @@ kill_player - Kills the player
 			g->next_state      = Game::STATE_PLAYING;
 
 			eat_whitespace(&str);
-			String token = eat_non_whitespace(&str);
+			string token = eat_non_whitespace(&str);
 
 			if (token == "boss") {
 				g->skip_to_boss = true;
@@ -178,7 +178,7 @@ void Console::write(char ch) {
 	array_add(&history, ch);
 }
 
-void Console::write(String str) {
+void Console::write(string str) {
 	for (size_t i = 0; i < str.count; i++) {
 		write(str[i]);
 	}

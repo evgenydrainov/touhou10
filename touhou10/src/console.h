@@ -26,7 +26,7 @@ struct Console {
 	void execute();
 
 	void write(char ch);
-	void write(String str);
+	void write(string str);
 
 	void draw(float delta);
 };

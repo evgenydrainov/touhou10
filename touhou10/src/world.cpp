@@ -740,7 +740,7 @@ void World::draw(float delta_not_modified) {
 		float y = PLAY_AREA_Y + 32;
 
 		char buf[64];
-		String str;
+		string str;
 
 		str = Sprintf(buf, "HiScore %d", 0);
 		r->draw_text(GetSprite(spr_font_main), str, x, y);
@@ -1002,14 +1002,14 @@ void World::draw(float delta_not_modified) {
 		// Draw phase count
 		{
 			char buf[10];
-			String str = Sprintf(buf, "%d", data->phase_count - b->phase_index - 1);
+			string str = Sprintf(buf, "%d", data->phase_count - b->phase_index - 1);
 			r->draw_text(GetSprite(spr_font_main), str, 0, 0);
 		}
 
 		// Draw timer
 		{
 			char buf[10];
-			String str = Sprintf(buf, "%d", (int)b->timer / 60);
+			string str = Sprintf(buf, "%d", (int)b->timer / 60);
 			r->draw_text(GetSprite(spr_font_main), str, PLAY_AREA_W, 0, HALIGN_RIGHT);
 		}
 

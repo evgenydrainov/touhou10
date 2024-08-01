@@ -7,7 +7,7 @@ struct SDL_RWops;
 struct Package {
 
 	struct Entry {
-		String name;
+		string name;
 		size_t offset;
 		size_t filesize;
 		u32 flags;
@@ -30,6 +30,6 @@ struct Package {
 	void open();
 	void close();
 
-	u8* get_file(String name, size_t* out_size);
+	u8* get_file(string name, size_t* out_size);
 
 };

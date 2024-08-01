@@ -19,9 +19,9 @@
 struct Game;
 extern Game* g;
 
-Texture    load_texture(String fname, bool filter = false);
-Mix_Chunk* load_sound(String fname);
-u32        load_3d_model_from_obj_file(String fname, int* out_num_vertices);
+Texture    load_texture(string fname, bool filter = false);
+Mix_Chunk* load_sound(string fname);
+u32        load_3d_model_from_obj_file(string fname, int* out_num_vertices);
 
 double GetTime();
 

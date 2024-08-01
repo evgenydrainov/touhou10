@@ -136,10 +136,10 @@ static u8* read_entire_file(const char* fname, size_t* out_size) {
 }
 #endif
 
-u8* Package::get_file(String name, size_t* out_size) {
+u8* Package::get_file(string name, size_t* out_size) {
 
-	auto get_file_from_package = [&](String name, size_t* out_size) -> u8* {
-		auto find_entry = [&](String name) -> Entry* {
+	auto get_file_from_package = [&](string name, size_t* out_size) -> u8* {
+		auto find_entry = [&](string name) -> Entry* {
 			For (e, entries) {
 				if (e->name == name) {
 					return e;
@@ -172,7 +172,7 @@ u8* Package::get_file(String name, size_t* out_size) {
 		return temp_buffer_for_files;
 	};
 
-	auto get_file_from_disk = [&](String name, size_t* out_size) -> u8* {
+	auto get_file_from_disk = [&](string name, size_t* out_size) -> u8* {
 
 		// @Sad
 		char* c_str = to_c_string(name);

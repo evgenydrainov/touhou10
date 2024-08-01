@@ -38,7 +38,7 @@ void Title_Screen::draw(float delta) {
 
 	r->draw_text(GetSprite(spr_font_main), "The Title Screen.", 16, 16);
 
-	String labels[MENU_SIZE] = {"Play", "Options", "Quit"};
+	string labels[MENU_SIZE] = {"Play", "Options", "Quit"};
 
 	for (int i = 0; i < ArrayLength(labels); i++) {
 		float x = GAME_W * 0.75f - 20.0f * i;

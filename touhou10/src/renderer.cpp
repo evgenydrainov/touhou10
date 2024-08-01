@@ -445,7 +445,7 @@ void Renderer::draw_circle(vec2 pos, float radius, vec4 color, int precision) {
 	}
 }
 
-vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
+vec2 Renderer::draw_text(Sprite* font, string text, float x, float y,
 						 HAlign halign, VAlign valign, vec4 color) {
 
 	switch (valign) {
@@ -502,7 +502,7 @@ vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
 	return {ch_x, ch_y};
 }
 
-vec2 Renderer::measure_text(Sprite* font, String text, bool only_one_line) {
+vec2 Renderer::measure_text(Sprite* font, string text, bool only_one_line) {
 	float w = 0;
 	float h = (float)font->height;
 

@@ -417,23 +417,23 @@ static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
 #define Str_Fmt      "%.*s"
 #define Str_Arg(str) (unsigned int)(str).count, (str).data
 
-struct String {
+struct string {
 	char*  data;
 	size_t count;
 
-	String() = default;
+	string() = default;
 
-	String(char* data, size_t count) : data(data), count(count) {}
+	string(char* data, size_t count) : data(data), count(count) {}
 
 	template <size_t N>
-	String(const char (&arr)[N]) : data((char*) &arr[0]), count(N - 1) {}
+	string(const char (&arr)[N]) : data((char*) &arr[0]), count(N - 1) {}
 
-	String(dynamic_array_cap<char> arr) : data(arr.data), count(arr.count) {}
+	string(dynamic_array_cap<char> arr) : data(arr.data), count(arr.count) {}
 
 	char& operator[](size_t i)       { Assert(i < count); return data[i]; }
 	char  operator[](size_t i) const { Assert(i < count); return data[i]; }
 
-	bool operator==(const String& other) {
+	bool operator==(const string& other) {
 		if (count != other.count) {
 			return false;
 		}
@@ -456,20 +456,20 @@ static bool is_numeric(char ch) {
 	return ch >= '0' && ch <= '9';
 }
 
-static void advance(String* str, size_t i = 1) {
+static void advance(string* str, size_t i = 1) {
 	i = min(i, str->count);
 	str->count -= i;
 	str->data  += i;
 }
 
-static void eat_whitespace(String* str) {
+static void eat_whitespace(string* str) {
 	while (str->count > 0 && is_whitespace(*str->data)) {
 		advance(str);
 	}
 }
 
-static String eat_non_whitespace(String* str) {
-	String result = {str->data, 0};
+static string eat_non_whitespace(string* str) {
+	string result = {str->data, 0};
 
 	while (str->count > 0 && !is_whitespace(*str->data)) {
 		advance(str);
@@ -479,8 +479,8 @@ static String eat_non_whitespace(String* str) {
 	return result;
 }
 
-static String eat_numeric(String* str) {
-	String result = {str->data, 0};
+static string eat_numeric(string* str) {
+	string result = {str->data, 0};
 
 	while (str->count > 0 && is_numeric(*str->data)) {
 		advance(str);
@@ -490,8 +490,8 @@ static String eat_numeric(String* str) {
 	return result;
 }
 
-static String eat_line(String* str) {
-	String result = {str->data, 0};
+static string eat_line(string* str) {
+	string result = {str->data, 0};
 
 	while (str->count > 0 && *str->data != '\n') {
 		advance(str);
@@ -506,7 +506,7 @@ static String eat_line(String* str) {
 	return result;
 }
 
-static u32 string_to_u32(String str, bool* done = nullptr) {
+static u32 string_to_u32(string str, bool* done = nullptr) {
 	if (str.count == 0) {
 		if (done) *done = false;
 		return 0;
@@ -528,7 +528,7 @@ static u32 string_to_u32(String str, bool* done = nullptr) {
 	return result;
 }
 
-static float string_to_f32(String str, bool* done = nullptr) {
+static float string_to_f32(string str, bool* done = nullptr) {
 	if (str.count == 0) {
 		if (done) *done = false;
 		return 0;
@@ -578,7 +578,7 @@ static float string_to_f32(String str, bool* done = nullptr) {
 }
 
 template <size_t N>
-static String Sprintf(char (&buf)[N], const char* fmt, ...) {
+static string Sprintf(char (&buf)[N], const char* fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
 
@@ -592,7 +592,7 @@ static String Sprintf(char (&buf)[N], const char* fmt, ...) {
 }
 
 // Have to free()
-static char* to_c_string(String str) {
+static char* to_c_string(string str) {
 	char* c_str = (char*) malloc(str.count + 1);
 	for (size_t i = 0; i < str.count; i++) {
 		c_str[i] = str[i];

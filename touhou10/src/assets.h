@@ -117,7 +117,7 @@ enum PhaseType {
 };
 
 struct BossPhase {
-	String name;
+	string name;
 	float hp;
 	float time;
 	PhaseType type;

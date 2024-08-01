@@ -64,7 +64,7 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 
 
 static_assert(NUM_SOUNDS == 16, "");
-static String sounds_filenames[] = {
+static string sounds_filenames[] = {
 	"sounds/boss_die.wav",
 	"sounds/char_reimu_shoot.wav",
 	"sounds/enemy_die.wav",
@@ -578,7 +578,7 @@ void Game::draw(float delta) {
 
 		if (show_debug_info) {
 			char buf[256];
-			String str = Sprintf(buf,
+			string str = Sprintf(buf,
 								 "fps: %.2f\n"
 								 "update: %.2fms\n"
 								 "draw: %.2fms\n"
@@ -603,7 +603,7 @@ void Game::draw(float delta) {
 
 			// Audio Debug
 			{
-				auto find_chunk_filename = [&](Mix_Chunk* chunk) -> String {
+				auto find_chunk_filename = [&](Mix_Chunk* chunk) -> string {
 					for (int i = 0; i < NUM_SOUNDS; i++) {
 						if (sound_data[i] == chunk) {
 							return sounds_filenames[i];
@@ -615,10 +615,10 @@ void Game::draw(float delta) {
 				int nchannels = Mix_AllocateChannels(-1);
 				for (int i = 0; i < nchannels; i++) {
 					Mix_Chunk* chunk = Mix_GetChunk(i);
-					String filename = find_chunk_filename(chunk);
+					string filename = find_chunk_filename(chunk);
 
 					char buf[64];
-					String str = Sprintf(buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
+					string str = Sprintf(buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
 
 					vec4 color = Mix_Playing(i) ? color_white : vec4{0.5f, 0.5f, 0.5f, 1};
 					pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
@@ -629,7 +629,7 @@ void Game::draw(float delta) {
 
 			if (state == STATE_PLAYING) {
 				char buf[256];
-				String str = Sprintf(buf,
+				string str = Sprintf(buf,
 									 "bullets: %zu / %zu\n"
 									 "enemies: %zu / %zu\n"
 									 "player bullets: %zu / %zu\n"
@@ -657,7 +657,7 @@ void Game::draw(float delta) {
 					Player* p = &w->player;
 
 					char buf[256];
-					String str = Sprintf(buf,
+					string str = Sprintf(buf,
 										 Object_Fmt
 										 "state: %s\n"
 										 "focused: %d\n"
@@ -680,7 +680,7 @@ void Game::draw(float delta) {
 					Boss* b = &w->boss;
 
 					char buf[256];
-					String str = Sprintf(buf,
+					string str = Sprintf(buf,
 										 Object_Fmt
 										 "boss_index: %s\n"
 										 "state: %s\n"
@@ -737,7 +737,7 @@ static bool is_qoi(u8* filedata, size_t filesize) {
 	return true;
 }
 
-Texture load_texture(String fname, bool filter) {
+Texture load_texture(string fname, bool filter) {
 
 	auto create_texture = [&](void* pixel_data, int width, int height, int num_channels) -> Texture {
 		u32 texture;
@@ -797,7 +797,7 @@ Texture load_texture(String fname, bool filter) {
 	return result;
 }
 
-Mix_Chunk* load_sound(String fname) {
+Mix_Chunk* load_sound(string fname) {
 	Mix_Chunk* result = nullptr;
 
 	size_t filesize;
@@ -817,7 +817,7 @@ Mix_Chunk* load_sound(String fname) {
 	return result;
 }
 
-u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
+u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
 	Arena arena = arena_create(Kilobytes(700));
 	Defer { arena_destroy(&arena); };
 
@@ -837,10 +837,10 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 		return create_vertex_array_obj(nullptr, 0); // Stub
 	}
 
-	String text = {(char*)filedata, filesize};
+	string text = {(char*)filedata, filesize};
 
 	while (text.count > 0) {
-		String line = eat_line(&text);
+		string line = eat_line(&text);
 
 		if (line.count == 0) {
 			continue;
@@ -851,17 +851,17 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 		}
 
 		eat_whitespace(&line);
-		String s = eat_non_whitespace(&line);
+		string s = eat_non_whitespace(&line);
 
 		if (s == "v") {
 			eat_whitespace(&line);
-			String x = eat_non_whitespace(&line);
+			string x = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String y = eat_non_whitespace(&line);
+			string y = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String z = eat_non_whitespace(&line);
+			string z = eat_non_whitespace(&line);
 
 			vec3 pos;
 			pos.x = string_to_f32(x);
@@ -871,13 +871,13 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			array_add(&positions, pos);
 		} else if (s == "vn") {
 			eat_whitespace(&line);
-			String x = eat_non_whitespace(&line);
+			string x = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String y = eat_non_whitespace(&line);
+			string y = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String z = eat_non_whitespace(&line);
+			string z = eat_non_whitespace(&line);
 
 			vec3 normal;
 			normal.x = string_to_f32(x);
@@ -887,10 +887,10 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			array_add(&normals, normal);
 		} else if (s == "vt") {
 			eat_whitespace(&line);
-			String u = eat_non_whitespace(&line);
+			string u = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String v = eat_non_whitespace(&line);
+			string v = eat_non_whitespace(&line);
 
 			vec2 uv;
 			uv.x = string_to_f32(u);
@@ -899,22 +899,22 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			array_add(&uvs, uv);
 		} else if (s == "f") {
 			eat_whitespace(&line);
-			String vert1 = eat_non_whitespace(&line);
+			string vert1 = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String vert2 = eat_non_whitespace(&line);
+			string vert2 = eat_non_whitespace(&line);
 
 			eat_whitespace(&line);
-			String vert3 = eat_non_whitespace(&line);
+			string vert3 = eat_non_whitespace(&line);
 
-			auto add_vert = [&](String vert) {
-				String pos = eat_numeric(&vert);
+			auto add_vert = [&](string vert) {
+				string pos = eat_numeric(&vert);
 				advance(&vert); // Skip '/'
 
-				String uv = eat_numeric(&vert);
+				string uv = eat_numeric(&vert);
 				advance(&vert); // Skip '/'
 
-				String normal = eat_numeric(&vert);
+				string normal = eat_numeric(&vert);
 
 				Vertex v;
 				v.pos = positions[string_to_u32(pos) - 1];
