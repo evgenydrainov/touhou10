@@ -3,7 +3,7 @@
 #include "game.h"
 
 void Particle_System::init() {
-	particles = ArrayAllocFromArena<Particle>(&g->arena, MAX_PARTICLES);
+	particles = dynamic_array_cap_from_arena<Particle>(&g->arena, MAX_PARTICLES);
 }
 
 void Particle_System::destroy() {}

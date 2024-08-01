@@ -211,7 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\animation.h" />
-    <ClInclude Include="src\array.h" />
     <ClInclude Include="src\assets.h" />
     <ClInclude Include="src\boss_data_cirno.h" />
     <ClInclude Include="src\boss_data_daiyousei.h" />

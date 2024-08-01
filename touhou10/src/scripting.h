@@ -66,7 +66,7 @@ static Bullet* ShootExtO(Object* o,
 
 	play_sound(snd_enemy_shoot);
 
-	return w->bullets.add(b);
+	return array_add(&w->bullets, b);
 }
 
 static Bullet* ShootO(Object* o,
@@ -101,7 +101,7 @@ static Bullet* ShootLazerO(Object* o,
 
 	play_sound(snd_lazer);
 
-	return w->bullets.add(b);
+	return array_add(&w->bullets, b);
 }
 
 
@@ -142,7 +142,7 @@ static void ShootRadial(int count, float dir_diff, const Func& func) {
 
 			b->dir += dir_diff * mul;
 
-		} else if constexpr (std::is_same_v<decltype(res), Array<instance_id>>) {
+		} else if constexpr (std::is_same_v<decltype(res), array<instance_id>>) {
 			For (it, res) {
 				Bullet* b = w->find_bullet(*it);
 				Assert(b);
@@ -163,7 +163,7 @@ static void ShootRadial(int count, float dir_diff, const Func& func) {
 // clear it once in a while in your script if you use functions that allocate.
 // 
 template <typename Func>
-static Array<instance_id> ShootRadialA(int count, float dir_diff, const Func& func) {
+static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& func) {
 
 	// 
 	// @Hack?
@@ -186,7 +186,7 @@ static Array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 			arena_push(&w->temp_arena_for_boss, sizeof(instance_id), 1);
 			bullet_ids[num_bullet_ids++] = b->id;
 
-		} else if constexpr (std::is_same_v<decltype(res), Array<instance_id>>) {
+		} else if constexpr (std::is_same_v<decltype(res), array<instance_id>>) {
 			For (it, res) {
 				Bullet* b = w->find_bullet(*it);
 				Assert(b);
@@ -273,7 +273,7 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.death_callback = death_callback;
 	e.update_callback = update_callback;
 
-	return w->enemies.add(e);
+	return array_add(&w->enemies, e);
 }
 
 // Returns number of frames

@@ -11,11 +11,11 @@ void World::init() {
 
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
-	enemies    = ArrayAllocFromArena<Enemy>        (&g->arena, MAX_ENEMIES);
-	bullets    = ArrayAllocFromArena<Bullet>       (&g->arena, MAX_BULLETS);
-	p_bullets  = ArrayAllocFromArena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
-	pickups    = ArrayAllocFromArena<Pickup>       (&g->arena, MAX_PICKUPS);
-	animations = ArrayAllocFromArena<Animation>    (&g->arena, MAX_ANIMATIONS);
+	enemies    = dynamic_array_cap_from_arena<Enemy>        (&g->arena, MAX_ENEMIES);
+	bullets    = dynamic_array_cap_from_arena<Bullet>       (&g->arena, MAX_BULLETS);
+	p_bullets  = dynamic_array_cap_from_arena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
+	pickups    = dynamic_array_cap_from_arena<Pickup>       (&g->arena, MAX_PICKUPS);
+	animations = dynamic_array_cap_from_arena<Animation>    (&g->arena, MAX_ANIMATIONS);
 
 	part_sys.init();
 
@@ -46,22 +46,22 @@ void World::destroy() {
 	For (p, pickups) {
 		object_cleanup(p);
 	}
-	pickups.clear();
+	pickups.count = 0;
 
 	For (b, p_bullets) {
 		object_cleanup(b);
 	}
-	p_bullets.clear();
+	p_bullets.count = 0;
 
 	For (b, bullets) {
 		object_cleanup(b);
 	}
-	bullets.clear();
+	bullets.count = 0;
 
 	For (e, enemies) {
 		object_cleanup(e);
 	}
-	enemies.clear();
+	enemies.count = 0;
 
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		object_cleanup(&boss);
@@ -171,7 +171,7 @@ void World::physics_update(float delta) {
 						p.color_from   = {1, 1, 1, 0.5f};
 						p.color_to     = p.color_from;
 
-						part_sys.particles.add(p);
+						array_add(&part_sys.particles, p);
 					}
 
 					if (b->bullet_type == BULLET_TYPE_LAZER) {
@@ -237,7 +237,7 @@ void World::physics_update(float delta) {
 		p.scale_to     = {2.5f, 2.5f};
 		p.lifespan     = 10;
 
-		part_sys.particles.add(p);
+		array_add(&part_sys.particles, p);
 	};
 
 	// Boss vs player bullets
@@ -329,7 +329,7 @@ void drop_pickup(float x, float y, PickupType type) {
 	p.pickup_type = type;
 	p.frame_index = (float)type;
 
-	w->pickups.add(p);
+	array_add(&w->pickups, p);
 }
 
 static void enemy_drop_pickups(int drops, float x, float y) {
@@ -1037,7 +1037,7 @@ instance_id World::get_instance_id(ObjType type) {
 }
 
 template <typename T>
-static T* BinarySearch(Arena_Backed_Array<T> arr, instance_id id) {
+static T* binary_search(dynamic_array_cap<T> arr, instance_id id) {
 	ssize_t left = 0;
 	ssize_t right = (ssize_t)arr.count - 1;
 
@@ -1056,7 +1056,7 @@ static T* BinarySearch(Arena_Backed_Array<T> arr, instance_id id) {
 }
 
 Bullet* World::find_bullet(instance_id id) {
-	return BinarySearch(bullets, id);
+	return binary_search(bullets, id);
 }
 
 Player* World::find_player(instance_id id) {
@@ -1077,26 +1077,32 @@ Boss* World::find_boss(instance_id id) {
 	return result;
 }
 
-// @Todo
+// @Cleanup? find_player isn't even used anywhere
 Object* World::find_object(instance_id id) {
 	Object* result = nullptr;
 	u64 object_type = id >> 32;
+
 	switch (object_type) {
-		case OBJ_TYPE_PLAYER :
+		case OBJ_TYPE_PLAYER:
 			result = find_player(id);
 			break;
 		case OBJ_TYPE_BOSS:
+			result = find_boss(id);
 			break;
 		case OBJ_TYPE_ENEMY:
+			result = binary_search(enemies, id);
 			break;
 		case OBJ_TYPE_BULLET:
 			result = find_bullet(id);
 			break;
 		case OBJ_TYPE_PLAYER_BULLET:
+			result = binary_search(p_bullets, id);
 			break;
 		case OBJ_TYPE_PICKUP:
+			result = binary_search(pickups, id);
 			break;
 	}
+
 	return result;
 }
 

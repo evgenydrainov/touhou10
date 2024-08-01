@@ -48,10 +48,10 @@ struct World {
 	// When array runs out of capacity and replaces the
 	// last object, it doesn't get cleaned up.
 	// 
-	Arena_Backed_Array<Enemy>        enemies;
-	Arena_Backed_Array<Bullet>       bullets;
-	Arena_Backed_Array<PlayerBullet> p_bullets;
-	Arena_Backed_Array<Pickup>       pickups;
+	dynamic_array_cap<Enemy>        enemies;
+	dynamic_array_cap<Bullet>       bullets;
+	dynamic_array_cap<PlayerBullet> p_bullets;
+	dynamic_array_cap<Pickup>       pickups;
 
 	u64 next_instance_id = 1;
 	mco_coro* co;
@@ -59,7 +59,7 @@ struct World {
 	bool paused;
 
 	float boss_spellcard_background_alpha;
-	Arena_Backed_Array<Animation> animations;
+	dynamic_array_cap<Animation> animations;
 	Particle_System part_sys;
 	Arena temp_arena_for_boss;
 	float delta_multiplier = 1;

@@ -75,7 +75,7 @@ struct Rectf {
 // 
 
 #define For(it, arr)    for (auto it = arr.begin(); it != arr.end(); it++)
-#define Remove(it, arr) (it = arr.remove(it), it--)
+#define Remove(it, arr) (it = array_remove(&arr, it), it--)
 #define Repeat(n)       for (int CONCAT(_i_, __LINE__) = (int)(n); CONCAT(_i_, __LINE__)--;)
 
 #define CONCAT_INTERNAL(x, y) x##y
@@ -316,4 +316,82 @@ static Arena arena_create_from_arena(Arena* arena, size_t capacity) {
 	a.capacity = capacity;
 
 	return a;
+}
+
+// ----------------------------------------------------
+// SECTION: Array Type
+// ----------------------------------------------------
+
+// "Array view"
+template <typename T>
+struct array {
+	T*     data;
+	size_t count;
+
+	T& operator[](size_t i) {
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() { return data; }
+	T* end()   { return data + count; }
+};
+
+
+// 
+// A dynamic array that doesn't grow when it runs out of capacity, but
+// replaces the last element.
+// 
+// TODO: Come up with a cleanup strategy
+// 
+template <typename T>
+struct dynamic_array_cap {
+	T*     data;
+	size_t count;
+	size_t capacity;
+
+	T& operator[](size_t i) {
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() { return data; }
+	T* end()   { return data + count; }
+};
+
+template <typename T>
+static dynamic_array_cap<T> dynamic_array_cap_from_arena(Arena* a, size_t capacity) {
+	dynamic_array_cap<T> arr = {};
+	arr.data      = (T*) arena_push(a, capacity * sizeof(T));
+	arr.capacity = capacity;
+
+	return arr;
+}
+
+template <typename T>
+static T* array_add(dynamic_array_cap<T>* arr, const T& val) {
+	Assert(arr->count <= arr->capacity);
+
+	if (arr->count == arr->capacity) {
+		arr->count--;
+	}
+
+	arr->data[arr->count] = val;
+	T* result = &arr->data[arr->count];
+	arr->count++;
+
+	return result;
+}
+
+template <typename T>
+static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
+	Assert(it >= arr->begin());
+	Assert(it <  arr->end());
+
+	for (T* i = it; i < arr->end() - 1; i++) {
+		*i = *(i + 1);
+	}
+	arr->count--;
+
+	return it;
 }

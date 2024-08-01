@@ -86,7 +86,7 @@ void boss_start_phase(Boss* b) {
 		a.data = &anim_boss_spellcard;
 		a.speed = 0.75f;
 		anim_boss_spellcard.sprite_tracks[0].texture_index = b->GetData()->portrait_texture; // @Hack
-		w->animations.add(a);
+		array_add(&w->animations, a);
 	} else {
 		b->wait_timer = BOSS_PHASE_START_TIME_NONSPELL;
 	}
@@ -98,7 +98,7 @@ void boss_end_phase(Boss* b) {
 
 		object_cleanup(b);
 	}
-	w->bullets.clear();
+	w->bullets.count = 0;
 
 	For (p, w->pickups) {
 		p->homing_target = w->player.id;

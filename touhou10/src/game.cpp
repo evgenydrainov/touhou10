@@ -816,10 +816,10 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 	Arena arena = arena_create(Kilobytes(700));
 	Defer { arena_destroy(&arena); };
 
-	auto positions = ArrayAllocFromArena<vec3>   (&arena, 10'000);
-	auto uvs       = ArrayAllocFromArena<vec2>   (&arena, 10'000);
-	auto normals   = ArrayAllocFromArena<vec3>   (&arena, 10'000);
-	auto vertices  = ArrayAllocFromArena<Vertex> (&arena, 10'000);
+	auto positions = dynamic_array_cap_from_arena<vec3>   (&arena, 10'000);
+	auto uvs       = dynamic_array_cap_from_arena<vec2>   (&arena, 10'000);
+	auto normals   = dynamic_array_cap_from_arena<vec3>   (&arena, 10'000);
+	auto vertices  = dynamic_array_cap_from_arena<Vertex> (&arena, 10'000);
 
 	g->package.open();
 	Defer { g->package.close(); };
@@ -863,7 +863,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			pos.y = string_to_f32(y);
 			pos.z = string_to_f32(z);
 
-			positions.add(pos);
+			array_add(&positions, pos);
 		} else if (s == "vn") {
 			eat_whitespace(&line);
 			String x = eat_non_whitespace(&line);
@@ -879,7 +879,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			normal.y = string_to_f32(y);
 			normal.z = string_to_f32(z);
 
-			normals.add(normal);
+			array_add(&normals, normal);
 		} else if (s == "vt") {
 			eat_whitespace(&line);
 			String u = eat_non_whitespace(&line);
@@ -891,7 +891,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			uv.x = string_to_f32(u);
 			uv.y = string_to_f32(v);
 
-			uvs.add(uv);
+			array_add(&uvs, uv);
 		} else if (s == "f") {
 			eat_whitespace(&line);
 			String vert1 = eat_non_whitespace(&line);
@@ -916,7 +916,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 				v.uv  = uvs[string_to_u32(uv) - 1];
 				v.color = color_white;
 
-				vertices.add(v);
+				array_add(&vertices, v);
 			};
 
 			add_vert(vert1);

@@ -19,7 +19,7 @@ struct Package {
 	static constexpr size_t MEMORY_FOR_FILENAMES  = Kilobytes(100);
 	static constexpr size_t TEMP_BUFFER_FOR_FILES = Megabytes(1);
 
-	Arena_Backed_Array<Entry> entries;
+	dynamic_array_cap<Entry> entries;
 	Arena arena_for_filenames;
 	const char* filename;
 	SDL_RWops* f;

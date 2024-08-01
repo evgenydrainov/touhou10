@@ -35,7 +35,7 @@ struct Particle {
 };
 
 struct Particle_System {
-	Arena_Backed_Array<Particle> particles;
+	dynamic_array_cap<Particle> particles;
 
 	void init();
 	void destroy();

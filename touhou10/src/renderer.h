@@ -70,7 +70,7 @@ struct Renderer {
 	u32 triangle_vao;
 	u32 triangle_vbo;
 
-	Arena_Backed_Array<Vertex> batch_vertices;
+	dynamic_array_cap<Vertex> batch_vertices;
 	u32 batch_vao;
 	u32 batch_vbo;
 	u32 batch_ebo;

@@ -1,7 +1,7 @@
 #include "package.h"
 
 void Package::init(Arena* a) {
-	entries             = ArrayAllocFromArena<Entry>(a, MAX_ENTRIES);
+	entries             = dynamic_array_cap_from_arena<Entry>(a, MAX_ENTRIES);
 	arena_for_filenames = arena_create_from_arena(a, MEMORY_FOR_FILENAMES);
 }
 
@@ -67,7 +67,7 @@ void Package::load(const char* _filename) {
 
 		SDL_RWread(f, e.name.data, 1, filename_length);
 
-		entries.add(e);
+		array_add(&entries, e);
 	}
 
 	log_info("Successfully read %u files from %s.", num_files, filename);

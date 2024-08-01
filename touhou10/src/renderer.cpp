@@ -194,7 +194,7 @@ void Renderer::init() {
 
 		glBindVertexArray(0);
 
-		batch_vertices = ArrayAllocFromArena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
+		batch_vertices = dynamic_array_cap_from_arena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
 	}
 
 	model = {1.0f};
@@ -290,10 +290,10 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		vertices[2].pos = model * vec4{vertices[2].pos, 1.0f};
 		vertices[3].pos = model * vec4{vertices[3].pos, 1.0f};
 
-		batch_vertices.add(vertices[0]);
-		batch_vertices.add(vertices[1]);
-		batch_vertices.add(vertices[2]);
-		batch_vertices.add(vertices[3]);
+		array_add(&batch_vertices, vertices[0]);
+		array_add(&batch_vertices, vertices[1]);
+		array_add(&batch_vertices, vertices[2]);
+		array_add(&batch_vertices, vertices[3]);
 	}
 
 #if 0
@@ -410,9 +410,9 @@ void Renderer::draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color) {
 		// glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 		// glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		batch_vertices.add(vertices[0]);
-		batch_vertices.add(vertices[1]);
-		batch_vertices.add(vertices[2]);
+		array_add(&batch_vertices, vertices[0]);
+		array_add(&batch_vertices, vertices[1]);
+		array_add(&batch_vertices, vertices[2]);
 	}
 
 #if 0
@@ -600,7 +600,7 @@ void Renderer::break_batch() {
 		}
 	}
 
-	batch_vertices.clear();
+	batch_vertices.count = 0;
 	batch_texture = 0;
 	mode = MODE_NONE;
 }
