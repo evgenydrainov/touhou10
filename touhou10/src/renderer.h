@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "strings.h"
 
 constexpr size_t BATCH_MAX_QUADS    = 10'000;
 constexpr size_t VERTICES_PER_QUAD  = 4;

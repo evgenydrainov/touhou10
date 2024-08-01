@@ -1,5 +1,6 @@
 #pragma once
 
+
 // -----------------------------------------------------------
 // SECTION: Stuff specific to this project.
 // -----------------------------------------------------------
@@ -7,6 +8,7 @@
 #if !defined(TH_DEBUG)
 #error "You have to define TH_DEBUG as 1 or 0 whether this is a debug build. (-DTH_DEBUG=1)"
 #endif
+
 
 // -----------------------------------------------------------
 // SECTION: Common types.
@@ -63,12 +65,13 @@ struct Rectf {
 #define Assert SDL_enabled_assert
 
 #define panic_and_abort(fmt, ...) do { \
-	char buf[512]; \
-	stb_snprintf(buf, sizeof(buf), "%s:" STRINGIFY(__LINE__) ": " fmt, __FILE__, ##__VA_ARGS__); \
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, g->window); \
-	SDL_Quit(); \
-	exit(1); \
-} while (0)
+		char buf[512]; \
+		stb_snprintf(buf, sizeof(buf), "%s:" STRINGIFY(__LINE__) ": " fmt, __FILE__, ##__VA_ARGS__); \
+		log_error("%s", buf); \
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, g->window); \
+		SDL_Quit(); \
+		exit(1); \
+	} while (0)
 
 // 
 // For loop
@@ -76,6 +79,7 @@ struct Rectf {
 
 #define For(it, arr)    for (auto it = arr.begin(); it != arr.end(); it++)
 #define Remove(it, arr) (it = array_remove(&arr, it), it--)
+
 #define Repeat(n)       for (int CONCAT(_i_, __LINE__) = (int)(n); CONCAT(_i_, __LINE__)--;)
 
 #define CONCAT_INTERNAL(x, y) x##y
@@ -165,9 +169,13 @@ static const char* format_size_string(size_t bytes) {
 	return result;
 }
 
+
+
 // --------------------------------------------------------
 // SECTION: Math
 // --------------------------------------------------------
+
+
 
 // 
 // Cirno's Perfect Math Library
@@ -259,9 +267,13 @@ static T wrap(T a, T b) {
 	return ((a % b) + b) % b;
 }
 
+
+
 // ----------------------------------------------------
 // SECTION: Memory Arena
 // ----------------------------------------------------
+
+
 
 // 
 // Stolen from https://bytesbeneath.com/p/the-arena-custom-memory-allocators
@@ -318,9 +330,13 @@ static Arena arena_create_from_arena(Arena* arena, size_t capacity) {
 	return a;
 }
 
+
+
 // ----------------------------------------------------
 // SECTION: Array Type
 // ----------------------------------------------------
+
+
 
 // "Array view"
 template <typename T>
@@ -328,10 +344,7 @@ struct array {
 	T*     data;
 	size_t count;
 
-	T& operator[](size_t i) {
-		Assert(i < count);
-		return data[i];
-	}
+	T& operator[](size_t i) { Assert(i < count); return data[i]; }
 
 	T* begin() { return data; }
 	T* end()   { return data + count; }
@@ -350,10 +363,7 @@ struct dynamic_array_cap {
 	size_t count;
 	size_t capacity;
 
-	T& operator[](size_t i) {
-		Assert(i < count);
-		return data[i];
-	}
+	T& operator[](size_t i) { Assert(i < count); return data[i]; }
 
 	T* begin() { return data; }
 	T* end()   { return data + count; }
@@ -395,3 +405,200 @@ static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
 
 	return it;
 }
+
+
+// -----------------------------------------------
+// SECTION: String Type
+// -----------------------------------------------
+
+
+#include <stdarg.h>          // for va_list
+
+#define Str_Fmt      "%.*s"
+#define Str_Arg(str) (unsigned int)(str).count, (str).data
+
+struct String {
+	char*  data;
+	size_t count;
+
+	String() = default;
+
+	String(char* data, size_t count) : data(data), count(count) {}
+
+	template <size_t N>
+	String(const char (&arr)[N]) : data((char*) &arr[0]), count(N - 1) {}
+
+	String(dynamic_array_cap<char> arr) : data(arr.data), count(arr.count) {}
+
+	char& operator[](size_t i)       { Assert(i < count); return data[i]; }
+	char  operator[](size_t i) const { Assert(i < count); return data[i]; }
+
+	bool operator==(const String& other) {
+		if (count != other.count) {
+			return false;
+		}
+
+		for (size_t i = 0; i < count; i++) {
+			if (data[i] != other[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+};
+
+static bool is_whitespace(char ch) {
+	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
+}
+
+static bool is_numeric(char ch) {
+	return ch >= '0' && ch <= '9';
+}
+
+static void advance(String* str, size_t i = 1) {
+	i = min(i, str->count);
+	str->count -= i;
+	str->data  += i;
+}
+
+static void eat_whitespace(String* str) {
+	while (str->count > 0 && is_whitespace(*str->data)) {
+		advance(str);
+	}
+}
+
+static String eat_non_whitespace(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && !is_whitespace(*str->data)) {
+		advance(str);
+		result.count++;
+	}
+
+	return result;
+}
+
+static String eat_numeric(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && is_numeric(*str->data)) {
+		advance(str);
+		result.count++;
+	}
+
+	return result;
+}
+
+static String eat_line(String* str) {
+	String result = {str->data, 0};
+
+	while (str->count > 0 && *str->data != '\n') {
+		advance(str);
+		result.count++;
+	}
+
+	// Skip newline character.
+	if (str->count > 0 && *str->data == '\n') {
+		advance(str);
+	}
+
+	return result;
+}
+
+static u32 string_to_u32(String str, bool* done = nullptr) {
+	if (str.count == 0) {
+		if (done) *done = false;
+		return 0;
+	}
+
+	u32 result = 0;
+
+	for (size_t i = 0; i < str.count; i++) {
+		if (!is_numeric(str[i])) {
+			if (done) *done = false;
+			return 0;
+		}
+
+		result *= 10;
+		result += str[i] - '0';
+	}
+
+	if (done) *done = true;
+	return result;
+}
+
+static float string_to_f32(String str, bool* done = nullptr) {
+	if (str.count == 0) {
+		if (done) *done = false;
+		return 0;
+	}
+
+	float negative = 1;
+
+	while (str.count > 0 && *str.data == '-') {
+		negative = -negative;
+		advance(&str);
+	}
+
+	float result = 0;
+
+	while (str.count > 0 && *str.data != '.') {
+		if (!is_numeric(*str.data)) {
+			if (done) *done = false;
+			return 0;
+		}
+
+		result *= 10;
+		result += *str.data - '0';
+
+		advance(&str);
+	}
+
+	if (str.count > 0 && *str.data == '.') {
+		advance(&str);
+
+		float f = 0.1f;
+
+		while (str.count > 0) {
+			if (!is_numeric(*str.data)) {
+				if (done) *done = false;
+				return 0;
+			}
+
+			result += (*str.data - '0') * f;
+			f /= 10;
+
+			advance(&str);
+		}
+	}
+
+	if (done) *done = true;
+	return result * negative;
+}
+
+template <size_t N>
+static String Sprintf(char (&buf)[N], const char* fmt, ...) {
+	va_list va;
+	va_start(va, fmt);
+
+	static_assert(N < (size_t)INT_MAX, "");
+
+	int result = stb_vsnprintf(buf, (int)N, fmt, va);
+	va_end(va);
+
+	Assert(result > 0);
+	return {buf, (size_t)result};
+}
+
+// Have to free()
+static char* to_c_string(String str) {
+	char* c_str = (char*) malloc(str.count + 1);
+	for (size_t i = 0; i < str.count; i++) {
+		c_str[i] = str[i];
+	}
+	c_str[str.count] = 0;
+	return c_str;
+}
+
+

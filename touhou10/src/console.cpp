@@ -5,7 +5,20 @@
 
 #include <string.h>
 
-Static_String<1024> Console::history;
+char Console::history_buf[1024];
+
+void Console::init() {
+	user_input_line.data     = user_input_line_buf;
+	user_input_line.capacity = ArrayLength(user_input_line_buf);
+
+	user_input_line_prev.data     = user_input_line_prev_buf;
+	user_input_line_prev.capacity = ArrayLength(user_input_line_prev_buf);
+
+	history.data     = history_buf;
+	history.capacity = ArrayLength(history_buf);
+}
+
+void Console::destroy() {}
 
 void Console::update(float delta) {
 	if (!show) {
@@ -28,7 +41,8 @@ void Console::event(SDL_Event* ev) {
 					}
 
 				} else if (scancode == SDL_SCANCODE_RETURN) {
-					user_input_line_prev = user_input_line;
+					memcpy(user_input_line_prev_buf, user_input_line_buf, user_input_line.count);
+					user_input_line_prev.count = user_input_line.count;
 
 					write(user_input_line);
 					write('\n');
@@ -38,7 +52,8 @@ void Console::event(SDL_Event* ev) {
 					user_input_line.count = 0;
 
 				} else if (scancode == SDL_SCANCODE_UP) {
-					user_input_line = user_input_line_prev;
+					memcpy(user_input_line_buf, user_input_line_prev_buf, user_input_line_prev.count);
+					user_input_line.count = user_input_line_prev.count;
 
 				} else if (scancode == SDL_SCANCODE_DOWN) {
 					user_input_line.count = 0;
@@ -59,9 +74,7 @@ void Console::event(SDL_Event* ev) {
 
 			if (show) {
 				if (ch != '`' && ch >= 32 && ch <= 127) {
-					if (user_input_line.count < user_input_line.capacity) {
-						user_input_line.data[user_input_line.count++] = ch;
-					}
+					array_add(&user_input_line, ch);
 				}
 			}
 			break;
@@ -80,7 +93,8 @@ void Console::event(SDL_Event* ev) {
 void Console::execute() {
 	String str = user_input_line;
 
-	String command = eat_next_token(&str);
+	eat_whitespace(&str);
+	String command = eat_non_whitespace(&str);
 
 	if (command == "h" || command == "help") {
 		String s = R"(Commands:
@@ -95,8 +109,11 @@ kill_player - Kills the player
 	}
 
 	if (command == "stage") {
+		eat_whitespace(&str);
+		String stage_index_str = eat_non_whitespace(&str);
+
 		bool done;
-		u32 stage_index = string_to_u32(eat_next_token(&str), &done);
+		u32 stage_index = string_to_u32(stage_index_str, &done);
 
 		if (done && stage_index < STAGE_COUNT) {
 			g->stage_index     = stage_index;
@@ -104,7 +121,9 @@ kill_player - Kills the player
 			g->skip_to_midboss = false;
 			g->next_state      = Game::STATE_PLAYING;
 
-			String token = eat_next_token(&str);
+			eat_whitespace(&str);
+			String token = eat_non_whitespace(&str);
+
 			if (token == "boss") {
 				g->skip_to_boss = true;
 			} else if (token == "midboss") {
@@ -153,13 +172,10 @@ kill_player - Kills the player
 
 void Console::write(char ch) {
 	if (history.count == history.capacity) {
-		for (size_t i = 0; i < history.count - 1; i++) {
-			history[i] = history[i + 1];
-		}
-		history.count--;
+		array_remove(&history, history.begin());
 	}
 
-	history.data[history.count++] = ch;
+	array_add(&history, ch);
 }
 
 void Console::write(String str) {

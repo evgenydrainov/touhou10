@@ -739,34 +739,35 @@ void World::draw(float delta_not_modified) {
 		float x = PLAY_AREA_X + PLAY_AREA_W + 16;
 		float y = PLAY_AREA_Y + 32;
 
-		Static_String<64> buf;
+		char buf[64];
+		String str;
 
-		Sprintf(&buf, "HiScore %d", 0);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "HiScore %d", 0);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16;
 
-		Sprintf(&buf, "Score %d", g->stats.score);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Score %d", g->stats.score);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16 * 2;
 
-		Sprintf(&buf, "Player %d", g->stats.lives);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Player %d", g->stats.lives);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16;
 
-		Sprintf(&buf, "Bomb %d", g->stats.bombs);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Bomb %d", g->stats.bombs);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16 * 2;
 
-		Sprintf(&buf, "Power %d", g->stats.power);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Power %d", g->stats.power);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16;
 
-		Sprintf(&buf, "Graze %d", g->stats.graze);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Graze %d", g->stats.graze);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16;
 
-		Sprintf(&buf, "Point %d", g->stats.points);
-		r->draw_text(GetSprite(spr_font_main), buf, x, y);
+		str = Sprintf(buf, "Point %d", g->stats.points);
+		r->draw_text(GetSprite(spr_font_main), str, x, y);
 		y += 16;
 	}
 
@@ -1000,16 +1001,16 @@ void World::draw(float delta_not_modified) {
 
 		// Draw phase count
 		{
-			Static_String<10> buf;
-			Sprintf(&buf, "%d", data->phase_count - b->phase_index - 1);
-			r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
+			char buf[10];
+			String str = Sprintf(buf, "%d", data->phase_count - b->phase_index - 1);
+			r->draw_text(GetSprite(spr_font_main), str, 0, 0);
 		}
 
 		// Draw timer
 		{
-			Static_String<10> buf;
-			Sprintf(&buf, "%d", (int)b->timer / 60);
-			r->draw_text(GetSprite(spr_font_main), buf, PLAY_AREA_W, 0, HALIGN_RIGHT);
+			char buf[10];
+			String str = Sprintf(buf, "%d", (int)b->timer / 60);
+			r->draw_text(GetSprite(spr_font_main), str, PLAY_AREA_W, 0, HALIGN_RIGHT);
 		}
 
 		// Draw phase name

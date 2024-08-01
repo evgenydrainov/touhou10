@@ -3,7 +3,6 @@
 #include "common.h"
 #include "sprite_indices.h"
 #include "animation.h"
-#include "strings.h"
 
 #include <minicoro/minicoro.h>
 #include <SDL_mixer.h>

@@ -304,9 +304,14 @@ void Game::init() {
 
 	music = Mix_LoadMUS("music/dbu_the_foolish_girl.mp3");
 	Mix_PlayMusic(music, -1);
+
+	console.init();
+
 }
 
 void Game::destroy() {
+
+	console.destroy();
 
 	if (music) {
 		Mix_FreeMusic(music);
@@ -572,28 +577,28 @@ void Game::draw(float delta) {
 		};
 
 		if (show_debug_info) {
-			Static_String<256> buf;
-			Sprintf(&buf,
-					"fps: %.2f\n"
-					"update: %.2fms\n"
-					"draw: %.2fms\n"
-					"arena: " Size_Fmt " / " Size_Fmt "\n"
-					"frame arena: " Size_Fmt " / " Size_Fmt "\n"
-					"draw calls: %d\n"
-					"max batch: %zu / %zu\n"
+			char buf[256];
+			String str = Sprintf(buf,
+								 "fps: %.2f\n"
+								 "update: %.2fms\n"
+								 "draw: %.2fms\n"
+								 "arena: "       Size_Fmt " / " Size_Fmt "\n"
+								 "frame arena: " Size_Fmt " / " Size_Fmt "\n"
+								 "draw calls: %d\n"
+								 "max batch: %zu / %zu\n"
 #if TH_DEBUG
-					"COMPILED WITH DEBUG\n"
+								 "COMPILED WITH DEBUG\n"
 #endif
-					"__cplusplus=%ld\n",
-					fps,
-					update_took * 1000.0,
-					draw_took * 1000.0,
-					Size_Arg(arena.count),       Size_Arg(arena.capacity),
-					Size_Arg(frame_arena.count), Size_Arg(frame_arena.capacity),
-					draw_calls,
-					max_batch, BATCH_MAX_VERTICES,
-					__cplusplus);
-			vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
+								 "__cplusplus=%ld\n",
+								 fps,
+								 update_took * 1000.0,
+								 draw_took   * 1000.0,
+								 Size_Arg(arena.count),       Size_Arg(arena.capacity),
+								 Size_Arg(frame_arena.count), Size_Arg(frame_arena.capacity),
+								 draw_calls,
+								 max_batch, BATCH_MAX_VERTICES,
+								 __cplusplus);
+			vec2 pos = r->draw_text(GetSprite(spr_font_main), str, 0, 0);
 			pos.y += 8;
 
 			// Audio Debug
@@ -612,36 +617,36 @@ void Game::draw(float delta) {
 					Mix_Chunk* chunk = Mix_GetChunk(i);
 					String filename = find_chunk_filename(chunk);
 
-					Static_String<64> buf;
-					Sprintf(&buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
+					char buf[64];
+					String str = Sprintf(buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
 
 					vec4 color = Mix_Playing(i) ? color_white : vec4{0.5f, 0.5f, 0.5f, 1};
-					pos = r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
+					pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
 				}
 
 				pos.y += 8;
 			}
 
 			if (state == STATE_PLAYING) {
-				Static_String<256> buf;
-				Sprintf(&buf,
-						"bullets: %zu / %zu\n"
-						"enemies: %zu / %zu\n"
-						"player bullets: %zu / %zu\n"
-						"pickups: %zu / %zu\n"
-						"next instance id: %" PRIX64 " / %" PRIX64 "\n"
-						"coroutine memory: " Size_Fmt "\n"
-						"animations: %zu / %zu\n"
-						"temp arena for boss: " Size_Fmt " / " Size_Fmt "\n",
-						w->bullets.count,   w->bullets.capacity,
-						w->enemies.count,   w->enemies.capacity,
-						w->p_bullets.count, w->p_bullets.capacity,
-						w->pickups.count,   w->pickups.capacity,
-						w->next_instance_id, (u64)UINT32_MAX,
-						Size_Arg(w->coro_memory),
-						w->animations.count, w->animations.capacity,
-						Size_Arg(w->temp_arena_for_boss.count), Size_Arg(w->temp_arena_for_boss.capacity));
-				pos = r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y);
+				char buf[256];
+				String str = Sprintf(buf,
+									 "bullets: %zu / %zu\n"
+									 "enemies: %zu / %zu\n"
+									 "player bullets: %zu / %zu\n"
+									 "pickups: %zu / %zu\n"
+									 "next instance id: %" PRIX64 " / %" PRIX64 "\n"
+									 "coroutine memory: " Size_Fmt "\n"
+									 "animations: %zu / %zu\n"
+									 "temp arena for boss: " Size_Fmt " / " Size_Fmt "\n",
+									 w->bullets.count,   w->bullets.capacity,
+									 w->enemies.count,   w->enemies.capacity,
+									 w->p_bullets.count, w->p_bullets.capacity,
+									 w->pickups.count,   w->pickups.capacity,
+									 w->next_instance_id, (u64)UINT32_MAX,
+									 Size_Arg(w->coro_memory),
+									 w->animations.count, w->animations.capacity,
+									 Size_Arg(w->temp_arena_for_boss.count), Size_Arg(w->temp_arena_for_boss.capacity));
+				pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
 				pos.y += 8;
 
 #define Object_Fmt "id: %" PRIX64 "\n"
@@ -651,46 +656,46 @@ void Game::draw(float delta) {
 				{
 					Player* p = &w->player;
 
-					Static_String<256> buf;
-					Sprintf(&buf,
-							Object_Fmt
-							"state: %s\n"
-							"focused: %d\n"
-							"iframes: %f\n"
-							"timer: %f\n"
-							"bomb_timer: %f\n"
-							"lazer_graze_timer: %f\n",
-							Object_Arg(p),
-							GetPlayerStateName(p->state),
-							p->focused,
-							p->iframes,
-							p->timer,
-							p->bomb_timer,
-							p->lazer_graze_timer);
-					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(p->x), world_to_screen_y(p->y));
+					char buf[256];
+					String str = Sprintf(buf,
+										 Object_Fmt
+										 "state: %s\n"
+										 "focused: %d\n"
+										 "iframes: %f\n"
+										 "timer: %f\n"
+										 "bomb_timer: %f\n"
+										 "lazer_graze_timer: %f\n",
+										 Object_Arg(p),
+										 GetPlayerStateName(p->state),
+										 p->focused,
+										 p->iframes,
+										 p->timer,
+										 p->bomb_timer,
+										 p->lazer_graze_timer);
+					r->draw_text(GetSprite(spr_font_main), str, world_to_screen_x(p->x), world_to_screen_y(p->y));
 				}
 
 				if (!(w->boss.flags & FLAG_INSTANCE_DEAD)) {
 
 					Boss* b = &w->boss;
 
-					Static_String<256> buf;
-					Sprintf(&buf,
-							Object_Fmt
-							"boss_index: %s\n"
-							"state: %s\n"
-							"phase_index: %d\n"
-							"hp: %f\n"
-							"timer: %f\n"
-							"wait_timer: %f\n",
-							Object_Arg(b),
-							GetBossIndexName((BossIndex)b->boss_index),
-							GetBossStateName(b->state),
-							b->phase_index,
-							b->hp,
-							b->timer,
-							b->wait_timer);
-					r->draw_text(GetSprite(spr_font_main), buf, world_to_screen_x(b->x), world_to_screen_y(b->y));
+					char buf[256];
+					String str = Sprintf(buf,
+										 Object_Fmt
+										 "boss_index: %s\n"
+										 "state: %s\n"
+										 "phase_index: %d\n"
+										 "hp: %f\n"
+										 "timer: %f\n"
+										 "wait_timer: %f\n",
+										 Object_Arg(b),
+										 GetBossIndexName((BossIndex)b->boss_index),
+										 GetBossStateName(b->state),
+										 b->phase_index,
+										 b->hp,
+										 b->timer,
+										 b->wait_timer);
+					r->draw_text(GetSprite(spr_font_main), str, world_to_screen_x(b->x), world_to_screen_y(b->y));
 				}
 			}
 

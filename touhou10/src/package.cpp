@@ -173,9 +173,12 @@ u8* Package::get_file(String name, size_t* out_size) {
 	};
 
 	auto get_file_from_disk = [&](String name, size_t* out_size) -> u8* {
-		// That string better be null-terminated.
-		Assert(name.data[name.count] == 0);
-		SDL_RWops* src = SDL_RWFromFile(name.data, "rb");
+
+		// @Sad
+		char* c_str = to_c_string(name);
+		Defer { free(c_str); };
+
+		SDL_RWops* src = SDL_RWFromFile(c_str, "rb");
 		Defer { if (src) SDL_RWclose(src); };
 
 		if (!src) {

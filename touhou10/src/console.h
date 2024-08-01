@@ -1,19 +1,25 @@
 #pragma once
 
 #include "common.h"
-#include "strings.h"
 
 union SDL_Event;
 
 struct Console {
 	bool show;
 
-	Static_String<32> user_input_line;
-	Static_String<32> user_input_line_prev;
+	char user_input_line_buf[32];
+	dynamic_array_cap<char> user_input_line;
 
-	static Static_String<1024> history;
+	char user_input_line_prev_buf[32];
+	dynamic_array_cap<char> user_input_line_prev;
+
+	static char history_buf[1024];
+	dynamic_array_cap<char> history;
 
 	float scroll;
+
+	void init();
+	void destroy();
 
 	void update(float delta);
 	void event(SDL_Event* ev);

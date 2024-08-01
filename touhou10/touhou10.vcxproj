@@ -226,7 +226,6 @@
     <ClInclude Include="src\scripting.h" />
     <ClInclude Include="src\sprite_indices.h" />
     <ClInclude Include="src\stdafx.h" />
-    <ClInclude Include="src\strings.h" />
     <ClInclude Include="src\title_screen.h" />
     <ClInclude Include="src\world.h" />
     <ClInclude Include="src\xoshiro128plus.h" />
