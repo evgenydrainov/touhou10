@@ -227,9 +227,9 @@ void Game::init() {
 			+ memory_for_world
 			+ Kilobytes(10); // Add some for alignment
 
-		arena = ArenaAlloc(all_memory);
+		arena = arena_create(all_memory);
 
-		// frame_arena = ArenaAlloc(1000);
+		// frame_arena = arena_create(1000);
 	}
 
 	Mix_Init(MIX_INIT_MP3);
@@ -325,8 +325,8 @@ void Game::destroy() {
 	Mix_CloseAudio();
 	Mix_Quit();
 
-	ArenaRelease(&frame_arena);
-	ArenaRelease(&arena);
+	arena_destroy(&frame_arena);
+	arena_destroy(&arena);
 
 	SDL_GL_DeleteContext(gl_context);
 
@@ -813,8 +813,8 @@ Mix_Chunk* load_sound(String fname) {
 }
 
 u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
-	Arena arena = ArenaAlloc(Kilobytes(700));
-	Defer { ArenaRelease(&arena); };
+	Arena arena = arena_create(Kilobytes(700));
+	Defer { arena_destroy(&arena); };
 
 	auto positions = ArrayAllocFromArena<vec3>   (&arena, 10'000);
 	auto uvs       = ArrayAllocFromArena<vec2>   (&arena, 10'000);

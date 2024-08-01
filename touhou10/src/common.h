@@ -258,3 +258,62 @@ template <typename T>
 static T wrap(T a, T b) {
 	return ((a % b) + b) % b;
 }
+
+// ----------------------------------------------------
+// SECTION: Memory Arena
+// ----------------------------------------------------
+
+// 
+// Stolen from https://bytesbeneath.com/p/the-arena-custom-memory-allocators
+// 
+
+#define is_power_of_two(x) ((x) != 0 && ((x) & ((x) - 1)) == 0)
+
+static uintptr_t align_forward(uintptr_t ptr, size_t align) {
+	Assert(is_power_of_two(align));
+	return (ptr + (align - 1)) & ~(align - 1);
+}
+
+struct Arena {
+	static constexpr size_t DEFAULT_ALIGNMENT = sizeof(void*);
+
+	u8*    data;
+	size_t count;
+	size_t capacity;
+};
+
+static Arena arena_create(size_t capacity) {
+	Arena a = {};
+	a.data     = (u8*) malloc(capacity);
+	a.capacity = capacity;
+
+	Assert(a.data);
+
+	return a;
+}
+
+static void arena_destroy(Arena* a) {
+	free(a->data);
+	*a = {};
+}
+
+static u8* arena_push(Arena* a, size_t size, size_t alignment = Arena::DEFAULT_ALIGNMENT) {
+	uintptr_t curr_ptr = (uintptr_t)a->data + (uintptr_t)a->count;
+	uintptr_t offset = align_forward(curr_ptr, alignment);
+	offset -= (uintptr_t)a->data;
+
+	Assert(offset + size <= a->capacity && "Arena out of memory");
+
+	u8* ptr = a->data + offset;
+	a->count = offset + size;
+
+	return ptr;
+}
+
+static Arena arena_create_from_arena(Arena* arena, size_t capacity) {
+	Arena a = {};
+	a.data     = arena_push(arena, capacity);
+	a.capacity = capacity;
+
+	return a;
+}

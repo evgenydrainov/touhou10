@@ -2,7 +2,6 @@
 
 #include "common.h"
 
-#include "arena.h"
 #include "renderer.h"
 #include "world.h"
 #include "title_screen.h"

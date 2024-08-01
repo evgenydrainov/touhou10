@@ -161,7 +161,7 @@ void Renderer::init() {
 
 		size_t arena_pos = g->arena.count;
 
-		auto indices = PushArray<u32>(&g->arena, BATCH_MAX_INDICES);
+		u32* indices = (u32*) arena_push(&g->arena, BATCH_MAX_INDICES * sizeof(u32));
 
 		u32 offset = 0;
 		for (size_t i = 0; i < BATCH_MAX_INDICES; i += 6) {
@@ -178,7 +178,7 @@ void Renderer::init() {
 
 		// 3. copy our index array in a element buffer for OpenGL to use
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices.data, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices, GL_STATIC_DRAW);
 
 		g->arena.count = arena_pos;
 

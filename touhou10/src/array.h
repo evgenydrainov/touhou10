@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "arena.h"
 
 // 
 // "Array view".
@@ -19,18 +18,6 @@ struct Array {
 	T* begin() { return data; }
 	T* end()   { return data + count; }
 };
-
-
-// 
-// This returns an "array view". If you want to
-// allocate an empty array from an arena and then append to it,
-// then use "ArrayAllocFromArena"
-// 
-template <typename T>
-static Array<T> PushArray(Arena* a, size_t count) {
-	T* data = (T*) ArenaPush(a, sizeof(T) * count);
-	return {data, count};
-}
 
 
 // 
@@ -83,6 +70,6 @@ struct Arena_Backed_Array {
 
 template <typename T>
 static Arena_Backed_Array<T> ArrayAllocFromArena(Arena* a, size_t capacity) {
-	T* data = PushStructN<T>(a, capacity);
+	T* data = (T*) arena_push(a, capacity * sizeof(T));
 	return {data, 0, capacity};
 }

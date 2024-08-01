@@ -2,7 +2,7 @@
 
 void Package::init(Arena* a) {
 	entries             = ArrayAllocFromArena<Entry>(a, MAX_ENTRIES);
-	arena_for_filenames = ArenaAllocFromArena(a, MEMORY_FOR_FILENAMES);
+	arena_for_filenames = arena_create_from_arena(a, MEMORY_FOR_FILENAMES);
 }
 
 void Package::load(const char* _filename) {
@@ -62,7 +62,7 @@ void Package::load(const char* _filename) {
 		e.filesize = (size_t) filesize;
 		e.flags    = flags;
 
-		e.name.data  = (char*) ArenaPush(&arena_for_filenames, filename_length);
+		e.name.data  = (char*) arena_push(&arena_for_filenames, filename_length);
 		e.name.count = filename_length;
 
 		SDL_RWread(f, e.name.data, 1, filename_length);

@@ -26,7 +26,7 @@ void World::init() {
 		mco_create(&co, &desc);
 	}
 
-	temp_arena_for_boss = ArenaAllocFromArena(&g->arena, TEMP_STORAGE_FOR_BOSS);
+	temp_arena_for_boss = arena_create_from_arena(&g->arena, TEMP_STORAGE_FOR_BOSS);
 
 	Assert(stage->init_background);
 	stage->init_background();
