@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "array.h"
 #include "strings.h"
 
 struct SDL_RWops;

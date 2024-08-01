@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "array.h"
 
 #include "objects.h"
 #include "particle_system.h"

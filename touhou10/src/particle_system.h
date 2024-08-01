@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "array.h"
 
 #define MAX_PARTICLES 1'000
 
