@@ -1,29 +1,12 @@
 #include "game.h"
 
-#include "cpml.h"
-
 #include <glad/gl.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <stb/stb_image.h>
-#include <stb/stb_sprintf.h>
 #include <qoi/qoi.h>
 
-#include <inttypes.h>
+#include <inttypes.h> // for PRIX64
 
 Game* g;
-
-static GLADapiproc glad_load_func(const char* name) {
-	return (GLADapiproc) SDL_GL_GetProcAddress(name);
-}
-
-// @Copy
-void _Assertion_Failed(const char* file, int line, const char* condition) {
-	char buf[256];
-	stb_snprintf(buf, sizeof(buf), "%s:%d:\n%s", file, line, condition);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion failed", buf, g->window);
-	SDL_Quit();
-	exit(1);
-}
 
 #if TH_DEBUG
 static void GLAPIENTRY glDebugOutput(GLenum source,
@@ -75,7 +58,7 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 	// SDL_Window* win = SDL_GL_GetCurrentWindow();
 	// SDL_ShowSimpleMessageBox(0, "", message, win);
 
-	Assert(false);
+	SDL_TriggerBreakpoint();
 }
 #endif
 
@@ -102,18 +85,24 @@ static String sounds_filenames[] = {
 
 
 void Game::init() {
-	SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+	// SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
 	SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "system");
 
-	SDL_Init(SDL_INIT_VIDEO
-			 | SDL_INIT_AUDIO);
+	if (SDL_Init(SDL_INIT_VIDEO
+				 | SDL_INIT_AUDIO) != 0) {
+		panic_and_abort("Couldn't initialize SDL: %s", SDL_GetError());
+	}
 
 	window = SDL_CreateWindow("touhou10",
 							  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 							  2 * GAME_W, 2 * GAME_H,
 							  SDL_WINDOW_OPENGL
 							  | SDL_WINDOW_RESIZABLE);
+
+	if (!window) {
+		panic_and_abort("Couldn't create window: %s", SDL_GetError());
+	}
 
 	SDL_SetWindowMinimumSize(window, GAME_W, GAME_H);
 
@@ -129,7 +118,10 @@ void Game::init() {
 	SDL_GL_MakeCurrent(window, gl_context);
 
 	{
-		int version = gladLoadGL(glad_load_func);
+		int version = gladLoadGL([](const char* name) {
+			return (GLADapiproc) SDL_GL_GetProcAddress(name);
+		});
+
 		log_info("Loaded GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 	}
 
@@ -258,7 +250,7 @@ void Game::init() {
 	package.init(&arena);
 	package.load("package.dat");
 
-	log_info("Read package header in %fms.", (GetTime() - loading_time) * 1000.0);
+	// log_info("Read package header in %fms.", (GetTime() - loading_time) * 1000.0);
 	loading_time = GetTime();
 
 	// load textures
@@ -601,7 +593,7 @@ void Game::draw(float delta) {
 					draw_calls,
 					max_batch, BATCH_MAX_VERTICES,
 					__cplusplus);
-			glm::vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
+			vec2 pos = r->draw_text(GetSprite(spr_font_main), buf, 0, 0);
 			pos.y += 8;
 
 			// Audio Debug
@@ -623,7 +615,7 @@ void Game::draw(float delta) {
 					Static_String<64> buf;
 					Sprintf(&buf, "%d " Str_Fmt "\n", i, Str_Arg(filename));
 
-					glm::vec4 color = Mix_Playing(i) ? color_white : glm::vec4{0.5f, 0.5f, 0.5f, 1};
+					vec4 color = Mix_Playing(i) ? color_white : vec4{0.5f, 0.5f, 0.5f, 1};
 					pos = r->draw_text(GetSprite(spr_font_main), buf, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
 				}
 
@@ -824,10 +816,10 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 	Arena arena = ArenaAlloc(Kilobytes(700));
 	Defer { ArenaRelease(&arena); };
 
-	auto positions = ArrayAllocFromArena<glm::vec3> (&arena, 10'000);
-	auto uvs       = ArrayAllocFromArena<glm::vec2> (&arena, 10'000);
-	auto normals   = ArrayAllocFromArena<glm::vec3> (&arena, 10'000);
-	auto vertices  = ArrayAllocFromArena<Vertex>    (&arena, 10'000);
+	auto positions = ArrayAllocFromArena<vec3>   (&arena, 10'000);
+	auto uvs       = ArrayAllocFromArena<vec2>   (&arena, 10'000);
+	auto normals   = ArrayAllocFromArena<vec3>   (&arena, 10'000);
+	auto vertices  = ArrayAllocFromArena<Vertex> (&arena, 10'000);
 
 	g->package.open();
 	Defer { g->package.close(); };
@@ -866,7 +858,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			eat_whitespace(&line);
 			String z = eat_non_whitespace(&line);
 
-			glm::vec3 pos;
+			vec3 pos;
 			pos.x = string_to_f32(x);
 			pos.y = string_to_f32(y);
 			pos.z = string_to_f32(z);
@@ -882,7 +874,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			eat_whitespace(&line);
 			String z = eat_non_whitespace(&line);
 
-			glm::vec3 normal;
+			vec3 normal;
 			normal.x = string_to_f32(x);
 			normal.y = string_to_f32(y);
 			normal.z = string_to_f32(z);
@@ -895,7 +887,7 @@ u32 load_3d_model_from_obj_file(String fname, int* out_num_vertices) {
 			eat_whitespace(&line);
 			String v = eat_non_whitespace(&line);
 
-			glm::vec2 uv;
+			vec2 uv;
 			uv.x = string_to_f32(u);
 			uv.y = string_to_f32(v);
 

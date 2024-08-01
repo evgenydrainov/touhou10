@@ -1,10 +1,8 @@
 #include "world.h"
 
 #include "game.h"
-#include "cpml.h"
 
 #include <glad/gl.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 World* w;
 
@@ -96,8 +94,8 @@ static bool player_collides_with_bullet(Player* p, float player_radius, Bullet* 
 void World::physics_update(float delta) {
 
 	auto object_move = [](Object* o, float delta) {
-		o->x += o->spd * cosf(glm::radians(o->dir)) * delta;
-		o->y -= o->spd * sinf(glm::radians(o->dir)) * delta;
+		o->x += o->spd * dcos(o->dir) * delta;
+		o->y -= o->spd * dsin(o->dir) * delta;
 		o->spd += o->acc * delta;
 		o->spd = max(o->spd, 0.0f);
 	};
@@ -668,25 +666,25 @@ l_skip_update:
 			}
 
 			if (is_key_held(SDL_SCANCODE_W)) {
-				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
-				d3d.cam_pos.y += spd * sinf(glm::radians(d3d.pitch));
-				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+				d3d.cam_pos.x += spd * dcos(d3d.yaw) * dcos(d3d.pitch);
+				d3d.cam_pos.y += spd * dsin(d3d.pitch);
+				d3d.cam_pos.z += spd * dsin(d3d.yaw) * dcos(d3d.pitch);
 			}
 
 			if (is_key_held(SDL_SCANCODE_S)) {
-				d3d.cam_pos.x -= spd * cosf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
-				d3d.cam_pos.y -= spd * sinf(glm::radians(d3d.pitch));
-				d3d.cam_pos.z -= spd * sinf(glm::radians(d3d.yaw)) * cosf(glm::radians(d3d.pitch));
+				d3d.cam_pos.x -= spd * dcos(d3d.yaw) * dcos(d3d.pitch);
+				d3d.cam_pos.y -= spd * dsin(d3d.pitch);
+				d3d.cam_pos.z -= spd * dsin(d3d.yaw) * dcos(d3d.pitch);
 			}
 
 			if (is_key_held(SDL_SCANCODE_A)) {
-				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw - 90));
-				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw - 90));
+				d3d.cam_pos.z += spd * dsin(d3d.yaw - 90);
+				d3d.cam_pos.x += spd * dcos(d3d.yaw - 90);
 			}
 
 			if (is_key_held(SDL_SCANCODE_D)) {
-				d3d.cam_pos.z += spd * sinf(glm::radians(d3d.yaw + 90));
-				d3d.cam_pos.x += spd * cosf(glm::radians(d3d.yaw + 90));
+				d3d.cam_pos.z += spd * dsin(d3d.yaw + 90);
+				d3d.cam_pos.x += spd * dcos(d3d.yaw + 90);
 			}
 		}
 
@@ -696,26 +694,26 @@ l_skip_update:
 
 }
 
-glm::vec3 World::D3D::get_camera_forward() {
-	glm::vec3 forward;
-	forward.x = cosf(glm::radians(yaw)) * cosf(glm::radians(pitch));
-	forward.y = sinf(glm::radians(pitch));
-	forward.z = sinf(glm::radians(yaw)) * cosf(glm::radians(pitch));
+vec3 World::D3D::get_camera_forward() {
+	vec3 forward;
+	forward.x = dcos(yaw) * dcos(pitch);
+	forward.y = dsin(pitch);
+	forward.z = dsin(yaw) * dcos(pitch);
 	return forward;
 }
 
-glm::mat4 World::D3D::get_view_mat() {
-	glm::mat4 view = glm::lookAt(cam_pos, cam_pos + get_camera_forward(), get_up_vector());
+mat4 World::D3D::get_view_mat() {
+	mat4 view = glm::lookAt(cam_pos, cam_pos + get_camera_forward(), get_up_vector());
 	return view;
 }
 
-glm::mat4 World::D3D::get_proj_mat() {
-	glm::mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
+mat4 World::D3D::get_proj_mat() {
+	mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
 	return proj;
 }
 
-glm::mat4 World::D3D::get_mvp() {
-	glm::mat4 MVP = (get_proj_mat() * get_view_mat());
+mat4 World::D3D::get_mvp() {
+	mat4 MVP = (get_proj_mat() * get_view_mat());
 	return MVP;
 }
 
@@ -777,7 +775,7 @@ void World::draw(float delta_not_modified) {
 		float x = PLAY_AREA_X + boss.x;
 		float y = PLAY_AREA_Y + PLAY_AREA_H;
 
-		glm::vec4 color = {1, 1, 1, 0.5f};
+		vec4 color = {1, 1, 1, 0.5f};
 
 		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
 	}
@@ -831,8 +829,8 @@ void World::draw(float delta_not_modified) {
 	player_draw(&player, delta);
 
 	For (b, p_bullets) {
-		glm::vec4 color = {1, 1, 1, 0.35f};
-		glm::vec2 scale = {1.5f, 1.5f};
+		vec4 color = {1, 1, 1, 0.35f};
+		vec2 scale = {1.5f, 1.5f};
 		float angle = 0;
 		if (b->type == PLAYER_BULLET_REIMU_CARD) {
 			angle = b->reimu_card.rotation;
@@ -879,15 +877,15 @@ void World::draw(float delta_not_modified) {
 							break;
 					}
 
-					glm::vec2 scale_from = {1.5f, 1.5f};
-					glm::vec2 scale_to   = {1.0f, 1.0f};
+					vec2 scale_from = {1.5f, 1.5f};
+					vec2 scale_to   = {1.0f, 1.0f};
 
-					glm::vec4 color_from = {1, 1, 1, 0};
-					glm::vec4 color_to   = {1, 1, 1, 0.5f};
+					vec4 color_from = {1, 1, 1, 0};
+					vec4 color_to   = {1, 1, 1, 0.5f};
 
 					float f = b->lifetime / BULLET_SPAWN_PARTICLE_LIFESPAN;
-					glm::vec2 scale = lerp(scale_from, scale_to, f);
-					glm::vec4 color = lerp(color_from, color_to, f);
+					vec2 scale = lerp(scale_from, scale_to, f);
+					vec4 color = lerp(color_from, color_to, f);
 
 					r->draw_sprite(GetSprite(spr_bullet_spawn_particle), frame_index, {b->x, b->y}, scale, 0, color);
 				};
@@ -925,7 +923,7 @@ void World::draw(float delta_not_modified) {
 		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
 
 		if (p->y < 0) {
-			glm::vec4 color = {1, 1, 1, 0.5f};
+			vec4 color = {1, 1, 1, 0.5f};
 
 			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8}, {1, 1}, 0, color);
 		}
@@ -1038,15 +1036,13 @@ instance_id World::get_instance_id(ObjType type) {
 	return (type << 32) | (next_instance_id++);
 }
 
-typedef ptrdiff_t ssize;
-
 template <typename T>
 static T* BinarySearch(Arena_Backed_Array<T> arr, instance_id id) {
-	ssize left = 0;
-	ssize right = (ssize)arr.count - 1;
+	ssize_t left = 0;
+	ssize_t right = (ssize_t)arr.count - 1;
 
 	while (left <= right) {
-		ssize middle = (left + right) / 2;
+		ssize_t middle = (left + right) / 2;
 		if (arr[middle].id < id) {
 			left = middle + 1;
 		} else if (arr[middle].id > id) {

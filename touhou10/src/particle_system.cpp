@@ -1,7 +1,6 @@
 #include "particle_system.h"
 
 #include "game.h"
-#include "cpml.h"
 
 void Particle_System::init() {
 	particles = ArrayAllocFromArena<Particle>(&g->arena, MAX_PARTICLES);
@@ -31,8 +30,8 @@ void Particle_System::draw(float delta) {
 	For (p, particles) {
 		float f = p->lifetime / p->lifespan;
 
-		glm::vec2 scale = lerp(p->scale_from, p->scale_to, f);
-		glm::vec4 color = lerp(p->color_from, p->color_to, f);
+		vec2 scale = lerp(p->scale_from, p->scale_to, f);
+		vec4 color = lerp(p->color_from, p->color_to, f);
 
 		r->draw_sprite(GetSprite(p->sprite_index), (int)p->frame_index, {p->x, p->y}, scale, 0, color);
 	}

@@ -1,7 +1,6 @@
 #include "objects.h"
 
 #include "game.h"
-#include "cpml.h"
 
 #define POINT_OF_COLLECTION 96.0f
 
@@ -92,31 +91,30 @@ void player_update(Player* p, float delta) {
 
 	switch (p->state) {
 		case PLAYER_STATE_NORMAL: {
-			float dir_x = 0;
-			float dir_y = 0;
+			vec2 dir = {};
 
 			if (is_key_held(SDL_SCANCODE_UP)) {
-				dir_y -= 1.0f;
+				dir.y -= 1.0f;
 			}
 			if (is_key_held(SDL_SCANCODE_DOWN)) {
-				dir_y += 1.0f;
+				dir.y += 1.0f;
 			}
 			if (is_key_held(SDL_SCANCODE_LEFT)) {
-				dir_x -= 1.0f;
+				dir.x -= 1.0f;
 			}
 			if (is_key_held(SDL_SCANCODE_RIGHT)) {
-				dir_x += 1.0f;
+				dir.x += 1.0f;
 			}
 
 			p->focused = is_key_held(SDL_SCANCODE_LSHIFT);
 
-			normalize0(&dir_x, &dir_y);
+			dir = normalize0(dir);
 
 			{
 				float spd = (p->focused) ? character->focus_spd : character->move_spd;
 
-				p->hsp = dir_x * spd;
-				p->vsp = dir_y * spd;
+				p->hsp = dir.x * spd;
+				p->vsp = dir.y * spd;
 			}
 
 			Assert(character->shot_type);
@@ -200,8 +198,8 @@ void player_update(Player* p, float delta) {
 
 void player_draw(Player* p, float delta) {
 	{
-		glm::vec4 color = color_white;
-		glm::vec2 scale = {1, 1};
+		vec4 color = color_white;
+		vec2 scale = {1, 1};
 
 		if (p->state == PLAYER_STATE_DYING || p->state == PLAYER_STATE_APPEARING) {
 			float f;
@@ -227,7 +225,7 @@ void player_draw(Player* p, float delta) {
 	}
 
 	if (p->character_index == CHARACTER_REIMU) {
-		glm::vec4 color = {1, 1, 1, 0.50f};
+		vec4 color = {1, 1, 1, 0.50f};
 
 		float angle1 = SDL_GetTicks() / 5.0f;
 		float angle2 = 90 - angle1;
@@ -249,7 +247,7 @@ void player_draw(Player* p, float delta) {
 
 	if (p->hitbox_alpha > 0.0f) {
 		float angle = SDL_GetTicks() / 20.0f;
-		glm::vec4 color = {1.0f, 1.0f, 1.0f, p->hitbox_alpha};
+		vec4 color = {1.0f, 1.0f, 1.0f, p->hitbox_alpha};
 		r->draw_sprite(GetSprite(spr_player_hitbox), 0, {p->x, p->y}, {1.0f, 1.0f}, angle, color);
 	}
 }

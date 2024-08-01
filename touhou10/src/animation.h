@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include <glm/glm.hpp>
 
 template <typename T>
 struct Keys {
@@ -14,9 +13,9 @@ struct Keys {
 
 struct SpriteTrack {
 	u32 texture_index; // @Temp Use sprites instead
-	Keys<glm::vec2> position;
-	Keys<glm::vec4> modulate;
-	Keys<glm::vec2> scale;
+	Keys<vec2> position;
+	Keys<vec4> modulate;
+	Keys<vec2> scale;
 };
 
 struct AnimData {

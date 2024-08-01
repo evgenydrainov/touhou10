@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include <SDL.h>
 
 #include "arena.h"
 #include "renderer.h"

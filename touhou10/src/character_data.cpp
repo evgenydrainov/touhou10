@@ -1,7 +1,6 @@
 #include "assets.h"
 
 #include "game.h"
-#include "cpml.h"
 
 #include "character_data_reimu.h"
 

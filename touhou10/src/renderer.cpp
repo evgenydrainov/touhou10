@@ -1,10 +1,8 @@
 #include "renderer.h"
 
 #include "game.h"
-#include "cpml.h"
 
 #include <glad/gl.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 Renderer* r;
 
@@ -28,8 +26,7 @@ void Renderer::init() {
 			if (!success) {
 				char buf[512];
 				glGetShaderInfoLog(shader, sizeof(buf), NULL, buf);
-				log_error("SHADER COMPILATION ERROR:\n%s", buf);
-				Assert(false);
+				log_error("SHADER COMPILATION ERROR: %s", buf);
 			}
 
 			return shader;
@@ -48,8 +45,7 @@ void Renderer::init() {
 			if (!success) {
 				char buf[512];
 				glGetProgramInfoLog(program, sizeof(buf), NULL, buf);
-				log_error("SHADER LINKING ERROR:\n%s", buf);
-				Assert(false);
+				log_error("SHADER LINKING ERROR: %s", buf);
 			}
 
 			return program;
@@ -229,8 +225,8 @@ void Renderer::destroy() {
 }
 
 void Renderer::draw_texture(Texture* t, Rect src,
-							glm::vec2 pos, glm::vec2 scale,
-							glm::vec2 origin, float angle, glm::vec4 color, glm::bvec2 flip) {
+							vec2 pos, vec2 scale,
+							vec2 origin, float angle, vec4 color, glm::bvec2 flip) {
 
 	Assert(t);
 
@@ -285,14 +281,14 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		// glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		// Has to be in this order (learned it the hard way)
-		glm::mat4 model = glm::translate(glm::mat4{1.0f}, {pos.x, pos.y, 0.0f});
+		mat4 model = glm::translate(mat4{1.0f}, {pos.x, pos.y, 0.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
 		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 
-		vertices[0].pos = model * glm::vec4{vertices[0].pos, 1.0f};
-		vertices[1].pos = model * glm::vec4{vertices[1].pos, 1.0f};
-		vertices[2].pos = model * glm::vec4{vertices[2].pos, 1.0f};
-		vertices[3].pos = model * glm::vec4{vertices[3].pos, 1.0f};
+		vertices[0].pos = model * vec4{vertices[0].pos, 1.0f};
+		vertices[1].pos = model * vec4{vertices[1].pos, 1.0f};
+		vertices[2].pos = model * vec4{vertices[2].pos, 1.0f};
+		vertices[3].pos = model * vec4{vertices[3].pos, 1.0f};
 
 		batch_vertices.add(vertices[0]);
 		batch_vertices.add(vertices[1]);
@@ -307,11 +303,11 @@ void Renderer::draw_texture(Texture* t, Rect src,
 	{
 		glUseProgram(shader_texture_program);
 
-		model = glm::translate(glm::mat4{1.0f}, {pos.x, pos.y, 0.0f});
+		model = glm::translate(mat4{1.0f}, {pos.x, pos.y, 0.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
 		model = glm::scale(model, {scale.x, scale.y, 1.0f});
 
-		glm::mat4 MVP = (proj * view) * model;
+		mat4 MVP = (proj * view) * model;
 
 		int u_MVP = glGetUniformLocation(shader_texture_program, "u_MVP");
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -333,7 +329,7 @@ void Renderer::draw_texture(Texture* t, Rect src,
 
 }
 
-void Renderer::draw_rectangle(Rect rect, glm::vec4 color) {
+void Renderer::draw_rectangle(Rect rect, vec4 color) {
 #if 0
 	{
 		float x1 = (float)rect.x;
@@ -356,7 +352,7 @@ void Renderer::draw_rectangle(Rect rect, glm::vec4 color) {
 	{
 		glUseProgram(shader_color_program);
 
-		glm::mat4 MVP = (proj * view) * model;
+		mat4 MVP = (proj * view) * model;
 
 		int u_MVP = glGetUniformLocation(shader_color_program, "u_MVP");
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -374,8 +370,8 @@ void Renderer::draw_rectangle(Rect rect, glm::vec4 color) {
 #endif
 }
 
-void Renderer::draw_rectangle_ext(glm::vec2 pos, glm::vec2 scale,
-								  glm::vec2 origin, float angle, glm::vec4 color) {
+void Renderer::draw_rectangle_ext(vec2 pos, vec2 scale,
+								  vec2 origin, float angle, vec4 color) {
 	Sprite* s = GetSprite(spr_white);
 	Texture* t = GetTexture(s->texture_index);
 	SpriteFrame f = s->frames[0];
@@ -383,8 +379,8 @@ void Renderer::draw_rectangle_ext(glm::vec2 pos, glm::vec2 scale,
 }
 
 void Renderer::draw_sprite(Sprite* s, int frame_index,
-						   glm::vec2 pos, glm::vec2 scale,
-						   float angle, glm::vec4 color, glm::bvec2 flip) {
+						   vec2 pos, vec2 scale,
+						   float angle, vec4 color, glm::bvec2 flip) {
 	Texture* t = GetTexture(s->texture_index);
 
 	Assert(frame_index >= 0);
@@ -396,7 +392,7 @@ void Renderer::draw_sprite(Sprite* s, int frame_index,
 				 pos, scale, {(float)s->xorigin, (float)s->yorigin}, angle, color, flip);
 }
 
-void Renderer::draw_triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec4 color) {
+void Renderer::draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color) {
 
 	if (mode != MODE_TRIANGLES) {
 		break_batch();
@@ -423,7 +419,7 @@ void Renderer::draw_triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec4
 	{
 		glUseProgram(shader_color_program);
 
-		glm::mat4 MVP = (proj * view) * model;
+		mat4 MVP = (proj * view) * model;
 
 		int u_MVP = glGetUniformLocation(shader_color_program, "u_MVP");
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -439,18 +435,18 @@ void Renderer::draw_triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec4
 #endif
 }
 
-void Renderer::draw_circle(glm::vec2 pos, float radius, glm::vec4 color, int precision) {
+void Renderer::draw_circle(vec2 pos, float radius, vec4 color, int precision) {
 	for (int i = 0; i < precision; i++) {
 		float angle1 = (float)i       / (float)precision * 2.0f * glm::pi<float>();
 		float angle2 = (float)(i + 1) / (float)precision * 2.0f * glm::pi<float>();
-		glm::vec2 p1 = pos + glm::vec2{cosf(angle1), -sinf(angle1)} * radius;
-		glm::vec2 p2 = pos + glm::vec2{cosf(angle2), -sinf(angle2)} * radius;
+		vec2 p1 = pos + vec2{cosf(angle1), -sinf(angle1)} * radius;
+		vec2 p2 = pos + vec2{cosf(angle2), -sinf(angle2)} * radius;
 		draw_triangle(p1, p2, pos, color);
 	}
 }
 
-glm::vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
-							  HAlign halign, VAlign valign, glm::vec4 color) {
+vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
+						 HAlign halign, VAlign valign, vec4 color) {
 
 	switch (valign) {
 		case VALIGN_MIDDLE:
@@ -506,7 +502,7 @@ glm::vec2 Renderer::draw_text(Sprite* font, String text, float x, float y,
 	return {ch_x, ch_y};
 }
 
-glm::vec2 Renderer::measure_text(Sprite* font, String text, bool only_one_line) {
+vec2 Renderer::measure_text(Sprite* font, String text, bool only_one_line) {
 	float w = 0;
 	float h = (float)font->height;
 
@@ -562,7 +558,7 @@ void Renderer::break_batch() {
 			glUseProgram(program);
 			Defer { glUseProgram(0); };
 
-			glm::mat4 MVP = (proj * view) * model;
+			mat4 MVP = (proj * view) * model;
 
 			int u_MVP = glGetUniformLocation(program, "u_MVP");
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -587,7 +583,7 @@ void Renderer::break_batch() {
 			glUseProgram(program);
 			Defer { glUseProgram(0); };
 
-			glm::mat4 MVP = (proj * view) * model;
+			mat4 MVP = (proj * view) * model;
 
 			int u_MVP = glGetUniformLocation(program, "u_MVP");
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);

@@ -2,7 +2,6 @@
 
 #include "common.h"
 
-#include <stb/stb_sprintf.h> // For Sprintf
 #include <stdarg.h>          // For Sprintf
 
 #define Str_Fmt      "%.*s"

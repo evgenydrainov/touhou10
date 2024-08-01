@@ -1,6 +1,5 @@
 #include "scripting.h"
 #include <glad/gl.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 void Stage_1_Script(mco_coro* co) {
 	Wait(60);
@@ -32,7 +31,7 @@ void Stage_1_Draw_Background(float delta) {
 		glUseProgram(program);
 		Defer { glUseProgram(0); };
 
-		glm::mat4 MVP = w->d3d.get_mvp();
+		mat4 MVP = w->d3d.get_mvp();
 		MVP = glm::translate(MVP, {0, -wrapf(SDL_GetTicks() / 1000.0f, 8.0f), wrapf(SDL_GetTicks() / 1000.0f, 8.0f)});
 
 		int u_MVP = glGetUniformLocation(program, "u_MVP");

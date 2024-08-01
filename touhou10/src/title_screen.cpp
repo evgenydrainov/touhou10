@@ -1,8 +1,6 @@
 #include "title_screen.h"
 
 #include "game.h"
-#include "cpml.h"
-#include <glm/gtc/matrix_transform.hpp>
 #include <glad/gl.h>
 
 #define MENU_SIZE 3
@@ -46,7 +44,7 @@ void Title_Screen::draw(float delta) {
 		float x = GAME_W * 0.75f - 20.0f * i;
 		float y = GAME_H * 0.55f + 50.0f * i;
 
-		glm::vec4 color = color_white;
+		vec4 color = color_white;
 		if (i == cursor) {
 			color = color_yellow;
 		}

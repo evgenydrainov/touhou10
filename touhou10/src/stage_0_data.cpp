@@ -159,7 +159,7 @@ void Stage_0_Draw_Background(float delta) {
 
 		glUseProgram(program);
 
-		glm::mat4 MVP = w->d3d.get_mvp();
+		mat4 MVP = w->d3d.get_mvp();
 
 		int u_MVP = glGetUniformLocation(program, "u_MVP");
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);

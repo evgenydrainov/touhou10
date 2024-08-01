@@ -1,13 +1,12 @@
 #include "animation.h"
 
 #include "game.h"
-#include "cpml.h"
 
-static glm::vec2 interpolate(glm::vec2 a, glm::vec2 b, float f) {
+static vec2 interpolate(vec2 a, vec2 b, float f) {
 	return lerp(a, b, f);
 }
 
-static glm::vec4 interpolate(glm::vec4 a, glm::vec4 b, float f) {
+static vec4 interpolate(vec4 a, vec4 b, float f) {
 	return lerp(a, b, f);
 }
 
@@ -40,13 +39,13 @@ void Animation::draw(float delta) {
 	for (int i = 0; i < data->num_sprite_tracks; i++) {
 		SpriteTrack* sprite_track = &data->sprite_tracks[i];
 
-		glm::vec2 position = get_track_value(sprite_track->position, time, {});
-		glm::vec4 modulate = get_track_value(sprite_track->modulate, time, color_white);
-		glm::vec2 scale    = get_track_value(sprite_track->scale,    time, {1, 1});
+		vec2 position = get_track_value(sprite_track->position, time, {});
+		vec4 modulate = get_track_value(sprite_track->modulate, time, color_white);
+		vec2 scale    = get_track_value(sprite_track->scale,    time, {1, 1});
 
 		Texture* t = GetTexture(sprite_track->texture_index);
 
-		glm::vec2 origin = {
+		vec2 origin = {
 			t->width  / 2.0f,
 			t->height / 2.0f,
 		};

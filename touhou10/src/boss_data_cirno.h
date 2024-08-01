@@ -3,7 +3,7 @@
 static void Cirno_Draw_Spellcard_Background(float delta) {
 	Texture* t = GetTexture(tex_cirno_spellcard_background);
 
-	glm::vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
+	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
 	float scale = PLAY_AREA_W / (float)t->width;
 
 	int y = (SDL_GetTicks() / 50) % PLAY_AREA_W;

@@ -1,7 +1,5 @@
 #include "package.h"
 
-#include <SDL.h>
-
 void Package::init(Arena* a) {
 	entries             = ArrayAllocFromArena<Entry>(a, MAX_ENTRIES);
 	arena_for_filenames = ArenaAllocFromArena(a, MEMORY_FOR_FILENAMES);

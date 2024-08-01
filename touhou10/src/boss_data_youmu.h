@@ -40,7 +40,7 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 				float t = i / (float)(N - 1);
 				float x = lerp(startx, endx, t);
 				float y = lerp(starty, endy, t);
-				float off = 10 + 140 * sinf(glm::radians(180.0f * t));
+				float off = 10 + 140 * dsin(180.0f * t);
 				int N2 = min(1 + 3 * (i / 2), 11);
 
 				if (i % 2 == 0) {

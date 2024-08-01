@@ -4,8 +4,6 @@
 #include "array.h"
 #include "strings.h"
 
-#include <glm/glm.hpp>
-
 constexpr size_t BATCH_MAX_QUADS    = 10'000;
 constexpr size_t VERTICES_PER_QUAD  = 4;
 constexpr size_t INDICES_PER_QUAD   = 6;
@@ -19,17 +17,17 @@ struct Sprite;
 extern Renderer* r;
 
 struct Vertex {
-	glm::vec3 pos;
-	glm::vec4 color;
-	glm::vec2 uv;
+	vec3 pos;
+	vec4 color;
+	vec2 uv;
 };
 
-constexpr glm::vec4 color_white  = { 1.00f, 1.00f, 1.00f, 1.00f };
-constexpr glm::vec4 color_black  = { 0.00f, 0.00f, 0.00f, 1.00f };
-constexpr glm::vec4 color_red    = { 1.00f, 0.00f, 0.00f, 1.00f };
-constexpr glm::vec4 color_green  = { 0.00f, 1.00f, 0.00f, 1.00f };
-constexpr glm::vec4 color_blue   = { 0.00f, 0.00f, 1.00f, 1.00f };
-constexpr glm::vec4 color_yellow = { 1.00f, 1.00f, 0.00f, 1.00f };
+constexpr vec4 color_white  = { 1.00f, 1.00f, 1.00f, 1.00f };
+constexpr vec4 color_black  = { 0.00f, 0.00f, 0.00f, 1.00f };
+constexpr vec4 color_red    = { 1.00f, 0.00f, 0.00f, 1.00f };
+constexpr vec4 color_green  = { 0.00f, 1.00f, 0.00f, 1.00f };
+constexpr vec4 color_blue   = { 0.00f, 0.00f, 1.00f, 1.00f };
+constexpr vec4 color_yellow = { 1.00f, 1.00f, 0.00f, 1.00f };
 
 enum HAlign {
 	HALIGN_LEFT,
@@ -78,9 +76,9 @@ struct Renderer {
 	u32 batch_ebo;
 	u32 batch_texture;
 
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
+	mat4 model;
+	mat4 view;
+	mat4 proj;
 
 	int draw_calls;
 	size_t max_batch;
@@ -89,27 +87,27 @@ struct Renderer {
 	void destroy();
 
 	void draw_texture(Texture* t, Rect src = {},
-					  glm::vec2 pos = {}, glm::vec2 scale = {1.0f, 1.0f},
-					  glm::vec2 origin = {}, float angle = 0.0f, glm::vec4 color = color_white, glm::bvec2 flip = {});
+					  vec2 pos = {}, vec2 scale = {1.0f, 1.0f},
+					  vec2 origin = {}, float angle = 0.0f, vec4 color = color_white, glm::bvec2 flip = {});
 
-	void draw_rectangle(Rect rect, glm::vec4 color);
+	void draw_rectangle(Rect rect, vec4 color);
 
 	// @Temp This is temporary. Draws a 16x16 rect
-	void draw_rectangle_ext(glm::vec2 pos, glm::vec2 scale = {1.0f, 1.0f},
-							glm::vec2 origin = {}, float angle = 0.0f, glm::vec4 color = color_white);
+	void draw_rectangle_ext(vec2 pos, vec2 scale = {1.0f, 1.0f},
+							vec2 origin = {}, float angle = 0.0f, vec4 color = color_white);
 
 	void draw_sprite(Sprite* s, int frame_index,
-					 glm::vec2 pos, glm::vec2 scale = {1.0f, 1.0f},
-					 float angle = 0.0f, glm::vec4 color = color_white, glm::bvec2 flip = {});
+					 vec2 pos, vec2 scale = {1.0f, 1.0f},
+					 float angle = 0.0f, vec4 color = color_white, glm::bvec2 flip = {});
 
-	void draw_triangle(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec4 color = color_white);
+	void draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color = color_white);
 
-	void draw_circle(glm::vec2 pos, float radius, glm::vec4 color = color_white, int precision = 6);
+	void draw_circle(vec2 pos, float radius, vec4 color = color_white, int precision = 6);
 
-	glm::vec2 draw_text(Sprite* font, String text, float x, float y,
-						HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, glm::vec4 color = color_white);
+	vec2 draw_text(Sprite* font, String text, float x, float y,
+				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
 
-	glm::vec2 measure_text(Sprite* font, String text, bool only_one_line = false);
+	vec2 measure_text(Sprite* font, String text, bool only_one_line = false);
 
 	void break_batch();
 

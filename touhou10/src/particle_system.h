@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "array.h"
-#include <glm/glm.hpp>
 
 #define MAX_PARTICLES 1'000
 
@@ -28,11 +27,11 @@ struct Particle {
 	u32 sprite_index;
 	float frame_index;
 
-	glm::vec4 color_from = {1, 1, 1, 1};
-	glm::vec4 color_to   = {1, 1, 1, 1};
+	vec4 color_from = {1, 1, 1, 1};
+	vec4 color_to   = {1, 1, 1, 1};
 
-	glm::vec2 scale_from = {1, 1};
-	glm::vec2 scale_to   = {1, 1};
+	vec2 scale_from = {1, 1};
+	vec2 scale_to   = {1, 1};
 };
 
 struct Particle_System {
