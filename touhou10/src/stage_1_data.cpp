@@ -29,7 +29,7 @@ void Stage_1_Draw_Background(float delta) {
 		u32 program = r->shader_texture_program;
 
 		glUseProgram(program);
-		Defer { glUseProgram(0); };
+		defer { glUseProgram(0); };
 
 		mat4 MVP = w->d3d.get_mvp();
 		MVP = glm::translate(MVP, {0, -wrapf(SDL_GetTicks() / 1000.0f, 8.0f), wrapf(SDL_GetTicks() / 1000.0f, 8.0f)});
@@ -38,16 +38,16 @@ void Stage_1_Draw_Background(float delta) {
 		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_pcb_youmu_stairs)->ID);
-		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glBindVertexArray(vao);
-		Defer { glBindVertexArray(0); };
+		defer { glBindVertexArray(0); };
 
 		glEnable(GL_DEPTH_TEST);
-		Defer { glDisable(GL_DEPTH_TEST); };
+		defer { glDisable(GL_DEPTH_TEST); };
 
 		glEnable(GL_CULL_FACE);
-		Defer { glDisable(GL_CULL_FACE); };
+		defer { glDisable(GL_CULL_FACE); };
 
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
 		r->draw_calls++;

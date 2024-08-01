@@ -788,7 +788,7 @@ void World::draw(float delta_not_modified) {
 
 	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
 	glEnable(GL_SCISSOR_TEST);
-	Defer { glDisable(GL_SCISSOR_TEST); };
+	defer { glDisable(GL_SCISSOR_TEST); };
 
 	if (boss_spellcard_background_alpha < 1) {
 		StageData* stage = GetStageData(g->stage_index);

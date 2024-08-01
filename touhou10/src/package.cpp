@@ -114,7 +114,7 @@ static u8* read_entire_file(const char* fname, size_t* out_size) {
 #else
 	f = fopen(fname, "rb");
 #endif
-	Defer { if (f) fclose(f); };
+	defer { if (f) fclose(f); };
 
 	if (f) {
 		fseek(f, 0, SEEK_END);
@@ -176,10 +176,10 @@ u8* Package::get_file(string name, size_t* out_size) {
 
 		// @Sad
 		char* c_str = to_c_string(name);
-		Defer { free(c_str); };
+		defer { free(c_str); };
 
 		SDL_RWops* src = SDL_RWFromFile(c_str, "rb");
-		Defer { if (src) SDL_RWclose(src); };
+		defer { if (src) SDL_RWclose(src); };
 
 		if (!src) {
 			return nullptr;

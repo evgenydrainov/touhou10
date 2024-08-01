@@ -52,22 +52,22 @@ void Renderer::init() {
 		};
 
 		u32 shader_texture_vertex = compile_shader(GL_VERTEX_SHADER, shader_texture_vertex_text);
-		Defer { glDeleteShader(shader_texture_vertex); };
+		defer { glDeleteShader(shader_texture_vertex); };
 
 		u32 shader_texture_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_texture_fragment_text);
-		Defer { glDeleteShader(shader_texture_fragment); };
+		defer { glDeleteShader(shader_texture_fragment); };
 
 		u32 shader_color_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_color_fragment_text);
-		Defer { glDeleteShader(shader_color_fragment); };
+		defer { glDeleteShader(shader_color_fragment); };
 
 		u32 shader_stage_0_bg_vertex = compile_shader(GL_VERTEX_SHADER, shader_stage_0_bg_vertex_text);
-		Defer { glDeleteShader(shader_stage_0_bg_vertex); };
+		defer { glDeleteShader(shader_stage_0_bg_vertex); };
 
 		u32 shader_stage_0_bg_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_stage_0_bg_fragment_text);
-		Defer { glDeleteShader(shader_stage_0_bg_fragment); };
+		defer { glDeleteShader(shader_stage_0_bg_fragment); };
 
 		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_sharp_bilinear_fragment_text);
-		Defer { glDeleteShader(shader_sharp_bilinear_fragment); };
+		defer { glDeleteShader(shader_sharp_bilinear_fragment); };
 
 		shader_texture_program        = link_program(shader_texture_vertex,    shader_texture_fragment);
 		shader_color_program          = link_program(shader_texture_vertex,    shader_color_fragment);
@@ -556,7 +556,7 @@ void Renderer::break_batch() {
 			u32 program = current_texture_shader;
 
 			glUseProgram(program);
-			Defer { glUseProgram(0); };
+			defer { glUseProgram(0); };
 
 			mat4 MVP = (proj * view) * model;
 
@@ -564,10 +564,10 @@ void Renderer::break_batch() {
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 			glBindTexture(GL_TEXTURE_2D, batch_texture);
-			Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+			defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 			glBindVertexArray(batch_vao);
-			Defer { glBindVertexArray(0); };
+			defer { glBindVertexArray(0); };
 
 			Assert(batch_vertices.count % 4 == 0);
 
@@ -581,7 +581,7 @@ void Renderer::break_batch() {
 			u32 program = current_color_shader;
 
 			glUseProgram(program);
-			Defer { glUseProgram(0); };
+			defer { glUseProgram(0); };
 
 			mat4 MVP = (proj * view) * model;
 
@@ -589,7 +589,7 @@ void Renderer::break_batch() {
 			glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
 			glBindVertexArray(batch_vao);
-			Defer { glBindVertexArray(0); };
+			defer { glBindVertexArray(0); };
 
 			Assert(batch_vertices.count % 3 == 0);
 
@@ -617,7 +617,7 @@ u32 create_vertex_array_obj(Vertex* vertices, size_t num_vertices,
 	if (indices) glGenBuffers(1, &ebo);
 
 	glBindVertexArray(vao);
-	Defer { glBindVertexArray(0); };
+	defer { glBindVertexArray(0); };
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(vertices[0]), vertices, GL_STATIC_DRAW);

@@ -109,7 +109,7 @@ public:
 	ExitScope<T> operator+(T t) { return t; }
 };
 
-#define Defer const auto& CONCAT(_defer_, __LINE__) = ExitScopeHelp() + [&]()
+#define defer const auto& CONCAT(_defer_, __LINE__) = ExitScopeHelp() + [&]()
 
 // 
 // Automatically convert an enum to a string.

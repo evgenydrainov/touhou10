@@ -170,7 +170,7 @@ void Game::init() {
 		glGenTextures(1, &game_texture); // @Leak
 
 		glBindTexture(GL_TEXTURE_2D, game_texture);
-		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_LINEAR for sharp bilinear shader
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -184,7 +184,7 @@ void Game::init() {
 		glGenTextures(1, &game_depth_texture); // @Leak
 
 		glBindTexture(GL_TEXTURE_2D, game_depth_texture);
-		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -198,7 +198,7 @@ void Game::init() {
 		glGenFramebuffers(1, &game_fbo); // @Leak
 
 		glBindFramebuffer(GL_FRAMEBUFFER, game_fbo);
-		Defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
+		defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, game_texture,       0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, game_depth_texture, 0);
@@ -503,7 +503,7 @@ void Game::draw(float delta) {
 	// 
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, game_fbo);
-		Defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
+		defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
 
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -744,7 +744,7 @@ Texture load_texture(string fname, bool filter) {
 		glGenTextures(1, &texture);
 
 		glBindTexture(GL_TEXTURE_2D, texture);
-		Defer { glBindTexture(GL_TEXTURE_2D, 0); };
+		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR : GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST);
@@ -769,13 +769,13 @@ Texture load_texture(string fname, bool filter) {
 			int height;
 			int num_channels;
 			void* pixel_data = stbi_load_from_memory(filedata, (int)filesize, &width, &height, &num_channels, 4);
-			Defer { if (pixel_data) stbi_image_free(pixel_data); };
+			defer { if (pixel_data) stbi_image_free(pixel_data); };
 
 			result = create_texture(pixel_data, width, height, num_channels);
 		} else if (is_qoi(filedata, filesize)) {
 			qoi_desc desc;
 			void* pixel_data = qoi_decode(filedata, (int)filesize, &desc, 4);
-			Defer { if (pixel_data) free(pixel_data); };
+			defer { if (pixel_data) free(pixel_data); };
 
 			// Assert(desc.colorspace == QOI_SRGB);
 
@@ -819,7 +819,7 @@ Mix_Chunk* load_sound(string fname) {
 
 u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
 	Arena arena = arena_create(Kilobytes(700));
-	Defer { arena_destroy(&arena); };
+	defer { arena_destroy(&arena); };
 
 	auto positions = dynamic_array_cap_from_arena<vec3>   (&arena, 10'000);
 	auto uvs       = dynamic_array_cap_from_arena<vec2>   (&arena, 10'000);
@@ -827,7 +827,7 @@ u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
 	auto vertices  = dynamic_array_cap_from_arena<Vertex> (&arena, 10'000);
 
 	g->package.open();
-	Defer { g->package.close(); };
+	defer { g->package.close(); };
 
 	size_t filesize;
 	u8* filedata = g->package.get_file(fname, &filesize);
