@@ -5,6 +5,7 @@
 #include <qoi/qoi.h>
 
 #include <inttypes.h> // for PRIX64
+#include <string.h> // for memset
 
 Game* g;
 
@@ -94,6 +95,38 @@ void Game::init() {
 		panic_and_abort("Couldn't initialize SDL: %s", SDL_GetError());
 	}
 
+	{
+		SDL_version ver;
+
+		SDL_VERSION(&ver);
+		log_info("Compiled against SDL %u.%u.%u", ver.major, ver.minor, ver.patch);
+
+		SDL_GetVersion(&ver);
+		log_info("Linked against SDL %u.%u.%u", ver.major, ver.minor, ver.patch);
+	}
+
+	{
+		// printf instead of log_info because I want them in one line
+		// log_info uses SDL_Log
+		printf("Available video backends: ");
+		for (int i = 0; i < SDL_GetNumVideoDrivers(); i++) {
+			printf("%s ", SDL_GetVideoDriver(i));
+		}
+		printf("\n");
+
+		log_info("Current video backend: %s", SDL_GetCurrentVideoDriver());
+	}
+
+	{
+		printf("Available audio backends: ");
+		for (int i = 0; i < SDL_GetNumAudioDrivers(); i++) {
+			printf("%s ", SDL_GetAudioDriver(i));
+		}
+		printf("\n");
+
+		log_info("Current audio backend: %s", SDL_GetCurrentAudioDriver());
+	}
+
 	window = SDL_CreateWindow("touhou10",
 							  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 							  2 * GAME_W, 2 * GAME_H,
@@ -141,12 +174,12 @@ void Game::init() {
 		int num_exts;
 		glGetIntegerv(GL_NUM_EXTENSIONS, &num_exts);
 
-		log_info("%d extensions:", num_exts);
-
+		printf("GL extensions: ");
 		for (int i = 0; i < num_exts; i++) {
 			const char* ext = (const char*) glGetStringi(GL_EXTENSIONS, i);
-			log_info("%s", ext);
+			printf("%s ", ext);
 		}
+		printf("\n");
 	}
 #endif
 
@@ -233,6 +266,15 @@ void Game::init() {
 	}
 
 	Mix_Init(MIX_INIT_MP3);
+
+	{
+		SDL_version cver;
+		MIX_VERSION(&cver);
+		log_info("Compiled against SDL_mixer %u.%u.%u", cver.major, cver.minor, cver.patch);
+
+		const SDL_version* lver = Mix_Linked_Version();
+		log_info("Linked against SDL_mixer %u.%u.%u", lver->major, lver->minor, lver->patch);
+	}
 
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
 

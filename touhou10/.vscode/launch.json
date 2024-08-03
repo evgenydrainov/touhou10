@@ -12,7 +12,13 @@
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
-			"environment": [],
+			"environment": [
+				// Uncomment if using TEMP_USE_CUSTOM_SDL
+				// {
+				// 	"name": "LD_LIBRARY_PATH",
+				// 	"value": "${env:HOME}/source/repos/SDL-2.30.6/build:${env:HOME}/source/repos/SDL_mixer-2.8.0/build:${env:LD_LIBRARY_PATH}",
+				// },
+			],
 			"externalConsole": true,
 			"MIMode": "gdb",
 			"setupCommands": [
@@ -25,7 +31,7 @@
 					"description": "Set Disassembly Flavor to Intel",
 					"text": "-gdb-set disassembly-flavor intel",
 					"ignoreFailures": true
-				}
+				},
 			]
 		}
 	]

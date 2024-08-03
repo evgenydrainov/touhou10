@@ -15,11 +15,25 @@ add_compile_definitions($<$<CONFIG:Debug>:_DEBUG>)
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
-find_package(SDL2 REQUIRED)
-MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
-MESSAGE(STATUS "INFO: SDL2_LIBRARIES is ${SDL2_LIBRARIES}")
+# 
+# See .vscode/launch.json and .vscode/settings.json if using TEMP_USE_CUSTOM_SDL
+# 
+if(NOT DEFINED TEMP_USE_CUSTOM_SDL)
+	set(TEMP_USE_CUSTOM_SDL OFF)
+else()
+	MESSAGE(STATUS "INFO: TEMP_USE_CUSTOM_SDL is ${TEMP_USE_CUSTOM_SDL}")
+endif()
 
-include_directories(touhou10 ${SDL2_INCLUDE_DIRS})
+if(NOT TEMP_USE_CUSTOM_SDL)
+	find_package(SDL2 REQUIRED)
+	MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
+	MESSAGE(STATUS "INFO: SDL2_LIBRARIES is ${SDL2_LIBRARIES}")
+
+	include_directories(touhou10 ${SDL2_INCLUDE_DIRS})
+else()
+	include_directories(touhou10 ~/source/repos/SDL-2.30.6/include)
+	include_directories(touhou10 ~/source/repos/SDL_mixer-2.8.0/include)
+endif()
 
 include_directories(touhou10 ../external/glad/include)
 include_directories(touhou10 ../external/glm/include)
@@ -46,8 +60,15 @@ add_executable(touhou10
 	src/sprite_data.cpp
 	src/stage_0_data.cpp
 	src/stage_1_data.cpp
-	src/stdafx.cpp
 	src/title_screen.cpp
 	src/world.cpp)
-target_link_libraries(touhou10 ${SDL2_LIBRARIES})
-target_link_libraries(touhou10 SDL2_mixer)
+
+if(NOT TEMP_USE_CUSTOM_SDL)
+	target_link_libraries(touhou10 ${SDL2_LIBRARIES})
+	target_link_libraries(touhou10 SDL2_mixer)
+else()
+	target_link_libraries(touhou10 "-L ~/source/repos/SDL-2.30.6/build      -lSDL2")
+	target_link_libraries(touhou10 "-L ~/source/repos/SDL_mixer-2.8.0/build -lSDL2_mixer")
+endif()
+
+target_precompile_headers(touhou10 PRIVATE src/stdafx.h)
