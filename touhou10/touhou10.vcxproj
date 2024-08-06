@@ -196,7 +196,6 @@
     <ClCompile Include="src\particle_system.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\renderer.cpp" />
-    <ClCompile Include="src\shader_data.cpp" />
     <ClCompile Include="src\sprite_data.cpp" />
     <ClCompile Include="src\stage_0_data.cpp" />
     <ClCompile Include="src\stage_1_data.cpp" />

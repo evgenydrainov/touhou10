@@ -208,3 +208,14 @@ u8* Package::get_file(string name, size_t* out_size) {
 		return get_file_from_disk(name, out_size);
 	}
 }
+
+string Package::get_file_string(string name) {
+	size_t filesize;
+	u8* filedata = get_file(name, &filesize);
+
+	if (!filedata) {
+		return {};
+	}
+
+	return {(char*)filedata, filesize};
+}

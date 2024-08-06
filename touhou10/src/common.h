@@ -93,23 +93,23 @@ struct Rectf {
 // Stolen from Jonathan Blow's microsoft_craziness.h
 // 
 
-template <typename T>
+template<typename T>
 struct ExitScope {
-	T lambda;
-	ExitScope(T lambda) : lambda(lambda) {}
-	~ExitScope() { lambda(); }
-	ExitScope(const ExitScope&);
-private:
-	ExitScope& operator=(const ExitScope&);
+    T lambda;
+    ExitScope(T lambda):lambda(lambda){}
+    ~ExitScope(){lambda();}
+    ExitScope(const ExitScope&);
+  private:
+    ExitScope& operator =(const ExitScope&);
 };
-
+ 
 class ExitScopeHelp {
-public:
-	template <typename T>
-	ExitScope<T> operator+(T t) { return t; }
+  public:
+    template<typename T>
+        ExitScope<T> operator+(T t){ return t;}
 };
 
-#define defer const auto& CONCAT(_defer_, __LINE__) = ExitScopeHelp() + [&]()
+#define defer const auto& CONCAT(_defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 // 
 // Automatically convert an enum to a string.

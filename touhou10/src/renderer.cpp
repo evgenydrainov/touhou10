@@ -8,16 +8,151 @@ Renderer* r;
 
 void Renderer::init() {
 
+
+	// 
+	// Initialize.
+	// 
+	{
+		glGenVertexArrays(1, &quad_vao);
+		glGenBuffers(1, &quad_vbo);
+		glGenBuffers(1, &quad_ebo);
+
+		// 1. bind Vertex Array Object
+		glBindVertexArray(quad_vao);
+
+		// 2. copy our vertices array in a vertex buffer for OpenGL to use
+		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, nullptr, GL_DYNAMIC_DRAW);
+
+		u32 indices[] = {
+			0, 1, 2,
+			2, 3, 0,
+		};
+
+		// 3. copy our index array in a element buffer for OpenGL to use
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+		// 4. then set the vertex attributes pointers
+		set_vertex_attribs();
+
+		glBindVertexArray(0);
+	}
+
+	{
+		glGenVertexArrays(1, &triangle_vao);
+		glGenBuffers(1, &triangle_vbo);
+
+		// 1. bind Vertex Array Object
+		glBindVertexArray(triangle_vao);
+
+		// 2. copy our vertices array in a vertex buffer for OpenGL to use
+		glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, nullptr, GL_DYNAMIC_DRAW);
+
+		// 4. then set the vertex attributes pointers
+		set_vertex_attribs();
+
+		glBindVertexArray(0);
+	}
+
+	{
+		glGenVertexArrays(1, &batch_vao);
+		glGenBuffers(1, &batch_vbo);
+		glGenBuffers(1, &batch_ebo);
+
+		// 1. bind Vertex Array Object
+		glBindVertexArray(batch_vao);
+
+		// 2. copy our vertices array in a vertex buffer for OpenGL to use
+		glBindBuffer(GL_ARRAY_BUFFER, batch_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * BATCH_MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
+
+		// 
+		// Use arena temporarily to generate indices
+		// 
+		{
+			const size_t memory_for_indices  = BATCH_MAX_INDICES  * sizeof(u32);
+			const size_t memory_for_vertices = BATCH_MAX_VERTICES * sizeof(Vertex);
+
+			static_assert(memory_for_indices <= memory_for_vertices, "there's not gonna be enough memory in the arena");
+		}
+
+		size_t arena_pos = g->arena.count;
+
+		u32* indices = (u32*) arena_push(&g->arena, BATCH_MAX_INDICES * sizeof(u32));
+
+		u32 offset = 0;
+		for (size_t i = 0; i < BATCH_MAX_INDICES; i += 6) {
+			indices[i + 0] = offset + 0;
+			indices[i + 1] = offset + 1;
+			indices[i + 2] = offset + 2;
+
+			indices[i + 3] = offset + 2;
+			indices[i + 4] = offset + 3;
+			indices[i + 5] = offset + 0;
+
+			offset += 4;
+		}
+
+		// 3. copy our index array in a element buffer for OpenGL to use
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch_ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices, GL_STATIC_DRAW);
+
+		g->arena.count = arena_pos;
+
+		// 4. then set the vertex attributes pointers
+		set_vertex_attribs();
+
+		glBindVertexArray(0);
+
+		batch_vertices = dynamic_array_cap_from_arena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
+	}
+
+	model = {1.0f};
+	view  = {1.0f};
+	proj  = {1.0f};
+
+	// Initialize after loading shaders
+	Assert(shader_texture_program != 0);
+	Assert(shader_color_program   != 0);
+
+	current_texture_shader = shader_texture_program;
+	current_color_shader   = shader_color_program;
+
+}
+
+void Renderer::destroy() {
+	glDeleteBuffers(1, &batch_ebo);
+	glDeleteBuffers(1, &batch_vbo);
+	glDeleteVertexArrays(1, &batch_vao);
+
+	glDeleteBuffers(1, &triangle_vbo);
+	glDeleteVertexArrays(1, &triangle_vao);
+
+	glDeleteBuffers(1, &quad_ebo);
+	glDeleteBuffers(1, &quad_vbo);
+	glDeleteVertexArrays(1, &quad_vao);
+
+	glDeleteProgram(shader_sharp_bilinear_program);
+	glDeleteProgram(shader_stage_0_bg_program);
+	glDeleteProgram(shader_color_program);
+	glDeleteProgram(shader_texture_program);
+}
+
+void Renderer::load_shaders() {
+
 	// 
 	// Load shaders.
 	// 
 	{
 
-		auto compile_shader = [](GLenum type, const char* source) {
+		auto compile_shader = [](GLenum type, string source) {
 			u32 shader = glCreateShader(type);
 
-			const char* sources[] = {source};
-			glShaderSource(shader, ArrayLength(sources), sources, NULL);
+			const char* sources[] = {source.data};
+			int lengths[] = {(int)source.count};
+			glShaderSource(shader, ArrayLength(sources), sources, lengths);
 
 			glCompileShader(shader);
 
@@ -51,184 +186,46 @@ void Renderer::init() {
 			return program;
 		};
 
+
+		string shader_texture_vertex_text = g->package.get_file_string("shaders/texture.vert");
 		u32 shader_texture_vertex = compile_shader(GL_VERTEX_SHADER, shader_texture_vertex_text);
 		defer { glDeleteShader(shader_texture_vertex); };
 
+		string shader_texture_fragment_text = g->package.get_file_string("shaders/texture.frag");
 		u32 shader_texture_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_texture_fragment_text);
 		defer { glDeleteShader(shader_texture_fragment); };
 
+		string shader_color_fragment_text = g->package.get_file_string("shaders/color.frag");
 		u32 shader_color_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_color_fragment_text);
 		defer { glDeleteShader(shader_color_fragment); };
 
+		string shader_stage_0_bg_vertex_text = g->package.get_file_string("shaders/stage_0_bg.vert");
 		u32 shader_stage_0_bg_vertex = compile_shader(GL_VERTEX_SHADER, shader_stage_0_bg_vertex_text);
 		defer { glDeleteShader(shader_stage_0_bg_vertex); };
 
+		string shader_stage_0_bg_fragment_text = g->package.get_file_string("shaders/stage_0_bg.frag");
 		u32 shader_stage_0_bg_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_stage_0_bg_fragment_text);
 		defer { glDeleteShader(shader_stage_0_bg_fragment); };
 
+		string shader_sharp_bilinear_fragment_text = g->package.get_file_string("shaders/sharp_bilinear.frag");
 		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_sharp_bilinear_fragment_text);
 		defer { glDeleteShader(shader_sharp_bilinear_fragment); };
 
+		string shader_3d_fragment_text = g->package.get_file_string("shaders/3d.frag");
 		u32 shader_3d_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_3d_fragment_text);
 		defer { glDeleteShader(shader_3d_fragment); };
 
+		string shader_3d_vertex_text = g->package.get_file_string("shaders/3d.vert");
 		u32 shader_3d_vertex = compile_shader(GL_VERTEX_SHADER, shader_3d_vertex_text);
 		defer { glDeleteShader(shader_3d_vertex); };
 
-		shader_texture_program        = link_program(shader_texture_vertex, shader_texture_fragment);
+		shader_texture_program        = link_program(shader_texture_vertex,    shader_texture_fragment);
 		shader_color_program          = link_program(shader_texture_vertex,    shader_color_fragment);
 		shader_stage_0_bg_program     = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
 		shader_sharp_bilinear_program = link_program(shader_texture_vertex,    shader_sharp_bilinear_fragment);
 		shader_3d_program             = link_program(shader_3d_vertex,         shader_3d_fragment);
 	}
 
-
-
-	// 
-	// Initialize.
-	// 
-	{
-		glGenVertexArrays(1, &quad_vao);
-		glGenBuffers(1, &quad_vbo);
-		glGenBuffers(1, &quad_ebo);
-
-		// 1. bind Vertex Array Object
-		glBindVertexArray(quad_vao);
-
-		// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, nullptr, GL_DYNAMIC_DRAW);
-
-		u32 indices[] = {
-			0, 1, 2,
-			2, 3, 0,
-		};
-
-		// 3. copy our index array in a element buffer for OpenGL to use
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		// 4. then set the vertex attributes pointers
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)); // position
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color)); // color
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv)); // texcoord
-		glEnableVertexAttribArray(2);
-
-		glBindVertexArray(0);
-	}
-
-	{
-		glGenVertexArrays(1, &triangle_vao);
-		glGenBuffers(1, &triangle_vbo);
-
-		// 1. bind Vertex Array Object
-		glBindVertexArray(triangle_vao);
-
-		// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, nullptr, GL_DYNAMIC_DRAW);
-
-		// 4. then set the vertex attributes pointers
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)); // position
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color)); // color
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv)); // texcoord
-		glEnableVertexAttribArray(2);
-
-		glBindVertexArray(0);
-	}
-
-	{
-		glGenVertexArrays(1, &batch_vao);
-		glGenBuffers(1, &batch_vbo);
-		glGenBuffers(1, &batch_ebo);
-
-		// 1. bind Vertex Array Object
-		glBindVertexArray(batch_vao);
-
-		// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, batch_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * BATCH_MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
-
-		// 
-		// Use arena temporarily to generate indices
-		// 
-		{
-			const size_t memory_for_indices  = BATCH_MAX_INDICES * sizeof(u32);
-			const size_t memory_for_vertices = BATCH_MAX_VERTICES * sizeof(Vertex);
-			static_assert(memory_for_indices <= memory_for_vertices, "there's not gonna be enough memory in the arena");
-		}
-
-		size_t arena_pos = g->arena.count;
-
-		u32* indices = (u32*) arena_push(&g->arena, BATCH_MAX_INDICES * sizeof(u32));
-
-		u32 offset = 0;
-		for (size_t i = 0; i < BATCH_MAX_INDICES; i += 6) {
-			indices[i + 0] = offset + 0;
-			indices[i + 1] = offset + 1;
-			indices[i + 2] = offset + 2;
-
-			indices[i + 3] = offset + 2;
-			indices[i + 4] = offset + 3;
-			indices[i + 5] = offset + 0;
-
-			offset += 4;
-		}
-
-		// 3. copy our index array in a element buffer for OpenGL to use
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * BATCH_MAX_INDICES, indices, GL_STATIC_DRAW);
-
-		g->arena.count = arena_pos;
-
-		// 4. then set the vertex attributes pointers
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)); // position
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color)); // color
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv)); // texcoord
-		glEnableVertexAttribArray(2);
-
-		glBindVertexArray(0);
-
-		batch_vertices = dynamic_array_cap_from_arena<Vertex>(&g->arena, BATCH_MAX_VERTICES);
-	}
-
-	model = {1.0f};
-	view = {1.0f};
-	proj = {1.0f};
-
-	current_texture_shader = shader_texture_program;
-	current_color_shader   = shader_color_program;
-
-}
-
-void Renderer::destroy() {
-	glDeleteBuffers(1, &batch_ebo);
-	glDeleteBuffers(1, &batch_vbo);
-	glDeleteVertexArrays(1, &batch_vao);
-
-	glDeleteBuffers(1, &triangle_vbo);
-	glDeleteVertexArrays(1, &triangle_vao);
-
-	glDeleteBuffers(1, &quad_ebo);
-	glDeleteBuffers(1, &quad_vbo);
-	glDeleteVertexArrays(1, &quad_vao);
-
-	glDeleteProgram(shader_sharp_bilinear_program);
-	glDeleteProgram(shader_stage_0_bg_program);
-	glDeleteProgram(shader_color_program);
-	glDeleteProgram(shader_texture_program);
 }
 
 void Renderer::draw_texture(Texture* t, Rect src,
@@ -277,10 +274,10 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		}
 
 		Vertex vertices[] = {
-			{{x1, y1, 0.0f}, color, {u1, v1}},
-			{{x2, y1, 0.0f}, color, {u2, v1}},
-			{{x2, y2, 0.0f}, color, {u2, v2}},
-			{{x1, y2, 0.0f}, color, {u1, v2}},
+			{{x1, y1, 0.0f}, {}, color, {u1, v1}},
+			{{x2, y1, 0.0f}, {}, color, {u2, v1}},
+			{{x2, y2, 0.0f}, {}, color, {u2, v2}},
+			{{x1, y2, 0.0f}, {}, color, {u1, v2}},
 		};
 
 		// glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
@@ -345,10 +342,10 @@ void Renderer::draw_rectangle(Rect rect, vec4 color) {
 		float y2 = (float)(rect.y + rect.h);
 
 		Vertex vertices[] = {
-			{{x1, y1, 0.0f}, color, {}},
-			{{x2, y1, 0.0f}, color, {}},
-			{{x2, y2, 0.0f}, color, {}},
-			{{x1, y2, 0.0f}, color, {}},
+			{{x1, y1, 0.0f}, {}, color, {}},
+			{{x2, y1, 0.0f}, {}, color, {}},
+			{{x2, y2, 0.0f}, {}, color, {}},
+			{{x1, y2, 0.0f}, {}, color, {}},
 		};
 
 		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
@@ -408,9 +405,9 @@ void Renderer::draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color) {
 
 	{
 		Vertex vertices[] = {
-			{{p1, 0.0f}, color, {}},
-			{{p2, 0.0f}, color, {}},
-			{{p3, 0.0f}, color, {}},
+			{{p1.x, p1.y, 0.0f}, {}, color, {}},
+			{{p2.x, p2.y, 0.0f}, {}, color, {}},
+			{{p3.x, p3.y, 0.0f}, {}, color, {}},
 		};
 
 		// glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
@@ -634,14 +631,27 @@ u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_indices * sizeof(indices[0]), indices, GL_STATIC_DRAW);
 	}
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-	glEnableVertexAttribArray(2);
+	set_vertex_attribs();
 
 	if (out_vbo) *out_vbo = vbo;
 	if (out_ebo) *out_ebo = ebo;
 	return vao;
+}
+
+void set_vertex_attribs() {
+	// Position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+	glEnableVertexAttribArray(0);
+
+	// Normal
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(1);
+
+	// Color
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+	glEnableVertexAttribArray(2);
+
+	// Texcoord
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+	glEnableVertexAttribArray(3);
 }

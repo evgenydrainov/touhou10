@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.16.0)
 project(touhou10)
 
 # 
@@ -41,7 +41,7 @@ include_directories(touhou10 ../external/minicoro/include)
 include_directories(touhou10 ../external/qoi/include)
 include_directories(touhou10 ../external/stb/include)
 
-add_executable(touhou10
+set(SOURCES
 	src/animation.cpp
 	src/anim_data_boss_spellcard_anim.cpp
 	src/assets.cpp
@@ -56,19 +56,20 @@ add_executable(touhou10
 	src/particle_system.cpp
 	src/player.cpp
 	src/renderer.cpp
-	src/shader_data.cpp
 	src/sprite_data.cpp
 	src/stage_0_data.cpp
 	src/stage_1_data.cpp
 	src/title_screen.cpp
 	src/world.cpp)
 
+add_executable(touhou10 ${SOURCES})
+
 if(NOT TEMP_USE_CUSTOM_SDL)
 	target_link_libraries(touhou10 ${SDL2_LIBRARIES})
 	target_link_libraries(touhou10 SDL2_mixer)
 else()
-	target_link_libraries(touhou10 "-L ~/source/repos/SDL-2.30.6/build      -lSDL2")
-	target_link_libraries(touhou10 "-L ~/source/repos/SDL_mixer-2.8.0/build -lSDL2_mixer")
+	target_link_libraries(touhou10 "-L$ENV{HOME}/source/repos/SDL-2.30.6/build      -lSDL2")
+	target_link_libraries(touhou10 "-L$ENV{HOME}/source/repos/SDL_mixer-2.8.0/build -lSDL2_mixer")
 endif()
 
 target_precompile_headers(touhou10 PRIVATE src/stdafx.h)

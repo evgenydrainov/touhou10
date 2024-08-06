@@ -13,14 +13,14 @@ static void draw_world_origin_axis(float delta) {
 
 	const float size = 10;
 	const Vertex vertices[] = {
-		{{0,    0, 0}, color_red},
-		{{size, 0, 0}, color_red},
+		{{0,    0, 0}, {}, color_red},
+		{{size, 0, 0}, {}, color_red},
 
-		{{0, 0,    0}, color_green},
-		{{0, size, 0}, color_green},
+		{{0, 0,    0}, {}, color_green},
+		{{0, size, 0}, {}, color_green},
 
-		{{0, 0, 0},    color_blue},
-		{{0, 0, size}, color_blue},
+		{{0, 0, 0},    {}, color_blue},
+		{{0, 0, size}, {}, color_blue},
 	};
 
 	if (!vao) {
@@ -53,8 +53,8 @@ static u32 vao;
 static int num_vertices;
 
 void Stage_1_Init_Background() {
-	w->d3d.cam_pos = {0, 15.6419, 7.4495};
-	w->d3d.pitch   = -(90 - 65.9595f);
+	w->d3d.cam_pos = {0, 10.0f, 10.0f};
+	w->d3d.pitch   = -10;
 	w->d3d.yaw     = -90;
 
 	if (!vao) {
@@ -79,18 +79,28 @@ void Stage_1_Draw_Background(float delta) {
 		glUseProgram(program);
 		defer { glUseProgram(0); };
 
-		mat4 MVP = w->d3d.get_mvp();
-		MVP = glm::translate(MVP, {0, -wrapf(SDL_GetTicks() / 1000.0f, 8.0f), wrapf(SDL_GetTicks() / 1000.0f, 8.0f)});
+		float y = -wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
+		float z =  wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
 
-		int u_MVP      = glGetUniformLocation(program, "u_MVP");
-		int u_FogStart = glGetUniformLocation(program, "u_FogStart");
-		int u_FogEnd   = glGetUniformLocation(program, "u_FogEnd");
-		int u_FogColor = glGetUniformLocation(program, "u_FogColor");
+		mat4 model = glm::translate(mat4(1.0f), vec3(0.0f, y, z));
+		mat4 view  = w->d3d.get_view_mat();
+		mat4 proj  = w->d3d.get_proj_mat();
 
-		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
-		glUniform1f(u_FogStart,   15);
-		glUniform1f(u_FogEnd,     30);
-		glUniform4fv(u_FogColor,  1, &fog_color[0]);
+		int u_Model          = glGetUniformLocation(program, "u_Model");
+		int u_View           = glGetUniformLocation(program, "u_View");
+		int u_Proj           = glGetUniformLocation(program, "u_Proj");
+		int u_FogStart       = glGetUniformLocation(program, "u_FogStart");
+		int u_FogEnd         = glGetUniformLocation(program, "u_FogEnd");
+		int u_FogColor       = glGetUniformLocation(program, "u_FogColor");
+		int u_LightDirection = glGetUniformLocation(program, "u_LightDirection");
+
+		glUniformMatrix4fv(u_Model, 1, GL_FALSE, &model[0][0]);
+		glUniformMatrix4fv(u_View,  1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(u_Proj,  1, GL_FALSE, &proj[0][0]);
+		glUniform1f(u_FogStart, 20);
+		glUniform1f(u_FogEnd, 40);
+		glUniform4fv(u_FogColor, 1, &fog_color[0]);
+		glUniform3f(u_LightDirection, 0, -1, 0);
 
 		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_pcb_youmu_stairs)->ID);
 		defer { glBindTexture(GL_TEXTURE_2D, 0); };

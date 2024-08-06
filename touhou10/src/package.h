@@ -32,4 +32,6 @@ struct Package {
 
 	u8* get_file(string name, size_t* out_size);
 
+	string get_file_string(string name);
+
 };

@@ -134,10 +134,10 @@ void Stage_0_Init_Background() {
 		float v2 = 1;
 
 		Vertex vertices[] = {
-			{{x1, 0, z1}, {1, 1, 1, 1}, {u1, v1}},
-			{{x2, 0, z1}, {1, 1, 1, 1}, {u2, v1}},
-			{{x2, 0, z2}, {1, 1, 1, 1}, {u2, v2}},
-			{{x1, 0, z2}, {1, 1, 1, 1}, {u1, v2}},
+			{{x1, 0, z1}, {}, color_white, {u1, v1}},
+			{{x2, 0, z1}, {}, color_white, {u2, v1}},
+			{{x2, 0, z2}, {}, color_white, {u2, v2}},
+			{{x1, 0, z2}, {}, color_white, {u1, v2}},
 		};
 
 		u32 indices[] = {

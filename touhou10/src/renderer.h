@@ -16,6 +16,7 @@ extern Renderer* r;
 
 struct Vertex {
 	vec3 pos;
+	vec3 normal;
 	vec4 color;
 	vec2 uv;
 };
@@ -42,6 +43,8 @@ enum VAlign {
 u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
 							const u32* indices = nullptr, size_t num_indices = 0,
 							u32* out_vbo = nullptr, u32* out_ebo = nullptr);
+
+void set_vertex_attribs();
 
 struct Renderer {
 
@@ -84,6 +87,8 @@ struct Renderer {
 
 	void init();
 	void destroy();
+
+	void load_shaders();
 
 	void draw_texture(Texture* t, Rect src = {},
 					  vec2 pos = {}, vec2 scale = {1.0f, 1.0f},

@@ -94,23 +94,6 @@ extern Character character_data[NUM_CHARACTERS];
 Character* GetCharacter(u32 character_index);
 
 // 
-// Shaders
-// 
-
-extern const char shader_texture_vertex_text[];
-extern const char shader_texture_fragment_text[];
-
-extern const char shader_color_fragment_text[];
-
-extern const char shader_stage_0_bg_vertex_text[];
-extern const char shader_stage_0_bg_fragment_text[];
-
-extern const char shader_sharp_bilinear_fragment_text[];
-
-extern const char shader_3d_vertex_text[];
-extern const char shader_3d_fragment_text[];
-
-// 
 // Boss data
 // 
 

@@ -328,10 +328,19 @@ void Game::init() {
 	}
 
 	log_info("Loaded sounds in %fms.", (GetTime() - loading_time) * 1000.0);
+	loading_time = GetTime();
+
+	// load shaders
+	{
+		r = &renderer;
+		r->load_shaders();
+	}
+
+	log_info("Loaded shaders in %fms.", (GetTime() - loading_time) * 1000.0);
+	loading_time = GetTime();
 
 	package.close();
 
-	r = &renderer;
 	r->init();
 
 	// 
@@ -864,13 +873,24 @@ Mix_Chunk* load_sound(string fname) {
 }
 
 u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
-	Arena arena = arena_create(Kilobytes(700));
+	const size_t NUM_POSITIONS = 10'000;
+	const size_t NUM_UVS       = 10'000;
+	const size_t NUM_NORMALS   = 10'000;
+	const size_t NUM_VERTICES  = 10'000;
+
+	const size_t MEMORY =
+		NUM_POSITIONS  * sizeof(vec3)
+		+ NUM_UVS      * sizeof(vec2)
+		+ NUM_NORMALS  * sizeof(vec3)
+		+ NUM_VERTICES * sizeof(Vertex);
+
+	Arena arena = arena_create(MEMORY + Kilobytes(1));
 	defer { arena_destroy(&arena); };
 
-	auto positions = dynamic_array_cap_from_arena<vec3>   (&arena, 10'000);
-	auto uvs       = dynamic_array_cap_from_arena<vec2>   (&arena, 10'000);
-	auto normals   = dynamic_array_cap_from_arena<vec3>   (&arena, 10'000);
-	auto vertices  = dynamic_array_cap_from_arena<Vertex> (&arena, 10'000);
+	auto positions = dynamic_array_cap_from_arena<vec3>   (&arena, NUM_POSITIONS);
+	auto uvs       = dynamic_array_cap_from_arena<vec2>   (&arena, NUM_UVS);
+	auto normals   = dynamic_array_cap_from_arena<vec3>   (&arena, NUM_NORMALS);
+	auto vertices  = dynamic_array_cap_from_arena<Vertex> (&arena, NUM_VERTICES);
 
 	g->package.open();
 	defer { g->package.close(); };
@@ -963,9 +983,10 @@ u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
 				string normal = eat_numeric(&vert);
 
 				Vertex v;
-				v.pos = positions[string_to_u32(pos) - 1];
-				v.uv  = uvs[string_to_u32(uv) - 1];
-				v.color = color_white;
+				v.pos    = positions[string_to_u32(pos)    - 1];
+				v.normal = normals  [string_to_u32(normal) - 1];
+				v.uv     = uvs      [string_to_u32(uv)     - 1];
+				v.color  = color_white;
 
 				array_add(&vertices, v);
 			};
