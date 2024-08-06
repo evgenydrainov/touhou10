@@ -65,13 +65,6 @@ struct Renderer {
 	u32 current_texture_shader;
 	u32 current_color_shader;
 
-	u32 quad_vao;
-	u32 quad_vbo;
-	u32 quad_ebo;
-
-	u32 triangle_vao;
-	u32 triangle_vbo;
-
 	dynamic_array_cap<Vertex> batch_vertices;
 	u32 batch_vao;
 	u32 batch_vbo;

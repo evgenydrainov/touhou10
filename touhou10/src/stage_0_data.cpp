@@ -110,18 +110,24 @@ l_boss:
 #endif
 }
 
-static u32 quad_vao;
-static u32 quad_vbo;
-static u32 quad_ebo;
+
+static u32 vao;
+static u32 vbo;
+static u32 ebo;
+
+static const u32 indices[] = {
+	0, 1, 2,
+	2, 3, 0,
+};
 
 void Stage_0_Init_Background() {
 	w->d3d.cam_pos = {0, 10, 0};
 	w->d3d.pitch   = -45;
 	w->d3d.yaw     = -90;
 
-	if (!quad_vao) {
-		Assert(!quad_vbo);
-		Assert(!quad_ebo);
+	if (!vao) {
+		Assert(!vbo);
+		Assert(!ebo);
 
 		float x1 = -100;
 		float z1 = -100;
@@ -140,13 +146,8 @@ void Stage_0_Init_Background() {
 			{{x1, 0, z2}, {}, color_white, {u1, v2}},
 		};
 
-		u32 indices[] = {
-			0, 1, 2,
-			2, 3, 0,
-		};
-
 		// @Leak
-		quad_vao = create_vertex_array_obj(vertices, ArrayLength(vertices), indices, ArrayLength(indices), &quad_vbo, &quad_ebo);
+		vao = create_vertex_array_obj(vertices, ArrayLength(vertices), indices, ArrayLength(indices), &vbo, &ebo);
 	}
 }
 
@@ -168,9 +169,9 @@ void Stage_0_Draw_Background(float delta) {
 		glUniform1f(u_Time, SDL_GetTicks() / 1000.0f);
 
 		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_stage_0_bg)->ID);
-		glBindVertexArray(quad_vao);
+		glBindVertexArray(vao);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, ArrayLength(indices), GL_UNSIGNED_INT, 0);
 		r->draw_calls++;
 
 		glBindVertexArray(0);

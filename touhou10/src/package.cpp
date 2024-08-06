@@ -104,37 +104,6 @@ void Package::close() {
 	}
 }
 
-#if 0
-static u8* read_entire_file(const char* fname, size_t* out_size) {
-	u8* result = nullptr;
-
-	FILE* f = nullptr;
-#ifdef _WIN32
-	fopen_s(&f, fname, "rb");
-#else
-	f = fopen(fname, "rb");
-#endif
-	defer { if (f) fclose(f); };
-
-	if (f) {
-		fseek(f, 0, SEEK_END);
-		size_t size = (size_t) ftell(f);
-
-		result = (u8*) malloc(size);
-		Assert(result);
-
-		fseek(f, 0, SEEK_SET);
-		fread(result, size, 1, f);
-
-		*out_size = size;
-	}
-
-	return result;
-}
-static u8* read_entire_file(const char* fname, size_t* out_size) {
-	return (u8*) SDL_LoadFile(fname, out_size);
-}
-#endif
 
 u8* Package::get_file(string name, size_t* out_size) {
 

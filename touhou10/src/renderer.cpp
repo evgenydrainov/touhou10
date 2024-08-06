@@ -13,50 +13,6 @@ void Renderer::init() {
 	// Initialize.
 	// 
 	{
-		glGenVertexArrays(1, &quad_vao);
-		glGenBuffers(1, &quad_vbo);
-		glGenBuffers(1, &quad_ebo);
-
-		// 1. bind Vertex Array Object
-		glBindVertexArray(quad_vao);
-
-		// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 4, nullptr, GL_DYNAMIC_DRAW);
-
-		u32 indices[] = {
-			0, 1, 2,
-			2, 3, 0,
-		};
-
-		// 3. copy our index array in a element buffer for OpenGL to use
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		// 4. then set the vertex attributes pointers
-		set_vertex_attribs();
-
-		glBindVertexArray(0);
-	}
-
-	{
-		glGenVertexArrays(1, &triangle_vao);
-		glGenBuffers(1, &triangle_vbo);
-
-		// 1. bind Vertex Array Object
-		glBindVertexArray(triangle_vao);
-
-		// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, nullptr, GL_DYNAMIC_DRAW);
-
-		// 4. then set the vertex attributes pointers
-		set_vertex_attribs();
-
-		glBindVertexArray(0);
-	}
-
-	{
 		glGenVertexArrays(1, &batch_vao);
 		glGenBuffers(1, &batch_vbo);
 		glGenBuffers(1, &batch_ebo);
@@ -127,13 +83,7 @@ void Renderer::destroy() {
 	glDeleteBuffers(1, &batch_vbo);
 	glDeleteVertexArrays(1, &batch_vao);
 
-	glDeleteBuffers(1, &triangle_vbo);
-	glDeleteVertexArrays(1, &triangle_vao);
-
-	glDeleteBuffers(1, &quad_ebo);
-	glDeleteBuffers(1, &quad_vbo);
-	glDeleteVertexArrays(1, &quad_vao);
-
+	glDeleteProgram(shader_3d_program);
 	glDeleteProgram(shader_sharp_bilinear_program);
 	glDeleteProgram(shader_stage_0_bg_program);
 	glDeleteProgram(shader_color_program);
@@ -280,10 +230,6 @@ void Renderer::draw_texture(Texture* t, Rect src,
 			{{x1, y2, 0.0f}, {}, color, {u1, v2}},
 		};
 
-		// glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
-		// glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		// glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 		// Has to be in this order (learned it the hard way)
 		mat4 model = glm::translate(mat4{1.0f}, {pos.x, pos.y, 0.0f});
 		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
@@ -300,78 +246,10 @@ void Renderer::draw_texture(Texture* t, Rect src,
 		array_add(&batch_vertices, vertices[3]);
 	}
 
-#if 0
-	// 
-	// Draw.
-	// 
-	{
-		glUseProgram(shader_texture_program);
-
-		model = glm::translate(mat4{1.0f}, {pos.x, pos.y, 0.0f});
-		model = glm::rotate(model, glm::radians(-angle), {0.0f, 0.0f, 1.0f});
-		model = glm::scale(model, {scale.x, scale.y, 1.0f});
-
-		mat4 MVP = (proj * view) * model;
-
-		int u_MVP = glGetUniformLocation(shader_texture_program, "u_MVP");
-		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
-
-		glBindTexture(GL_TEXTURE_2D, t->ID);
-		glBindVertexArray(quad_vao);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		draw_calls++;
-
-		glBindVertexArray(0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		model = {1.0f};
-
-		glUseProgram(0);
-	}
-#endif
-
 }
 
 void Renderer::draw_rectangle(Rect rect, vec4 color) {
-#if 0
-	{
-		float x1 = (float)rect.x;
-		float y1 = (float)rect.y;
-		float x2 = (float)(rect.x + rect.w);
-		float y2 = (float)(rect.y + rect.h);
-
-		Vertex vertices[] = {
-			{{x1, y1, 0.0f}, {}, color, {}},
-			{{x2, y1, 0.0f}, {}, color, {}},
-			{{x2, y2, 0.0f}, {}, color, {}},
-			{{x1, y2, 0.0f}, {}, color, {}},
-		};
-
-		glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	{
-		glUseProgram(shader_color_program);
-
-		mat4 MVP = (proj * view) * model;
-
-		int u_MVP = glGetUniformLocation(shader_color_program, "u_MVP");
-		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
-
-		glBindVertexArray(quad_vao);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		draw_calls++;
-
-		glBindVertexArray(0);
-		glUseProgram(0);
-	}
-#else
 	draw_sprite(GetSprite(spr_white), 0, {rect.x, rect.y}, {rect.w / 16.0f, rect.h / 16.0f}, 0.0f, color);
-#endif
 }
 
 void Renderer::draw_rectangle_ext(vec2 pos, vec2 scale,
@@ -410,33 +288,10 @@ void Renderer::draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color) {
 			{{p3.x, p3.y, 0.0f}, {}, color, {}},
 		};
 
-		// glBindBuffer(GL_ARRAY_BUFFER, triangle_vbo);
-		// glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		// glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 		array_add(&batch_vertices, vertices[0]);
 		array_add(&batch_vertices, vertices[1]);
 		array_add(&batch_vertices, vertices[2]);
 	}
-
-#if 0
-	{
-		glUseProgram(shader_color_program);
-
-		mat4 MVP = (proj * view) * model;
-
-		int u_MVP = glGetUniformLocation(shader_color_program, "u_MVP");
-		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
-
-		glBindVertexArray(triangle_vao);
-
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		draw_calls++;
-
-		glBindVertexArray(0);
-		glUseProgram(0);
-	}
-#endif
 }
 
 void Renderer::draw_circle(vec2 pos, float radius, vec4 color, int precision) {
