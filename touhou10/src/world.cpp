@@ -721,7 +721,7 @@ void World::draw(float delta_not_modified) {
 
 	float delta = delta_not_modified * delta_multiplier;
 
-	glViewport(0, 0, GAME_W, GAME_H);
+	glViewport(0, 0, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE);
 	r->proj = glm::ortho(0.0f, (float)GAME_W, (float)GAME_H, 0.0f);
 
 	// Draw background
@@ -783,10 +783,16 @@ void World::draw(float delta_not_modified) {
 
 	r->break_batch();
 
-	glViewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+	glViewport(PLAY_AREA_X * GAME_TEXTURE_SCALE,
+			   PLAY_AREA_Y * GAME_TEXTURE_SCALE,
+			   PLAY_AREA_W * GAME_TEXTURE_SCALE,
+			   PLAY_AREA_H * GAME_TEXTURE_SCALE);
 	r->proj = glm::ortho(0.0f, (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.0f);
 
-	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+	glScissor(PLAY_AREA_X * GAME_TEXTURE_SCALE,
+			  PLAY_AREA_Y * GAME_TEXTURE_SCALE,
+			  PLAY_AREA_W * GAME_TEXTURE_SCALE,
+			  PLAY_AREA_H * GAME_TEXTURE_SCALE);
 	glEnable(GL_SCISSOR_TEST);
 	defer { glDisable(GL_SCISSOR_TEST); };
 

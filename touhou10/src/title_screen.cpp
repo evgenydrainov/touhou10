@@ -33,7 +33,7 @@ void Title_Screen::update(float delta) {
 }
 
 void Title_Screen::draw(float delta) {
-	glViewport(0, 0, GAME_W, GAME_H);
+	glViewport(0, 0, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE);
 	r->proj = glm::ortho(0.0f, (float)GAME_W, (float)GAME_H, 0.0f);
 
 	r->draw_text(GetSprite(spr_font_main), "The Title Screen.", 16, 16);

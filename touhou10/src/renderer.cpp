@@ -69,10 +69,17 @@ void Renderer::init() {
 		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_sharp_bilinear_fragment_text);
 		defer { glDeleteShader(shader_sharp_bilinear_fragment); };
 
-		shader_texture_program        = link_program(shader_texture_vertex,    shader_texture_fragment);
+		u32 shader_3d_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_3d_fragment_text);
+		defer { glDeleteShader(shader_3d_fragment); };
+
+		u32 shader_3d_vertex = compile_shader(GL_VERTEX_SHADER, shader_3d_vertex_text);
+		defer { glDeleteShader(shader_3d_vertex); };
+
+		shader_texture_program        = link_program(shader_texture_vertex, shader_texture_fragment);
 		shader_color_program          = link_program(shader_texture_vertex,    shader_color_fragment);
 		shader_stage_0_bg_program     = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
 		shader_sharp_bilinear_program = link_program(shader_texture_vertex,    shader_sharp_bilinear_fragment);
+		shader_3d_program             = link_program(shader_3d_vertex,         shader_3d_fragment);
 	}
 
 
@@ -230,7 +237,7 @@ void Renderer::draw_texture(Texture* t, Rect src,
 
 	Assert(t);
 
-#if 1
+#if GAME_TEXTURE_SCALE == 1
 	pos = glm::floor(pos);
 #endif
 
@@ -605,8 +612,8 @@ void Renderer::break_batch() {
 	mode = MODE_NONE;
 }
 
-u32 create_vertex_array_obj(Vertex* vertices, size_t num_vertices,
-							u32* indices, size_t num_indices,
+u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
+							const u32* indices, size_t num_indices,
 							u32* out_vbo, u32* out_ebo) {
 	u32 vao = 0;
 	u32 vbo = 0;

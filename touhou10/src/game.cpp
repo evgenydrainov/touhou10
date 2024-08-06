@@ -210,7 +210,7 @@ void Game::init() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, GAME_W, GAME_H, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 	}
 
 	{
@@ -224,7 +224,7 @@ void Game::init() {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, GAME_W, GAME_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	}
 	
 	{
@@ -300,15 +300,15 @@ void Game::init() {
 		static_assert(NUM_TEXTURES == 9, "");
 
 		// @Leak
-		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                    true);
-		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                 true);
-		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png", true);
-		texture_data[tex_background]                  = load_texture("textures/background.png");
-		texture_data[tex_white]                       = load_texture("textures/white.png");
-		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png");
-		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png");
-		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
-		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png", true);
+		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                     (GAME_TEXTURE_SCALE == 1) ? GL_LINEAR : GL_NEAREST);
+		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                  GL_LINEAR);
+		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png",  GL_LINEAR);
+		texture_data[tex_background]                  = load_texture("textures/background.png",                  GL_NEAREST);
+		texture_data[tex_white]                       = load_texture("textures/white.png",                       GL_NEAREST);
+		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png",         GL_NEAREST);
+		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png",         GL_NEAREST);
+		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png", GL_NEAREST);
+		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png",            GL_LINEAR);
 	}
 
 	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);
@@ -580,7 +580,7 @@ void Game::draw(float delta) {
 		float game_texture_y = floorf((backbuffer_height - GAME_H * scale) / 2.0f);
 
 		{
-			u32 program = r->shader_sharp_bilinear_program;
+			u32 program = (GAME_TEXTURE_SCALE == 1) ? r->shader_sharp_bilinear_program : r->shader_texture_program;
 			u32 old_texture_shader = r->current_texture_shader;
 
 			r->current_texture_shader = program;
@@ -591,17 +591,21 @@ void Game::draw(float delta) {
 			t.width  = GAME_W;
 			t.height = GAME_H;
 
+#if GAME_TEXTURE_SCALE == 1
 			{
 				int u_source_size = glGetUniformLocation(program, "u_SourceSize");
 				glUniform2f(u_source_size, (float)t.width, (float)t.height);
 			}
+#endif
 
+#if GAME_TEXTURE_SCALE == 1
 			{
 				float int_scale = max(floorf(scale), 1.0f);
 
 				int u_scale = glGetUniformLocation(program, "u_Scale");
 				glUniform2f(u_scale, int_scale, int_scale);
 			}
+#endif
 
 			r->draw_texture(&t, {}, {game_texture_x, game_texture_y}, {scale, scale}, {}, 0, color_white, {false, true});
 
@@ -779,7 +783,7 @@ static bool is_qoi(u8* filedata, size_t filesize) {
 	return true;
 }
 
-Texture load_texture(string fname, bool filter) {
+Texture load_texture(string fname, int filter) {
 
 	auto create_texture = [&](void* pixel_data, int width, int height, int num_channels) -> Texture {
 		u32 texture;
@@ -788,8 +792,8 @@ Texture load_texture(string fname, bool filter) {
 		glBindTexture(GL_TEXTURE_2D, texture);
 		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 

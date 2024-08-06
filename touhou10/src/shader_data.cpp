@@ -211,3 +211,86 @@ void main() {
 }
 )END_SHADER";
 
+
+const char shader_3d_vertex_text[] = R"END_SHADER(
+#version 330 core
+
+layout(location = 0) in vec3 in_Position;
+layout(location = 1) in vec4 in_Color;
+layout(location = 2) in vec2 in_TexCoord;
+
+out vec4 v_Color;
+out vec2 v_TexCoord;
+out vec3 v_WorldPos;
+
+uniform mat4 u_MVP;
+
+uniform vec3 u_LightDirection;
+uniform vec4 u_LightColor;
+
+// 
+// Stolen from DragoniteSpam
+// 
+
+void main() {
+	gl_Position = u_MVP * vec4(in_Position, 1.0);
+
+	vec4 color = in_Color;
+
+	// Apply directional light
+	/*{
+		vec4 lightAmbient = vec4(0.25, 0.25, 0.25, 1.0);
+		vec3 lightDir = normalize(-u_LightDirection);
+		vec3 worldNormal = normalize(u_MVP * vec4(in_Normal, 0.0)).xyz;
+
+		float lightAngleDifference = max(dot(worldNormal, lightDir), 0.0);
+
+		color.rgb *= min(lightAmbient + u_LightColor * lightAngleDifference, vec4(1.0)).rgb;
+	}*/
+
+	v_Color    = color;
+	v_TexCoord = in_TexCoord;
+	v_WorldPos = gl_Position.xyz;
+}
+
+)END_SHADER";
+
+
+const char shader_3d_fragment_text[] = R"END_SHADER(
+#version 330 core
+
+layout(location = 0) out vec4 FragColor;
+
+in vec4 v_Color;
+in vec2 v_TexCoord;
+in vec3 v_WorldPos;
+
+uniform sampler2D u_Texture;
+
+uniform float u_FogStart;
+uniform float u_FogEnd;
+uniform vec4  u_FogColor;
+
+const vec3  FogOrigin   = vec3(0.0, 0.0, 0.0);
+const float FogStrength = 0.9;
+
+// 
+// Stolen from DragoniteSpam
+// 
+
+void main() {
+	vec4 color = texture(u_Texture, v_TexCoord);
+
+	// Apply fog
+	{
+		float dist = length(v_WorldPos - FogOrigin);
+		float fraction = clamp((dist - u_FogStart) / (u_FogEnd - u_FogStart), 0.0, 1.0);
+
+		color = mix(color, u_FogColor, fraction * FogStrength);
+	}
+
+	FragColor = color * v_Color;
+}
+
+)END_SHADER";
+

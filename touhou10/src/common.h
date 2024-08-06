@@ -170,6 +170,16 @@ static const char* format_size_string(size_t bytes) {
 }
 
 
+static vec4 get_color(u32 rgba) {
+	vec4 result;
+	result.r = ((rgba >> 24) & 0xFF) / 255.0f;
+	result.g = ((rgba >> 16) & 0xFF) / 255.0f;
+	result.b = ((rgba >>  8) & 0xFF) / 255.0f;
+	result.a = ((rgba >>  0) & 0xFF) / 255.0f;
+	return result;
+}
+
+
 
 // --------------------------------------------------------
 // SECTION: Math

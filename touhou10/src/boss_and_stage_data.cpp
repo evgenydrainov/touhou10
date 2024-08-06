@@ -32,14 +32,15 @@ BossData boss_data[NUM_BOSSES] = {
 	},
 
 	{
-		/* .name             = */ "Daiyousei",
-		/* .phases           = */ boss_daiyousei_midboss_phases,
-		/* .phase_count      = */ ArrayLength(boss_daiyousei_midboss_phases),
-		/* .type             = */ BOSS_TYPE_MIDBOSS,
-		/* .spr_idle         = */ spr_boss_daiyousei_idle,
-		/* .spr_left         = */ 0,
-		/* .spr_right        = */ 0,
-		/* .portrait_texture = */ 0,
+		/* .name                      = */ "Daiyousei",
+		/* .phases                    = */ boss_daiyousei_midboss_phases,
+		/* .phase_count               = */ ArrayLength(boss_daiyousei_midboss_phases),
+		/* .type                      = */ BOSS_TYPE_MIDBOSS,
+		/* .spr_idle                  = */ spr_boss_daiyousei_idle,
+		/* .spr_left                  = */ 0,
+		/* .spr_right                 = */ 0,
+		/* .draw_spellcard_background = */ nullptr,
+		/* .portrait_texture          = */ 0,
 	},
 
 	{
