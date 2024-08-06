@@ -57,11 +57,13 @@ struct World {
 	xoshiro128plus random{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 	bool paused;
 
-	float boss_spellcard_background_alpha;
 	dynamic_array_cap<Animation> animations;
 	Particle_System part_sys;
-	Arena temp_arena_for_boss;
 	float delta_multiplier = 1;
+
+	float boss_spellcard_background_alpha;
+	float boss_pcb_youmu_effect;
+	Arena temp_arena_for_boss;
 
 	bool show_hitboxes;
 	size_t coro_memory;

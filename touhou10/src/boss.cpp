@@ -105,12 +105,12 @@ void boss_end_phase(Boss* b) {
 	}
 
 	w->delta_multiplier = 1;
+	w->boss_pcb_youmu_effect = false;
 
-	Assert(b->co);
-	mco_destroy(b->co);
+	if (b->co) mco_destroy(b->co);
 	b->co = nullptr;
 
-	BossData* data = b->GetData();
+	BossData*  data  = b->GetData();
 	BossPhase* phase = b->GetPhase();
 
 	if (phase->type == PHASE_SPELLCARD) {

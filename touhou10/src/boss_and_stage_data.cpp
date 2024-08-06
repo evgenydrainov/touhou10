@@ -51,7 +51,7 @@ BossData boss_data[NUM_BOSSES] = {
 		/* .spr_idle                  = */ spr_boss_youmu_idle,
 		/* .spr_left                  = */ spr_boss_youmu_left,
 		/* .spr_right                 = */ spr_boss_youmu_right,
-		/* .draw_spellcard_background = */ Cirno_Draw_Spellcard_Background,
+		/* .draw_spellcard_background = */ Youmu_Draw_Spellcard_Background,
 		/* .portrait_texture          = */ tex_boss_youmu_portrait,
 	},
 };

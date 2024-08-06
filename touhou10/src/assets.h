@@ -29,6 +29,8 @@ enum {
 	tex_boss_youmu_portrait,
 	tex_spellcard_attack_anim_label,
 	tex_pcb_youmu_stairs,
+	tex_pcb_youmu_bg,
+	tex_pcb_youmu_bg_flowers,
 
 	NUM_TEXTURES,
 };

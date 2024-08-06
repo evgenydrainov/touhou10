@@ -362,7 +362,7 @@ void World::update(float delta_not_modified) {
 		paused = true;
 	}
 
-	if (paused) {
+	if (paused || g->skip_frame) {
 		goto l_skip_update;
 	}
 
@@ -904,7 +904,12 @@ void World::draw(float delta_not_modified) {
 						angle = b->dir - 90.0f;
 					}
 
-					r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
+					int frame_index = (int)b->frame_index;
+					if (boss_pcb_youmu_effect) {
+						frame_index = 15;
+					}
+
+					r->draw_sprite(b->GetSprite(), frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
 				};
 
 				if (b->lifetime < BULLET_SPAWN_PARTICLE_LIFESPAN) {

@@ -167,10 +167,11 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 
 	// 
 	// @Hack?
-	// I use ArenaPush here to get an aligned pointer
+	// I use arena_push here to get an aligned pointer
 	// 
-	instance_id* bullet_ids = (instance_id*) arena_push(&w->temp_arena_for_boss, 0);
-	size_t num_bullet_ids = 0;
+	array<instance_id> bullets;
+	bullets.data  = (instance_id*) arena_push(&w->temp_arena_for_boss, 0);
+	bullets.count = 0;
 
 	for (int i = 0; i < count; i++) {
 		float mul = -(count - 1) / 2.0f + i;
@@ -184,7 +185,7 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 
 			// Make sure there is no alignment.
 			arena_push(&w->temp_arena_for_boss, sizeof(instance_id), 1);
-			bullet_ids[num_bullet_ids++] = b->id;
+			bullets.data[bullets.count++] = b->id;
 
 		} else if constexpr (std::is_same_v<decltype(res), array<instance_id>>) {
 			For (it, res) {
@@ -195,7 +196,7 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 
 				// Make sure there is no alignment.
 				arena_push(&w->temp_arena_for_boss, sizeof(instance_id), 1);
-				bullet_ids[num_bullet_ids++] = b->id;
+				bullets.data[bullets.count++] = b->id;
 			}
 
 		} else {
@@ -203,7 +204,7 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 		}
 	}
 
-	return {bullet_ids, num_bullet_ids};
+	return bullets;
 }
 
 static float DirToPlayer(Object* o) {

@@ -297,7 +297,7 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 9, "");
+		static_assert(NUM_TEXTURES == 11, "");
 
 		// @Leak
 		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                     (GAME_TEXTURE_SCALE == 1) ? GL_LINEAR : GL_NEAREST);
@@ -309,6 +309,8 @@ void Game::init() {
 		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png",         GL_NEAREST);
 		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png", GL_NEAREST);
 		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png",            GL_LINEAR);
+		texture_data[tex_pcb_youmu_bg]                = load_texture("textures/pcb_youmu_bg.png",                GL_LINEAR);
+		texture_data[tex_pcb_youmu_bg_flowers]        = load_texture("textures/pcb_youmu_bg_flowers.png",        GL_LINEAR);
 	}
 
 	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);
@@ -503,7 +505,7 @@ void Game::run() {
 void Game::update(float delta) {
 	double time = GetTime();
 
-	if (!skip_frame) {
+	if (!skip_frame || state == STATE_PLAYING) {
 		switch (state) {
 			case STATE_TITLE_SCREEN: title_screen.update(delta); break;
 			case STATE_PLAYING:      w->update(delta);           break;

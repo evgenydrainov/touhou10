@@ -126,6 +126,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 	slide_to(60, 140);
 
 	while (true) {
+		w->boss_pcb_youmu_effect = false;
 		change_delta(1, 1.0f / 60.0f);
 
 		self->x = PLAY_AREA_W - 60;
@@ -133,10 +134,12 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		slash(0, PLAY_AREA_W, self->y);
 		Wait(seconds(2.6f));
 
+		w->boss_pcb_youmu_effect = true;
 		w->delta_multiplier = 0.25f;
 
 		Wait(seconds(2.1f));
 
+		w->boss_pcb_youmu_effect = false;
 		change_delta(1, 1.0f / 60.0f);
 
 		self->x = 60;
@@ -144,6 +147,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		slash(PLAY_AREA_W, 0, self->y);
 		Wait(seconds(2.6f));
 
+		w->boss_pcb_youmu_effect = true;
 		w->delta_multiplier = 0.25f;
 
 		Wait(seconds(2.1f));
@@ -166,3 +170,42 @@ static BossPhase boss_youmu_midboss_phases[] = {
 		/* .script = */ M_Youmu_Ghost_Sword,
 	},
 };
+
+static void Youmu_Draw_Spellcard_Background(float delta) {
+	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
+
+	{
+		Texture* t = GetTexture(tex_pcb_youmu_bg);
+
+		vec2 scale;
+		scale.x = PLAY_AREA_W / (float)t->width;
+		scale.y = PLAY_AREA_H / (float)t->height;
+
+		vec4 color2;
+		if (w->boss_pcb_youmu_effect) {
+			color2 = {0.5f, 0, 0, 1};
+		} else {
+			color2 = color_white;
+		}
+
+		r->draw_texture(t, {}, {}, scale, {}, 0, color * color2);
+	}
+
+	{
+		Texture* t = GetTexture(tex_pcb_youmu_bg_flowers);
+
+		vec2  pos    = {PLAY_AREA_W / 2.0f, PLAY_AREA_H / 2.0f};
+		vec2  scale  = {2, 2};
+		vec2  origin = {t->width / 2.0f, t->height / 2.0f};
+		float angle  = SDL_GetTicks() / 50.0f;
+
+		vec4 color2 = color_white;
+		if (w->boss_pcb_youmu_effect) {
+			color2.a = 0.75f;
+		} else {
+			color2.a = 0.5f;
+		}
+
+		r->draw_texture(t, {}, pos, scale, origin, angle, color * color2);
+	}
+}
