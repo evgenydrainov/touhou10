@@ -184,7 +184,7 @@ void Renderer::draw_texture(Texture* t, Rect src,
 
 	Assert(t);
 
-#if GAME_TEXTURE_SCALE == 1
+#if DRAW_AT_FLOORED_POSITION
 	pos = glm::floor(pos);
 #endif
 

@@ -158,7 +158,7 @@ struct Bullet : Object {
 			float thickness;
 			float time;
 			float length;
-			float timer; // TODO: use lifetime?
+			float timer; // @Todo: use lifetime?
 		} lazer;
 	};
 };

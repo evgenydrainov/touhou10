@@ -721,13 +721,23 @@ void World::draw(float delta_not_modified) {
 
 	float delta = delta_not_modified * delta_multiplier;
 
-	glViewport(0, 0, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE);
-	r->proj = glm::ortho(0.0f, (float)GAME_W, (float)GAME_H, 0.0f);
+	glViewport(g->game_viewport.x, g->game_viewport.y, g->game_viewport.w, g->game_viewport.h);
+	r->proj = glm::ortho<float>(0, GAME_W, GAME_H, 0);
 
 	// Draw background
 	{
-		Rect src = {0, 0, GAME_W, GAME_H};
-		r->draw_texture(GetTexture(tex_background), src);
+
+		// @Temp???
+		auto draw = [&](int x, int y, int width, int height) {
+			Rect src = {x, y, width, height};
+			vec2 pos = {x, y};
+			r->draw_texture(GetTexture(tex_background), src, pos);
+		};
+
+		draw(0, 0, PLAY_AREA_X, GAME_H);
+		draw(PLAY_AREA_X + PLAY_AREA_W, 0, GAME_W - (PLAY_AREA_X + PLAY_AREA_W), GAME_H);
+		draw(PLAY_AREA_X, 0, PLAY_AREA_W, PLAY_AREA_Y);
+		draw(PLAY_AREA_X, PLAY_AREA_Y + PLAY_AREA_H, PLAY_AREA_W, GAME_H - (PLAY_AREA_Y + PLAY_AREA_H));
 
 		r->break_batch();
 	}
@@ -783,16 +793,10 @@ void World::draw(float delta_not_modified) {
 
 	r->break_batch();
 
-	glViewport(PLAY_AREA_X * GAME_TEXTURE_SCALE,
-			   PLAY_AREA_Y * GAME_TEXTURE_SCALE,
-			   PLAY_AREA_W * GAME_TEXTURE_SCALE,
-			   PLAY_AREA_H * GAME_TEXTURE_SCALE);
-	r->proj = glm::ortho(0.0f, (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.0f);
+	glViewport(g->play_area_viewport.x, g->play_area_viewport.y, g->play_area_viewport.w, g->play_area_viewport.h);
+	r->proj = glm::ortho<float>(0, PLAY_AREA_W, PLAY_AREA_H, 0);
 
-	glScissor(PLAY_AREA_X * GAME_TEXTURE_SCALE,
-			  PLAY_AREA_Y * GAME_TEXTURE_SCALE,
-			  PLAY_AREA_W * GAME_TEXTURE_SCALE,
-			  PLAY_AREA_H * GAME_TEXTURE_SCALE);
+	glScissor(g->play_area_viewport.x, g->play_area_viewport.y, g->play_area_viewport.w, g->play_area_viewport.h);
 	glEnable(GL_SCISSOR_TEST);
 	defer { glDisable(GL_SCISSOR_TEST); };
 

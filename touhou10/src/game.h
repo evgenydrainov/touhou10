@@ -12,6 +12,9 @@
 #define GAME_H 480
 
 #define GAME_TEXTURE_SCALE 1
+#define RENDER_GAME_TO_TEXTURE 1
+#define DRAW_AT_FLOORED_POSITION 1
+#define FILTER_FOR_SPRITES GL_LINEAR
 
 #define PLAY_AREA_W 384
 #define PLAY_AREA_H 448
@@ -53,15 +56,24 @@ struct Game {
 	};
 
 	Renderer renderer;
-	Console console;
-	Package package;
+	Console  console;
+	Package  package;
 
-	SDL_Window* window;
+	SDL_Window*   window;
 	SDL_GLContext gl_context;
 
 	u32 game_fbo;
 	u32 game_texture;
 	u32 game_depth_texture;
+
+	Rect  game_texture_pos;
+	float game_texture_scale;
+
+	Rect  game_viewport;
+	float game_viewport_scale;
+
+	Rect  play_area_viewport;
+	float play_area_viewport_scale;
 
 	State state;
 	State next_state;

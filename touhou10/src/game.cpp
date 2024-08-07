@@ -300,7 +300,7 @@ void Game::init() {
 		static_assert(NUM_TEXTURES == 11, "");
 
 		// @Leak
-		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                     (GAME_TEXTURE_SCALE == 1) ? GL_LINEAR : GL_NEAREST);
+		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                     FILTER_FOR_SPRITES);
 		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                  GL_LINEAR);
 		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png",  GL_LINEAR);
 		texture_data[tex_background]                  = load_texture("textures/background.png",                  GL_NEAREST);
@@ -366,10 +366,8 @@ void Game::destroy() {
 
 	console.destroy();
 
-	if (music) {
-		Mix_FreeMusic(music);
-		music = nullptr;
-	}
+	if (music) Mix_FreeMusic(music);
+	music = nullptr;
 
 	switch (state) {
 		case STATE_TITLE_SCREEN: title_screen.destroy(); break;
@@ -551,15 +549,50 @@ void Game::draw(float delta) {
 	r->draw_calls = 0;
 	r->max_batch  = 0;
 
+
+	int backbuffer_width;
+	int backbuffer_height;
+	SDL_GL_GetDrawableSize(window, &backbuffer_width, &backbuffer_height);
+
+	{
+		float xscale = backbuffer_width  / (float)GAME_W;
+		float yscale = backbuffer_height / (float)GAME_H;
+		game_texture_scale = min(xscale, yscale);
+
+		game_texture_pos.w = (int) (GAME_W * game_texture_scale);
+		game_texture_pos.h = (int) (GAME_H * game_texture_scale);
+		game_texture_pos.x = (backbuffer_width  - game_texture_pos.w) / 2;
+		game_texture_pos.y = (backbuffer_height - game_texture_pos.h) / 2;
+
+#if RENDER_GAME_TO_TEXTURE
+		game_viewport.x = 0;
+		game_viewport.y = 0;
+		game_viewport.w = GAME_W * GAME_TEXTURE_SCALE;
+		game_viewport.h = GAME_H * GAME_TEXTURE_SCALE;
+		game_viewport_scale = GAME_TEXTURE_SCALE;
+#else
+		game_viewport = game_texture_pos;
+		game_viewport_scale = game_texture_scale;
+#endif
+
+		play_area_viewport.x = game_viewport.x + PLAY_AREA_X * game_viewport_scale;
+		play_area_viewport.y = game_viewport.y + PLAY_AREA_Y * game_viewport_scale;
+		play_area_viewport.w = PLAY_AREA_W * game_viewport_scale;
+		play_area_viewport.h = PLAY_AREA_H * game_viewport_scale;
+		play_area_viewport_scale = game_viewport_scale;
+	}
+
 	// 
 	// Render the game to a framebuffer.
 	// 
 	{
+#if RENDER_GAME_TO_TEXTURE
 		glBindFramebuffer(GL_FRAMEBUFFER, game_fbo);
 		defer { glBindFramebuffer(GL_FRAMEBUFFER, 0); };
 
-		glClearColor(0, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
+		// glClearColor(0, 0, 0, 1);
+		// glClear(GL_COLOR_BUFFER_BIT);
+#endif
 
 		switch (state) {
 			case STATE_TITLE_SCREEN: title_screen.draw(delta); break;
@@ -569,29 +602,21 @@ void Game::draw(float delta) {
 		}
 	}
 
-	int backbuffer_width;
-	int backbuffer_height;
-	SDL_GL_GetDrawableSize(window, &backbuffer_width, &backbuffer_height);
-
 	glViewport(0, 0, backbuffer_width, backbuffer_height);
-	r->proj = glm::ortho(0.0f, (float)backbuffer_width, (float)backbuffer_height, 0.0f);
+	r->proj = glm::ortho<float>(0, backbuffer_width, backbuffer_height, 0);
 
+#if RENDER_GAME_TO_TEXTURE
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
+#endif
 
 	// 
 	// Render the framebuffer to screen.
 	// 
 	{
-		float xscale = backbuffer_width  / (float)GAME_W;
-		float yscale = backbuffer_height / (float)GAME_H;
-		float scale = min(xscale, yscale);
-
-		float game_texture_x = floorf((backbuffer_width  - GAME_W * scale) / 2.0f);
-		float game_texture_y = floorf((backbuffer_height - GAME_H * scale) / 2.0f);
 
 		{
-			u32 program = (GAME_TEXTURE_SCALE == 1) ? r->shader_sharp_bilinear_program : r->shader_texture_program;
+			u32 program = r->shader_sharp_bilinear_program;
 			u32 old_texture_shader = r->current_texture_shader;
 
 			r->current_texture_shader = program;
@@ -602,23 +627,24 @@ void Game::draw(float delta) {
 			t.width  = GAME_W;
 			t.height = GAME_H;
 
-#if GAME_TEXTURE_SCALE == 1
 			{
 				int u_source_size = glGetUniformLocation(program, "u_SourceSize");
-				glUniform2f(u_source_size, (float)t.width, (float)t.height);
+				glUniform2f(u_source_size, GAME_W * GAME_TEXTURE_SCALE, GAME_H * GAME_TEXTURE_SCALE);
 			}
-#endif
 
-#if GAME_TEXTURE_SCALE == 1
 			{
-				float int_scale = max(floorf(scale), 1.0f);
+				float int_scale = max(floorf(game_texture_scale / (float)GAME_TEXTURE_SCALE), 1.0f);
 
 				int u_scale = glGetUniformLocation(program, "u_Scale");
 				glUniform2f(u_scale, int_scale, int_scale);
 			}
-#endif
 
-			r->draw_texture(&t, {}, {game_texture_x, game_texture_y}, {scale, scale}, {}, 0, color_white, {false, true});
+#if RENDER_GAME_TO_TEXTURE
+			r->draw_texture(&t, {},
+							{game_texture_pos.x, game_texture_pos.y}, {game_texture_scale, game_texture_scale},
+							{}, 0,
+							color_white, {false, true});
+#endif
 
 			r->break_batch();
 
@@ -626,11 +652,11 @@ void Game::draw(float delta) {
 		}
 
 		auto world_to_screen_x = [&](float x) {
-			return (x + (float)PLAY_AREA_X) * scale + game_texture_x;
+			return (x + PLAY_AREA_X) * game_texture_scale + game_texture_pos.x;
 		};
 
 		auto world_to_screen_y = [&](float y) {
-			return (y + (float)PLAY_AREA_Y) * scale + game_texture_y;
+			return (y + PLAY_AREA_Y) * game_texture_scale + game_texture_pos.y;
 		};
 
 		if (show_debug_info) {

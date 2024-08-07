@@ -71,7 +71,7 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 static void M_Youmu_Ghost_Sword(mco_coro* co) {
 	
 	auto bullet = [](mco_coro* co) {
-		// NOTE: Object::dir automatically wraps around 360.
+		// @Note: Object::dir automatically wraps around 360.
 		Repeat (360 / 3) {
 			self->dir += 3;
 			Wait(1);
@@ -174,12 +174,17 @@ static BossPhase boss_youmu_midboss_phases[] = {
 static void Youmu_Draw_Spellcard_Background(float delta) {
 	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
 
+	// the windows 95 effect
+	if (w->boss_pcb_youmu_effect) {
+		color.a = 0.25f;
+	}
+
 	{
 		Texture* t = GetTexture(tex_pcb_youmu_bg);
 
 		vec2 scale;
-		scale.x = PLAY_AREA_W / (float)t->width;
-		scale.y = PLAY_AREA_H / (float)t->height;
+		scale.x = (PLAY_AREA_W + 5) / (float)t->width; // floating point thing
+		scale.y = (PLAY_AREA_H + 5) / (float)t->height;
 
 		vec4 color2;
 		if (w->boss_pcb_youmu_effect) {
@@ -188,7 +193,8 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 			color2 = color_white;
 		}
 
-		r->draw_texture(t, {}, {}, scale, {}, 0, color * color2);
+		vec2 pos = {-1, -1}; // floating point thing
+		r->draw_texture(t, {}, pos, scale, {}, 0, color * color2);
 	}
 
 	{

@@ -118,6 +118,11 @@ class ExitScopeHelp {
 #define GENERATE_ENUM(x) x,
 #define GENERATE_STRING(x) #x,
 
+
+// 
+// @Todo: The "Get##Type##Name" function is static, so I think the "names" array is
+// copied a bunch of times.
+// 
 #define DEFINE_NAMED_ENUM(Type, List) \
 enum Type { List(GENERATE_ENUM) }; \
 static const char* Get##Type##Name(Type val) { \
@@ -365,7 +370,7 @@ struct array {
 // A dynamic array that doesn't grow when it runs out of capacity, but
 // replaces the last element.
 // 
-// TODO: Come up with a cleanup strategy
+// @Todo: Come up with a cleanup strategy
 // 
 template <typename T>
 struct dynamic_array_cap {
