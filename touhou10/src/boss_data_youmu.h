@@ -21,7 +21,7 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 				ShootExt(x, y, lerp(2.0f, 4.5f, i / 3.0f), point_direction(x, y, target_x, target_y), 0, sprite_index, frame_index);
 			}
 
-			Wait(2);
+			wait(2);
 		}
 	};
 
@@ -49,21 +49,21 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 					shoot(N2, x + lengthdir_x(off, dir - 90.0f), y + lengthdir_y(off, dir - 90.0f), dir, spr_bullet_filled, 7);
 				}
 
-				Wait(4);
+				wait(4);
 			}
 
-			Wait(180);
+			wait(180);
 		}
 
 		Repeat (2) {
 			slash(self->x, self->y, w->player.x, w->player.y, spr_bullet_arrow, 6);
 
-			Wait(50);
+			wait(50);
 
 			slash(self->x - 50.0f, self->y, w->player.x - 70.0f, w->player.y, spr_bullet_arrow, 2);
 			slash(self->x + 50.0f, self->y, w->player.x + 70.0f, w->player.y, spr_bullet_arrow, 2);
 
-			Wait(60);
+			wait(60);
 		}
 	}
 }
@@ -74,14 +74,14 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		// @Note: Object::dir automatically wraps around 360.
 		Repeat (360 / 3) {
 			self->dir += 3;
-			Wait(1);
+			wait(1);
 		}
 
 		float target_spd = w->random.rangef(2.50f, 3.50f);
 		float acc = 0.05f;
 		while (self->spd != target_spd) {
 			self->spd = approach(self->spd, target_spd, acc);
-			Wait(1);
+			wait(1);
 		}
 	};
 
@@ -103,54 +103,57 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 			float x = lerp(xstart, xend, t);
 			shoot(x, y);
 
-			Wait(4);
+			wait(4);
 		}
 	};
 
 	auto slide_to = [&](float x, float y) {
 		LaunchTowardsPoint(self, x, y, 0.02f);
 		while (self->spd > 0) {
-			Wait(1);
+			wait(1);
 		}
 	};
 
-	auto change_delta = [&](float target_delta, float change) {
-		while (w->delta_multiplier != target_delta) {
-			w->delta_multiplier = approach(w->delta_multiplier, target_delta, change);
-			Wait(1);
+	auto speed_up = [&]() {
+		float delta_multiplier_start      = w->delta_multiplier;
+		float boss_pcb_youmu_effect_start = w->boss_pcb_youmu_effect;
+
+		for (int i = 1; i <= 30; i++) {
+			w->delta_multiplier      = lerp(delta_multiplier_start,      1.0f, i / 30.0f);
+			w->boss_pcb_youmu_effect = lerp(boss_pcb_youmu_effect_start, 0.0f, i / 30.0f);
+
+			wait(1);
 		}
 
-		Wait(60);
+		wait(40);
 	};
 
 	slide_to(60, 140);
 
 	while (true) {
-		w->boss_pcb_youmu_effect = false;
-		change_delta(1, 1.0f / 60.0f);
+		speed_up();
 
 		self->x = PLAY_AREA_W - 60;
 
 		slash(0, PLAY_AREA_W, self->y);
-		Wait(seconds(2.6f));
+		wait(seconds(2.6f));
 
-		w->boss_pcb_youmu_effect = true;
+		w->boss_pcb_youmu_effect = 1;
 		w->delta_multiplier = 0.25f;
 
-		Wait(seconds(2.1f));
+		wait(seconds(2.1f));
 
-		w->boss_pcb_youmu_effect = false;
-		change_delta(1, 1.0f / 60.0f);
+		speed_up();
 
 		self->x = 60;
 
 		slash(PLAY_AREA_W, 0, self->y);
-		Wait(seconds(2.6f));
+		wait(seconds(2.6f));
 
-		w->boss_pcb_youmu_effect = true;
+		w->boss_pcb_youmu_effect = 1;
 		w->delta_multiplier = 0.25f;
 
-		Wait(seconds(2.1f));
+		wait(seconds(2.1f));
 	}
 }
 
@@ -175,9 +178,7 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
 
 	// the windows 95 effect
-	if (w->boss_pcb_youmu_effect) {
-		color.a = 0.25f;
-	}
+	color.a *= lerp(1.0f, 0.25f, w->boss_pcb_youmu_effect);
 
 	{
 		Texture* t = GetTexture(tex_pcb_youmu_bg);
@@ -186,12 +187,7 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		scale.x = (PLAY_AREA_W + 5) / (float)t->width; // floating point thing
 		scale.y = (PLAY_AREA_H + 5) / (float)t->height;
 
-		vec4 color2;
-		if (w->boss_pcb_youmu_effect) {
-			color2 = {0.5f, 0, 0, 1};
-		} else {
-			color2 = color_white;
-		}
+		vec4 color2 = lerp(color_white, vec4{0.5f, 0, 0, 1}, w->boss_pcb_youmu_effect);
 
 		vec2 pos = {-1, -1}; // floating point thing
 		r->draw_texture(t, {}, pos, scale, {}, 0, color * color2);
@@ -206,11 +202,7 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		float angle  = SDL_GetTicks() / 50.0f;
 
 		vec4 color2 = color_white;
-		if (w->boss_pcb_youmu_effect) {
-			color2.a = 0.75f;
-		} else {
-			color2.a = 0.5f;
-		}
+		color2.a = lerp(0.5f, 0.75f, w->boss_pcb_youmu_effect);
 
 		r->draw_texture(t, {}, pos, scale, origin, angle, color * color2);
 	}

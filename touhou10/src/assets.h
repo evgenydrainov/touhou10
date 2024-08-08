@@ -21,7 +21,7 @@ struct Texture {
 
 enum {
 	tex_atlas_0,
-	tex_stage_0_bg,
+	tex_eosd_misty_lake,
 	tex_cirno_spellcard_background,
 	tex_background,
 	tex_white,

@@ -525,7 +525,7 @@ void World::update(float delta_not_modified) {
 					p->vsp = PICKUP_STARTING_VSP;
 					p->homing_target = 0;
 				} else {
-					float spd = 8;
+					float spd = 10;
 					float dir = point_direction(p->x, p->y, player.x, player.y);
 					p->hsp = lengthdir_x(spd, dir);
 					p->vsp = lengthdir_y(spd, dir);
@@ -909,7 +909,7 @@ void World::draw(float delta_not_modified) {
 					}
 
 					int frame_index = (int)b->frame_index;
-					if (boss_pcb_youmu_effect) {
+					if (boss_pcb_youmu_effect > 0.5f) {
 						frame_index = 15;
 					}
 

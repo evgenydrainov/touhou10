@@ -4,6 +4,8 @@
 
 int main(int argc, char* argv[]) {
 	Game game = {};
+
+	// Yeah I know. Single letter global variables.
 	g = &game;
 
 	g->init();

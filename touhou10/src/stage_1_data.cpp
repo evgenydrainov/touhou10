@@ -2,7 +2,7 @@
 #include <glad/gl.h>
 
 void Stage_1_Script(mco_coro* co) {
-	Wait(60);
+	wait(60);
 
 	CreateBoss(BOSS_YOUMU_MIDBOSS);
 }
@@ -64,7 +64,7 @@ void Stage_1_Init_Background() {
 }
 
 void Stage_1_Draw_Background(float delta) {
-	const glm::vec4 fog_color = get_color(0xB08190FFu);
+	const vec4 fog_color = get_color(0xB08190FFu);
 
 	glClearColor(fog_color.r, fog_color.g, fog_color.b, fog_color.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -82,7 +82,7 @@ void Stage_1_Draw_Background(float delta) {
 		float y = -wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
 		float z =  wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
 
-		mat4 model = glm::translate(mat4(1.0f), vec3(0.0f, y, z));
+		mat4 model = glm::translate(mat4{1}, vec3{0, y, z});
 		mat4 view  = w->d3d.get_view_mat();
 		mat4 proj  = w->d3d.get_proj_mat();
 

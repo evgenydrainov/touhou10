@@ -35,24 +35,24 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 				});
 			}
 
-			Wait(60);
+			wait(60);
 		}
 
-		Wait(15);
+		wait(15);
 
 		Wander(self);
 
-		Wait(15);
+		wait(15);
 
 		for (int i = 0; i < 3; i++) {
 			shoot_radial_bullets();
 
-			Wait(15);
+			wait(15);
 
 			ShootRadial(17, 360.0f / 17.0f, [&]() {
 				return Shoot(4.5f, DirToPlayer(self), -0.08f, spr_bullet_pellet, 15, 0, [](mco_coro* co) {
 					while (self->spd > 0.0f) {
-						Wait(1);
+						wait(1);
 					}
 					self->spd = 5.0f;
 					self->dir = DirToPlayer(self);
@@ -60,11 +60,11 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 				});
 			});
 
-			Wait(15);
+			wait(15);
 
 			shoot_radial_bullets();
 
-			Wait(60);
+			wait(60);
 
 			if (i == 2) {
 				GoBack(self);
@@ -73,7 +73,7 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 			}
 		}
 
-		Wait(60);
+		wait(60);
 	}
 }
 #elif 0
@@ -97,12 +97,12 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 			return Shoot(w->random.rangef(3.0f, 4.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
 				for (int i = 45; i--;) {
 					self->dir++;
-					Wait(1);
+					wait(1);
 				}
 			});
 		});
 
-		Wait(1);
+		wait(1);
 
 		dir += acc;
 		acc += 0.1f;
@@ -119,7 +119,7 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 			});
 		});
 
-		Wait(60);
+		wait(60);
 	}
 }
 #endif
@@ -137,7 +137,7 @@ static void Cirno_Icicle_Fall(mco_coro* co) {
 					float target_y = self->y + lengthdir_y(100.0f + 90.0f * j, dir);
 
 					Bullet* bullet = Shoot(0, dir, 0, spr_bullet_pellet, 6, 0, [](mco_coro* co) {
-						Wait(50);
+						wait(50);
 						self->spd = 2;
 						self->acc = 0;
 						if (90 <= self->dir && self->dir < 270) {
@@ -157,7 +157,7 @@ static void Cirno_Icicle_Fall(mco_coro* co) {
 				});
 			}
 
-			Wait(20);
+			wait(20);
 		}
 	}
 }
@@ -177,7 +177,7 @@ static void Cirno_Nonspell_1(mco_coro* co) {
 				});
 			}
 
-			Wait(10);
+			wait(10);
 		}
 
 		Wander(self);
@@ -187,7 +187,7 @@ static void Cirno_Nonspell_1(mco_coro* co) {
 				return ShootLazer(3.5, DirToPlayer(self), 180, 2, 15);
 			});
 
-			Wait(60);
+			wait(60);
 		}
 	}
 }
@@ -206,10 +206,10 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 				bullets[nbullets++] = Shoot(w->random.rangef(1.0f, 4.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_outline, color)->id;
 			}
 
-			Wait(1);
+			wait(1);
 		}
 
-		Wait(60);
+		wait(60);
 
 		for (instance_id id : bullets) {
 			if (Bullet* b = w->find_bullet(id)) {
@@ -218,7 +218,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 			}
 		}
 
-		Wait(60);
+		wait(60);
 
 		Wander(self);
 
@@ -229,10 +229,10 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 				});
 			}
 
-			Wait(10);
+			wait(10);
 		}
 
-		Wait(60);
+		wait(60);
 
 		for (instance_id id : bullets) {
 			if (Bullet* b = w->find_bullet(id)) {
@@ -242,7 +242,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 			}
 		}
 
-		Wait(180);
+		wait(180);
 	}
 }
 
@@ -259,7 +259,7 @@ static void Cirno_Diamond_Blizzard(mco_coro* co) {
 				bullets[i] = ShootExt(x, y, w->random.rangef(4.0f, 5.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_pellet, 6)->id;
 			}
 
-			Wait(4);
+			wait(4);
 
 			for (int i = 0; i < n; i++) {
 				if (Bullet* b = w->find_bullet(bullets[i])) {

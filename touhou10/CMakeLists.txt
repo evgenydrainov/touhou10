@@ -16,13 +16,23 @@ add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
 # 
+# Include stuff.
+# 
+include_directories(touhou10 ../external/glad/include)
+include_directories(touhou10 ../external/glm/include)
+include_directories(touhou10 ../external/minicoro/include)
+include_directories(touhou10 ../external/qoi/include)
+include_directories(touhou10 ../external/stb/include)
+
+# 
+# Include SDL.
 # See .vscode/launch.json and .vscode/settings.json if using TEMP_USE_CUSTOM_SDL
 # 
 if(NOT DEFINED TEMP_USE_CUSTOM_SDL)
 	set(TEMP_USE_CUSTOM_SDL OFF)
-else()
-	MESSAGE(STATUS "INFO: TEMP_USE_CUSTOM_SDL is ${TEMP_USE_CUSTOM_SDL}")
 endif()
+
+MESSAGE(STATUS "INFO: TEMP_USE_CUSTOM_SDL is ${TEMP_USE_CUSTOM_SDL}")
 
 if(NOT TEMP_USE_CUSTOM_SDL)
 	find_package(SDL2 REQUIRED)
@@ -31,15 +41,9 @@ if(NOT TEMP_USE_CUSTOM_SDL)
 
 	include_directories(touhou10 ${SDL2_INCLUDE_DIRS})
 else()
-	include_directories(touhou10 ~/source/repos/SDL-2.30.6/include)
-	include_directories(touhou10 ~/source/repos/SDL_mixer-2.8.0/include)
+	include_directories(touhou10 $ENV{HOME}/source/repos/SDL-2.30.6/include)
+	include_directories(touhou10 $ENV{HOME}/source/repos/SDL_mixer-2.8.0/include)
 endif()
-
-include_directories(touhou10 ../external/glad/include)
-include_directories(touhou10 ../external/glm/include)
-include_directories(touhou10 ../external/minicoro/include)
-include_directories(touhou10 ../external/qoi/include)
-include_directories(touhou10 ../external/stb/include)
 
 set(SOURCES
 	src/animation.cpp

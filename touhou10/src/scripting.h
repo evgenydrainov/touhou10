@@ -20,7 +20,7 @@ static void co_check_stack_usage(mco_coro* co) {
 	log_info("coroutine stack usage: %zu", (stack_max - stack_addr));
 }
 
-static void Wait(int frames) {
+static void wait(int frames) {
 	while (frames--) {
 		mco_yield(mco_running());
 		// co_check_stack_usage(co);

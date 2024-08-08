@@ -300,17 +300,17 @@ void Game::init() {
 		static_assert(NUM_TEXTURES == 11, "");
 
 		// @Leak
-		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png",                     FILTER_FOR_SPRITES);
-		texture_data[tex_stage_0_bg]                  = load_texture("textures/stage_0_bg.png",                  GL_LINEAR);
-		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png",  GL_LINEAR);
-		texture_data[tex_background]                  = load_texture("textures/background.png",                  GL_NEAREST);
-		texture_data[tex_white]                       = load_texture("textures/white.png",                       GL_NEAREST);
-		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png",         GL_NEAREST);
-		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png",         GL_NEAREST);
-		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png", GL_NEAREST);
-		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png",            GL_LINEAR);
-		texture_data[tex_pcb_youmu_bg]                = load_texture("textures/pcb_youmu_bg.png",                GL_LINEAR);
-		texture_data[tex_pcb_youmu_bg_flowers]        = load_texture("textures/pcb_youmu_bg_flowers.png",        GL_LINEAR);
+		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png", FILTER_FOR_SPRITES);
+		texture_data[tex_eosd_misty_lake]             = load_texture("textures/eosd_misty_lake.png", GL_LINEAR, GL_MIRRORED_REPEAT);
+		texture_data[tex_cirno_spellcard_background]  = load_texture("textures/cirno_spellcard_background.png");
+		texture_data[tex_background]                  = load_texture("textures/background.png");
+		texture_data[tex_white]                       = load_texture("textures/white.png");
+		texture_data[tex_boss_cirno_portrait]         = load_texture("textures/boss_cirno_portrait.png");
+		texture_data[tex_boss_youmu_portrait]         = load_texture("textures/boss_youmu_portrait.png");
+		texture_data[tex_spellcard_attack_anim_label] = load_texture("textures/spellcard_attack_anim_label.png");
+		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png");
+		texture_data[tex_pcb_youmu_bg]                = load_texture("textures/pcb_youmu_bg.png");
+		texture_data[tex_pcb_youmu_bg_flowers]        = load_texture("textures/pcb_youmu_bg_flowers.png");
 	}
 
 	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);
@@ -475,6 +475,10 @@ void Game::run() {
 		}
 
 		float delta = 1;
+
+		// @Todo: Coroutines broken
+		if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
+		if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
 
 		update(delta);
 
@@ -659,6 +663,8 @@ void Game::draw(float delta) {
 			return (y + PLAY_AREA_Y) * game_texture_scale + game_texture_pos.y;
 		};
 
+		vec2 pos = {};
+
 		if (show_debug_info) {
 			char buf[256];
 			string str = Sprintf(buf,
@@ -681,7 +687,7 @@ void Game::draw(float delta) {
 								 draw_calls,
 								 max_batch, BATCH_MAX_VERTICES,
 								 __cplusplus);
-			vec2 pos = r->draw_text(GetSprite(spr_font_main), str, 0, 0);
+			pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
 			pos.y += 8;
 
 			// Audio Debug
@@ -785,6 +791,11 @@ void Game::draw(float delta) {
 			
 		}
 
+		if (frame_advance) {
+			string str = "F5 - Next Frame\nF6 - Disable Frame Advance Mode\n";
+			pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
+		}
+
 		console.draw(delta);
 
 		r->break_batch();
@@ -820,7 +831,7 @@ static bool is_qoi(u8* filedata, size_t filesize) {
 	return true;
 }
 
-Texture load_texture(string fname, int filter) {
+Texture load_texture(string fname, int filter, int wrap) {
 
 	auto create_texture = [&](void* pixel_data, int width, int height, int num_channels) -> Texture {
 		u32 texture;
@@ -829,10 +840,10 @@ Texture load_texture(string fname, int filter) {
 		glBindTexture(GL_TEXTURE_2D, texture);
 		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (filter != -1) ? filter : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (filter != -1) ? filter : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (wrap != -1) ? wrap : GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (wrap != -1) ? wrap : GL_REPEAT);
 
 		Assert(num_channels == 4);
 

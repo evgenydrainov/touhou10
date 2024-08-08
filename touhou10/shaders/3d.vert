@@ -7,7 +7,7 @@ layout(location = 3) in vec2 in_TexCoord;
 
 out vec4 v_Color;
 out vec2 v_TexCoord;
-out vec3 v_WorldPos;
+out vec3 v_MVPposition;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
@@ -41,7 +41,7 @@ void main() {
 		color.rgb *= low + ((1.0 - low) * lightAngleDifference);
 	}
 
-	v_Color    = color;
-	v_TexCoord = in_TexCoord;
-	v_WorldPos = gl_Position.xyz;
+	v_Color       = color;
+	v_TexCoord    = in_TexCoord;
+	v_MVPposition = gl_Position.xyz;
 }

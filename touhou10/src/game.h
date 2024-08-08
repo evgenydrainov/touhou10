@@ -24,7 +24,9 @@
 struct Game;
 extern Game* g;
 
-Texture    load_texture(string fname, int filter);
+// Default filter: GL_LINEAR, default wrap: GL_REPEAT
+Texture    load_texture(string fname, int filter = -1, int wrap = -1);
+
 Mix_Chunk* load_sound(string fname);
 u32        load_3d_model_from_obj_file(string fname, int* out_num_vertices);
 

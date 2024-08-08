@@ -4,10 +4,11 @@ layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec2 v_TexCoord;
-in vec3 v_WorldPos;
+in vec3 v_MVPposition;
 
 uniform sampler2D u_Texture;
 
+// @Copy
 uniform float u_FogStart;
 uniform float u_FogEnd;
 uniform vec4  u_FogColor;
@@ -27,7 +28,7 @@ void main() {
 
 	// Apply fog
 	{
-		float dist = length(v_WorldPos - FogOrigin);
+		float dist = length(v_MVPposition - FogOrigin);
 		float fraction = clamp((dist - u_FogStart) / (u_FogEnd - u_FogStart), 0.0, FogMax);
 
 		color = mix(color, u_FogColor, fraction);

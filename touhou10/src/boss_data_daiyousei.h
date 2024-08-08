@@ -32,14 +32,14 @@ static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 				Shoot(spd,     dir, 0, spr_bullet_kunai, color);
 				Shoot(spd * a, dir, 0, spr_bullet_kunai, color);
 
-				Wait(1);
+				wait(1);
 			}
 
-			Wait(100);
+			wait(100);
 
 			tp();
 
-			Wait(100);
+			wait(100);
 		}
 
 		Repeat (20) {
@@ -50,7 +50,7 @@ static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 			/*
 			ShootRadialArr<2>(3, 40, [&]() {
 				auto script = [](mco_coro* co) {
-					Wait(30);
+					wait(30);
 					self->spd = 4;
 					self->acc = 0;
 					self->dir = DirToPlayer(self);
@@ -64,7 +64,7 @@ static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 			*/
 
 			auto script = [](mco_coro* co) {
-				Wait(30);
+				wait(30);
 				self->spd = 4;
 				self->acc = 0;
 				self->dir = DirToPlayer(self);
@@ -78,14 +78,14 @@ static void M_Daiyousei_Nonspell_0(mco_coro* co) {
 				return Shoot(4 * 1.2f, DirToPlayer(self), -0.1f, spr_bullet_pellet, 15, 0, script);
 			});
 
-			Wait(10);
+			wait(10);
 		}
 
-		Wait(100);
+		wait(100);
 
 		tp();
 
-		Wait(100);
+		wait(100);
 	}
 }
 #else

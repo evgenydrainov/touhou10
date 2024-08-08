@@ -5,10 +5,10 @@ void Stage_0_Script(mco_coro* co) {
 
 	auto spawn_spinner = [&]() {
 		auto Script = [](mco_coro* co) {
-			Wait(60);
+			wait(60);
 			self->acc = -0.01f;
 			while (self->spd > 0) {
-				Wait(1);
+				wait(1);
 			}
 			self->dir = -self->dir;
 			self->acc = 0.01f;
@@ -50,16 +50,16 @@ void Stage_0_Script(mco_coro* co) {
 	}
 
 
-	Wait(60);
+	wait(60);
 
 #if 1
 	{
 		Repeat (50) {
 			spawn_spinner();
-			Wait(5);
+			wait(5);
 		}
 
-		Wait(180);
+		wait(180);
 
 		for (int j = 1; j <= 4; j++) {
 			for (int i = 1; i <= 18; i++) {
@@ -75,13 +75,13 @@ void Stage_0_Script(mco_coro* co) {
 					spawn_spinner();
 				}
 
-				Wait(20);
+				wait(20);
 			}
 
-			Wait(60);
+			wait(60);
 		}
 
-		Wait(180);
+		wait(180);
 	}
 #endif
 
@@ -90,18 +90,18 @@ l_midboss:
 	{
 		instance_id dai_chan = CreateBoss(BOSS_DAIYOUSEI_MIDBOSS)->id;
 		while (w->find_boss(dai_chan)) {
-			Wait(1);
+			wait(1);
 		}
 	}
 
-	Wait(60);
+	wait(60);
 
 l_boss:
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;
 		// while (w->find_boss(baka)) {
-		// 	Wait(1);
+		// 	wait(1);
 		// }
 	}
 
@@ -152,7 +152,9 @@ void Stage_0_Init_Background() {
 }
 
 void Stage_0_Draw_Background(float delta) {
-	glClearColor(1, 1, 1, 1);
+	const vec4 fog_color = {1, 1, 1, 1};
+
+	glClearColor(fog_color.r, fog_color.g, fog_color.b, fog_color.a);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	{
@@ -160,15 +162,27 @@ void Stage_0_Draw_Background(float delta) {
 
 		glUseProgram(program);
 
-		mat4 MVP = w->d3d.get_mvp();
+		mat4 model = {1};
+		mat4 view  = w->d3d.get_view_mat();
+		mat4 proj  = w->d3d.get_proj_mat();
 
-		int u_MVP = glGetUniformLocation(program, "u_MVP");
-		glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
+		int u_Model    = glGetUniformLocation(program, "u_Model");
+		int u_View     = glGetUniformLocation(program, "u_View");
+		int u_Proj     = glGetUniformLocation(program, "u_Proj");
+		int u_Time     = glGetUniformLocation(program, "u_Time");
+		int u_FogStart = glGetUniformLocation(program, "u_FogStart");
+		int u_FogEnd   = glGetUniformLocation(program, "u_FogEnd");
+		int u_FogColor = glGetUniformLocation(program, "u_FogColor");
 
-		int u_Time = glGetUniformLocation(program, "u_Time");
+		glUniformMatrix4fv(u_Model, 1, GL_FALSE, &model[0][0]);
+		glUniformMatrix4fv(u_View,  1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(u_Proj,  1, GL_FALSE, &proj[0][0]);
 		glUniform1f(u_Time, SDL_GetTicks() / 1000.0f);
+		glUniform1f(u_FogStart, 20);
+		glUniform1f(u_FogEnd, 60);
+		glUniform4fv(u_FogColor, 1, &fog_color[0]);
 
-		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_stage_0_bg)->ID);
+		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_eosd_misty_lake)->ID);
 		glBindVertexArray(vao);
 
 		glDrawElements(GL_TRIANGLES, ArrayLength(indices), GL_UNSIGNED_INT, 0);

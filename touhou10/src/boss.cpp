@@ -105,7 +105,7 @@ void boss_end_phase(Boss* b) {
 	}
 
 	w->delta_multiplier = 1;
-	w->boss_pcb_youmu_effect = false;
+	w->boss_pcb_youmu_effect = 0;
 
 	if (b->co) mco_destroy(b->co);
 	b->co = nullptr;
