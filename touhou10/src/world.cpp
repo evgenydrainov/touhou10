@@ -246,6 +246,7 @@ void World::physics_update(float delta) {
 			if (circle_vs_circle(boss.x, boss.y, boss.radius, b->x, b->y, b->radius)) {
 				if (boss.state == BOSS_STATE_NORMAL) {
 					boss.hp -= b->dmg;
+					boss.flags |= FLAG_BOSS_WAS_HIT_THIS_FRAME;
 				}
 
 				play_sound(snd_enemy_hurt);
@@ -803,7 +804,11 @@ void World::draw(float delta_not_modified) {
 		float x = PLAY_AREA_X + boss.x;
 		float y = PLAY_AREA_Y + PLAY_AREA_H;
 
-		vec4 color = {1, 1, 1, 0.5f};
+		vec4 color = {1, 1, 1, 0.75f};
+
+		if (boss.flags & FLAG_BOSS_WAS_HIT_THIS_FRAME) {
+			color.a = 0.25f;
+		}
 
 		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
 	}

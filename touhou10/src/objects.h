@@ -23,6 +23,8 @@ enum {
 
 	FLAG_BULLET_ROTATE     = 1 << 16,
 	FLAG_BULLET_WAS_GRAZED = 1 << 17,
+
+	FLAG_BOSS_WAS_HIT_THIS_FRAME = 1 << 16,
 };
 
 struct Object {

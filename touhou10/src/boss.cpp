@@ -43,6 +43,7 @@ void boss_update(Boss* b, float delta) {
 	b->dir = wrapf(b->dir, 360.0f);
 
 	b->frame_index = object_animate(b->sprite_index, b->frame_index, delta);
+	b->flags &= ~FLAG_BOSS_WAS_HIT_THIS_FRAME;
 
 	BossData* data = b->GetData();
 
