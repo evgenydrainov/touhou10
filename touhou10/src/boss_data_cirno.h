@@ -76,7 +76,7 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 		wait(60);
 	}
 }
-#elif 0
+#elif 1
 static void Cirno_Nonspell_0(mco_coro* co) {
 	u32 sprite_index[] = {
 		spr_bullet_arrow,
@@ -93,10 +93,10 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 	float acc = 0.0f;
 
 	while (true) {
-		ShootRadial(4, 360.0f / 4.0f, [&]() {
-			return Shoot(w->random.rangef(3.0f, 4.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
-				for (int i = 45; i--;) {
-					self->dir++;
+		ShootRadial(5, 360.0f / 5.0f, [&]() {
+			return Shoot(w->random.rangef(2.0f, 3.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
+				for (;;) {
+					self->dir += 2;
 					wait(1);
 				}
 			});
@@ -106,6 +106,8 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 
 		dir += acc;
 		acc += 0.1f;
+
+		// self->y += 0.1f;
 	}
 }
 #else

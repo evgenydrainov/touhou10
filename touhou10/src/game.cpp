@@ -90,9 +90,17 @@ void Game::init() {
 
 	SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "system");
 
+#if TH_DEBUG
+	SDL_setenv("SDL_ASSERT", "break", 0);
+#endif
+
 	if (SDL_Init(SDL_INIT_VIDEO
 				 | SDL_INIT_AUDIO) != 0) {
 		panic_and_abort("Couldn't initialize SDL: %s", SDL_GetError());
+	}
+
+	{
+		log_info("Platform: %s", SDL_GetPlatform());
 	}
 
 	{
@@ -106,10 +114,9 @@ void Game::init() {
 	}
 
 	{
-		// printf instead of log_info because I want them in one line
-		// log_info uses SDL_Log
-		printf("Available video backends: ");
-		for (int i = 0; i < SDL_GetNumVideoDrivers(); i++) {
+		// printf instead of log_info here because I want them in one line
+		printf("INFO: Available video backends: ");
+		for (int i = 0, n = SDL_GetNumVideoDrivers(); i < n; i++) {
 			printf("%s ", SDL_GetVideoDriver(i));
 		}
 		printf("\n");
@@ -118,14 +125,26 @@ void Game::init() {
 	}
 
 	{
-		printf("Available audio backends: ");
-		for (int i = 0; i < SDL_GetNumAudioDrivers(); i++) {
+		printf("INFO: Available audio backends: ");
+		for (int i = 0, n = SDL_GetNumAudioDrivers(); i < n; i++) {
 			printf("%s ", SDL_GetAudioDriver(i));
 		}
 		printf("\n");
 
 		log_info("Current audio backend: %s", SDL_GetCurrentAudioDriver());
 	}
+
+#if 0
+	{
+		printf("INFO: Available render backends: ");
+		for (int i = 0, n = SDL_GetNumRenderDrivers(); i < n; i++) {
+			SDL_RendererInfo info;
+			SDL_GetRenderDriverInfo(i, &info);
+			printf("%s ", info.name);
+		}
+		printf("\n");
+	}
+#endif
 
 	window = SDL_CreateWindow("touhou10",
 							  SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -279,6 +298,29 @@ void Game::init() {
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
 
 	{
+		int freq;
+		u16 format;
+		int nchannels;
+		Mix_QuerySpec(&freq, &format, &nchannels);
+
+		log_info("Got Audio Frequency %d", freq);
+		log_info("Got Audio Format %u",    format);
+		log_info("Got Audio Channels %d",  nchannels);
+
+		printf("INFO: Available chunk decoders: ");
+		for (int i = 0, n = Mix_GetNumChunkDecoders(); i < n; i++) {
+			printf("%s ", Mix_GetChunkDecoder(i));
+		}
+		printf("\n");
+
+		printf("INFO: Available music decoders: ");
+		for (int i = 0, n = Mix_GetNumMusicDecoders(); i < n; i++) {
+			printf("%s ", Mix_GetMusicDecoder(i));
+		}
+		printf("\n");
+	}
+
+	{
 		float master_volume = 0.50f;
 		float sound_volume  = 0.50f;
 		float music_volume  = 0.75f;
@@ -399,7 +441,6 @@ void Game::run() {
 
 	double prev_time = GetTime() - (1.0 / 60.0);
 
-	bool quit = false;
 	while (!quit) {
 
 		double time = GetTime();

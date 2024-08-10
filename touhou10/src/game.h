@@ -94,12 +94,13 @@ struct Game {
 	xoshiro128plus random_visual{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 
 	u32 key_pressed[(SDL_SCANCODE_UP + 1 + 31) / 32];
-	u32 key_repeat[(SDL_SCANCODE_UP + 1 + 31) / 32];
+	u32 key_repeat [(SDL_SCANCODE_UP + 1 + 31) / 32];
 
 	double fps;
 	double update_took;
 	double draw_took;
 
+	bool quit;
 	bool show_debug_info;
 	bool frame_advance;
 	bool skip_frame;

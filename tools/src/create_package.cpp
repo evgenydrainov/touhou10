@@ -26,7 +26,7 @@
 
 
 
-static String files_to_pack[] = {
+static string files_to_pack[] = {
 	"textures/atlas_0.png",
 	"textures/background.png",
 	"textures/boss_cirno_portrait.png",
@@ -68,7 +68,6 @@ struct Loaded_File {
 std::vector<Loaded_File> loaded_files;
 
 
-// @Copy
 static u8* read_entire_file(const char* fname, size_t* out_size) {
 	u8* result = nullptr;
 
@@ -78,7 +77,7 @@ static u8* read_entire_file(const char* fname, size_t* out_size) {
 #else
 	f = fopen(fname, "rb");
 #endif
-	Defer { if (f) fclose(f); };
+	defer { if (f) fclose(f); };
 
 	if (f) {
 		fseek(f, 0, SEEK_END);
@@ -151,7 +150,7 @@ int main(int argc, char* argv[]) {
 	{
 		FILE* f = fopen("package.dat", "wb");
 		Assert(f);
-		Defer { fclose(f); };
+		defer { fclose(f); };
 
 		// 
 		// Package Header

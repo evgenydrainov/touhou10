@@ -27,6 +27,7 @@ enum {
 	spr_bullet_bullet,
 	spr_bullet_small,
 	spr_bullet_spawn_particle,
+	spr_enemy_death_particle_blue,
 	spr_boss_cirno_idle,
 	spr_boss_cirno_right,
 	spr_boss_cirno_left,

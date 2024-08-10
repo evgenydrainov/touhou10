@@ -357,9 +357,11 @@ void World::update(float delta_not_modified) {
 
 	float delta = delta_not_modified * delta_multiplier;
 
-	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS)
-		|| (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
-		paused = true;
+	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
+		if (!paused) {
+			paused = true;
+			play_sound(snd_pause);
+		}
 	}
 
 	if (paused || g->skip_frame) {
@@ -396,6 +398,20 @@ void World::update(float delta_not_modified) {
 				}
 
 				play_sound(snd_enemy_die);
+
+				{
+					Particle p = {};
+					p.x            = e->x;
+					p.y            = e->y;
+					p.sprite_index = spr_enemy_death_particle_blue;
+					p.scale_from   = {0.5f, 0.5f};
+					p.scale_to     = {1.5f, 1.5f};
+					p.color_from   = {1, 1, 1, 0.4f};
+					p.color_to     = {1, 1, 1, 0};
+					p.lifespan     = 15;
+
+					array_add(&part_sys.particles, p);
+				}
 
 				object_cleanup(e);
 				Remove(e, enemies);
@@ -629,6 +645,7 @@ l_skip_update:
 	// Pause
 	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
 		paused ^= true;
+		play_sound(snd_pause);
 	}
 
 	// Show hitboxes

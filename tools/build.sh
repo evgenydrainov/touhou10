@@ -1,6 +1,6 @@
 mkdir -p ../out
 g++ \
-	-g -std=c++17 \
+	-g -std=c++17 -O2 \
 	-DTH_DEBUG=1 -D_DEBUG \
 	-o ../out/tools \
 	src/*.cpp \
