@@ -180,6 +180,7 @@ enum {
 	snd_pickup,
 	snd_powerup,
 	snd_spellcard,
+	snd_kira,
 
 	NUM_SOUNDS,
 };

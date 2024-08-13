@@ -140,6 +140,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 		w->boss_pcb_youmu_effect = 1;
 		w->delta_multiplier = 0.25f;
+		play_sound(snd_kira);
 
 		wait(seconds(2.1f));
 
@@ -152,6 +153,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 		w->boss_pcb_youmu_effect = 1;
 		w->delta_multiplier = 0.25f;
+		play_sound(snd_kira);
 
 		wait(seconds(2.1f));
 	}
@@ -175,10 +177,6 @@ static BossPhase boss_youmu_midboss_phases[] = {
 };
 
 static void Youmu_Draw_Spellcard_Background(float delta) {
-	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
-
-	// the windows 95 effect
-	color.a *= lerp(1.0f, 0.25f, w->boss_pcb_youmu_effect);
 
 	{
 		Texture* t = GetTexture(tex_pcb_youmu_bg);
@@ -187,10 +185,14 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		scale.x = (PLAY_AREA_W + 5) / (float)t->width; // floating point thing
 		scale.y = (PLAY_AREA_H + 5) / (float)t->height;
 
-		vec4 color2 = lerp(color_white, vec4{0.5f, 0, 0, 1}, w->boss_pcb_youmu_effect);
+		const vec4 color_from = {1,    1, 1, 1};
+		const vec4 color_to   = {0.5f, 0, 0, 0.15f};
+
+		vec4 color = lerp(color_from, color_to, w->boss_pcb_youmu_effect);
+		color.a *= w->boss_spellcard_background_alpha; // is 1 most of the time
 
 		vec2 pos = {-1, -1}; // floating point thing
-		r->draw_texture(t, {}, pos, scale, {}, 0, color * color2);
+		r->draw_texture(t, {}, pos, scale, {}, 0, color);
 	}
 
 	{
@@ -201,9 +203,10 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		vec2  origin = {t->width / 2.0f, t->height / 2.0f};
 		float angle  = SDL_GetTicks() / 50.0f;
 
-		vec4 color2 = color_white;
-		color2.a = lerp(0.5f, 0.75f, w->boss_pcb_youmu_effect);
+		vec4 color = color_white;
+		color.a = lerp(0.5f, 0.4f, w->boss_pcb_youmu_effect);
+		color.a *= w->boss_spellcard_background_alpha; // is 1 most of the time
 
-		r->draw_texture(t, {}, pos, scale, origin, angle, color * color2);
+		r->draw_texture(t, {}, pos, scale, origin, angle, color);
 	}
 }

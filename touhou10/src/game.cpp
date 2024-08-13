@@ -64,7 +64,7 @@ static void GLAPIENTRY glDebugOutput(GLenum source,
 #endif
 
 
-static_assert(NUM_SOUNDS == 16, "");
+static_assert(NUM_SOUNDS == 17, "");
 static string sounds_filenames[] = {
 	"sounds/boss_die.wav",
 	"sounds/char_reimu_shoot.wav",
@@ -82,6 +82,7 @@ static string sounds_filenames[] = {
 	"sounds/pickup.wav",
 	"sounds/powerup.wav",
 	"sounds/spellcard.wav",
+	"sounds/kira.wav",
 };
 
 
@@ -360,8 +361,6 @@ void Game::init() {
 
 	// load sounds
 	{
-
-		static_assert(NUM_SOUNDS == 16, "");
 
 		// @Leak
 		for (int i = 0; i < NUM_SOUNDS; i++) {
