@@ -436,14 +436,16 @@ double GetTime() {
 	return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
 }
 
+#define TARGET_FPS 60
+
 void Game::run() {
 
-	double prev_time = GetTime() - (1.0 / 60.0);
+	double prev_time = GetTime() - (1.0 / (double)TARGET_FPS);
 
 	while (!quit) {
 
 		double time = GetTime();
-		double frame_end_time = time + (1.0 / 60.0);
+		double frame_end_time = time + (1.0 / (double)TARGET_FPS);
 		fps = 1.0 / (time - prev_time);
 		prev_time = time;
 
@@ -514,7 +516,7 @@ void Game::run() {
 			}
 		}
 
-		float delta = 1;
+		float delta = 60.0f / (float)TARGET_FPS;
 
 		// @Todo: Coroutines broken
 		if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
@@ -536,7 +538,7 @@ void Game::run() {
 		double time_left = frame_end_time - GetTime();
 		if (time_left > 0.0) {
 			double time_to_sleep = time_left * 0.95;
-			SDL_Delay((unsigned int)(time_to_sleep * 1000.0));
+			SDL_Delay((u32)(time_to_sleep * 1000.0));
 
 			while (GetTime() < frame_end_time) {}
 		}
