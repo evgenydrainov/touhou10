@@ -82,12 +82,6 @@ void Renderer::destroy() {
 	glDeleteBuffers(1, &batch_ebo);
 	glDeleteBuffers(1, &batch_vbo);
 	glDeleteVertexArrays(1, &batch_vao);
-
-	glDeleteProgram(shader_3d_program);
-	glDeleteProgram(shader_sharp_bilinear_program);
-	glDeleteProgram(shader_stage_0_bg_program);
-	glDeleteProgram(shader_color_program);
-	glDeleteProgram(shader_texture_program);
 }
 
 void Renderer::load_shaders() {
@@ -97,11 +91,35 @@ void Renderer::load_shaders() {
 	// 
 	{
 
-		auto compile_shader = [](GLenum type, string source) {
+		string shader_include = copy_string(get_file_string("shaders/include.glsl"));
+		defer { free(shader_include.data); };
+
+		auto compile_shader = [&](GLenum type, string filename) {
+			string source = get_file_string(filename);
+
+			string define_string_vert =
+				"#version 330 core\n"
+				"#define VERTEX_SHADER\n";
+			string define_string_frag =
+				"#version 330 core\n"
+				"#define FRAGMENT_SHADER\n";
+			string define_string = (type == GL_VERTEX_SHADER) ? define_string_vert : define_string_frag;
+
 			u32 shader = glCreateShader(type);
 
-			const char* sources[] = {source.data};
-			int lengths[] = {(int)source.count};
+			const char* sources[] = {
+				define_string.data,
+				shader_include.data,
+				source.data,
+			};
+			int lengths[] = {
+				(int)define_string.count,
+				(int)shader_include.count,
+				(int)source.count,
+			};
+
+			Assert(ArrayLength(sources) == ArrayLength(lengths));
+
 			glShaderSource(shader, ArrayLength(sources), sources, lengths);
 
 			glCompileShader(shader);
@@ -112,12 +130,14 @@ void Renderer::load_shaders() {
 				char buf[512];
 				glGetShaderInfoLog(shader, sizeof(buf), NULL, buf);
 				log_error("SHADER COMPILATION ERROR: %s", buf);
+			} else {
+				log_info("Loaded shader " Str_Fmt, Str_Arg(filename));
 			}
 
 			return shader;
 		};
 
-		auto link_program = [](u32 vertex_shader, u32 fragment_shader) {
+		auto link_program = [&](u32 vertex_shader, u32 fragment_shader) {
 			u32 program = glCreateProgram();
 
 			glAttachShader(program, vertex_shader);
@@ -137,41 +157,38 @@ void Renderer::load_shaders() {
 		};
 
 
-		string shader_texture_vertex_text = g->package.get_file_string("shaders/texture.vert");
-		u32 shader_texture_vertex = compile_shader(GL_VERTEX_SHADER, shader_texture_vertex_text);
+		// 
+		// @Todo: Don't load the shader files twice.
+		// 
+
+		u32 shader_texture_vertex = compile_shader(GL_VERTEX_SHADER, "shaders/texture.glsl");
 		defer { glDeleteShader(shader_texture_vertex); };
 
-		string shader_texture_fragment_text = g->package.get_file_string("shaders/texture.frag");
-		u32 shader_texture_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_texture_fragment_text);
+		u32 shader_texture_fragment = compile_shader(GL_FRAGMENT_SHADER, "shaders/texture.glsl");
 		defer { glDeleteShader(shader_texture_fragment); };
 
-		string shader_color_fragment_text = g->package.get_file_string("shaders/color.frag");
-		u32 shader_color_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_color_fragment_text);
+		u32 shader_color_fragment = compile_shader(GL_FRAGMENT_SHADER, "shaders/color.glsl");
 		defer { glDeleteShader(shader_color_fragment); };
 
-		string shader_stage_0_bg_vertex_text = g->package.get_file_string("shaders/stage_0_bg.vert");
-		u32 shader_stage_0_bg_vertex = compile_shader(GL_VERTEX_SHADER, shader_stage_0_bg_vertex_text);
-		defer { glDeleteShader(shader_stage_0_bg_vertex); };
+		u32 shader_misty_lake_vertex = compile_shader(GL_VERTEX_SHADER, "shaders/misty_lake.glsl");
+		defer { glDeleteShader(shader_misty_lake_vertex); };
 
-		string shader_stage_0_bg_fragment_text = g->package.get_file_string("shaders/stage_0_bg.frag");
-		u32 shader_stage_0_bg_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_stage_0_bg_fragment_text);
-		defer { glDeleteShader(shader_stage_0_bg_fragment); };
+		u32 shader_misty_lake_fragment = compile_shader(GL_FRAGMENT_SHADER, "shaders/misty_lake.glsl");
+		defer { glDeleteShader(shader_misty_lake_fragment); };
 
-		string shader_sharp_bilinear_fragment_text = g->package.get_file_string("shaders/sharp_bilinear.frag");
-		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_sharp_bilinear_fragment_text);
+		u32 shader_sharp_bilinear_fragment = compile_shader(GL_FRAGMENT_SHADER, "shaders/sharp_bilinear.glsl");
 		defer { glDeleteShader(shader_sharp_bilinear_fragment); };
 
-		string shader_3d_fragment_text = g->package.get_file_string("shaders/3d.frag");
-		u32 shader_3d_fragment = compile_shader(GL_FRAGMENT_SHADER, shader_3d_fragment_text);
+		u32 shader_3d_fragment = compile_shader(GL_FRAGMENT_SHADER, "shaders/3d.glsl");
 		defer { glDeleteShader(shader_3d_fragment); };
 
-		string shader_3d_vertex_text = g->package.get_file_string("shaders/3d.vert");
-		u32 shader_3d_vertex = compile_shader(GL_VERTEX_SHADER, shader_3d_vertex_text);
+		u32 shader_3d_vertex = compile_shader(GL_VERTEX_SHADER, "shaders/3d.glsl");
 		defer { glDeleteShader(shader_3d_vertex); };
 
+		// @Leak
 		shader_texture_program        = link_program(shader_texture_vertex,    shader_texture_fragment);
 		shader_color_program          = link_program(shader_texture_vertex,    shader_color_fragment);
-		shader_stage_0_bg_program     = link_program(shader_stage_0_bg_vertex, shader_stage_0_bg_fragment);
+		shader_misty_lake_program     = link_program(shader_misty_lake_vertex, shader_misty_lake_fragment);
 		shader_sharp_bilinear_program = link_program(shader_texture_vertex,    shader_sharp_bilinear_fragment);
 		shader_3d_program             = link_program(shader_3d_vertex,         shader_3d_fragment);
 	}

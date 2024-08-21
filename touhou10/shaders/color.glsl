@@ -1,4 +1,4 @@
-#version 330 core
+#ifdef FRAGMENT_SHADER
 
 layout(location = 0) out vec4 FragColor;
 
@@ -8,3 +8,5 @@ in vec2 v_TexCoord;
 void main() {
 	FragColor = v_Color;
 }
+
+#endif

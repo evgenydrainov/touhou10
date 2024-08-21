@@ -157,6 +157,15 @@ void Game::init() {
 		panic_and_abort("Couldn't create window: %s", SDL_GetError());
 	}
 
+
+	// 
+	// A little workaround for Linux Mint Cinnamon.
+	// 
+#if TH_DEBUG && defined(__unix__)
+	SDL_RaiseWindow(window);
+#endif
+
+
 	SDL_SetWindowMinimumSize(window, GAME_W, GAME_H);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -897,7 +906,7 @@ Texture load_texture(string fname, int filter, int wrap) {
 	Texture result = {};
 
 	size_t filesize;
-	u8* filedata = g->package.get_file(fname, &filesize);
+	u8* filedata = get_file(fname, &filesize);
 
 	if (filedata) {
 		if (is_png(filedata, filesize)) {
@@ -937,7 +946,7 @@ Mix_Chunk* load_sound(string fname) {
 	Mix_Chunk* result = nullptr;
 
 	size_t filesize;
-	u8* filedata = g->package.get_file(fname, &filesize);
+	u8* filedata = get_file(fname, &filesize);
 
 	if (filedata) {
 		// Goddammit SDL.
@@ -977,7 +986,7 @@ u32 load_3d_model_from_obj_file(string fname, int* out_num_vertices) {
 	defer { g->package.close(); };
 
 	size_t filesize;
-	u8* filedata = g->package.get_file(fname, &filesize);
+	u8* filedata = get_file(fname, &filesize);
 
 	if (!filedata) {
 		*out_num_vertices = 0;
@@ -1099,3 +1108,6 @@ void play_sound(u32 sound_index) {
 	Mix_Chunk* chunk = GetSound(sound_index);
 	Mix_PlayChannel(-1, chunk, 0);
 }
+
+u8*    get_file(string filename, size_t* out_filesize) { return g->package.get_file(filename, out_filesize); }
+string get_file_string(string filename)                { return g->package.get_file_string(filename);        }

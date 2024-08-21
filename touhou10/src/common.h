@@ -2,7 +2,7 @@
 
 
 // -----------------------------------------------------------
-// SECTION: Stuff specific to this project.
+//        SECTION: Stuff specific to this project.
 // -----------------------------------------------------------
 
 #if !defined(TH_DEBUG)
@@ -11,13 +11,17 @@
 
 
 // -----------------------------------------------------------
-// SECTION: Common types.
+//                 SECTION: Common types.
 // -----------------------------------------------------------
 
 #include <SDL.h>
 #include <stb/stb_sprintf.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <math.h>
+#include <stdint.h>
+#include <stdarg.h>   // for va_list
+#include <string.h>   // for memcpy
 
 typedef uint8_t  u8;
 typedef uint16_t u16;
@@ -187,7 +191,7 @@ static vec4 get_color(u32 rgba) {
 
 
 // --------------------------------------------------------
-// SECTION: Math
+//                  SECTION: Math
 // --------------------------------------------------------
 
 
@@ -285,7 +289,7 @@ static T wrap(T a, T b) {
 
 
 // ----------------------------------------------------
-// SECTION: Memory Arena
+//               SECTION: Memory Arena
 // ----------------------------------------------------
 
 
@@ -348,7 +352,7 @@ static Arena arena_create_from_arena(Arena* arena, size_t capacity) {
 
 
 // ----------------------------------------------------
-// SECTION: Array Type
+//                SECTION: Array Type
 // ----------------------------------------------------
 
 
@@ -423,11 +427,9 @@ static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
 
 
 // -----------------------------------------------
-// SECTION: String Type
+//             SECTION: String Type
 // -----------------------------------------------
 
-
-#include <stdarg.h>          // for va_list
 
 #define Str_Fmt      "%.*s"
 #define Str_Arg(str) (unsigned int)(str).count, (str).data
@@ -606,14 +608,25 @@ static string Sprintf(char (&buf)[N], const char* fmt, ...) {
 	return {buf, (size_t)result};
 }
 
-// Have to free()
+
+// You have to free() the C string
 static char* to_c_string(string str) {
 	char* c_str = (char*) malloc(str.count + 1);
-	for (size_t i = 0; i < str.count; i++) {
-		c_str[i] = str[i];
-	}
+	Assert(c_str);
+	memcpy(c_str, str.data, str.count);
 	c_str[str.count] = 0;
 	return c_str;
+}
+
+
+// You have to free() string.data
+static string copy_string(string str) {
+	string result;
+	result.data  = (char*) malloc(str.count);
+	result.count = str.count;
+	Assert(result.data);
+	memcpy(result.data, str.data, str.count);
+	return result;
 }
 
 

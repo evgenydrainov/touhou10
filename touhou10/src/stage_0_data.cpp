@@ -158,7 +158,7 @@ void Stage_0_Draw_Background(float delta) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	{
-		u32 program = r->shader_stage_0_bg_program;
+		u32 program = r->shader_misty_lake_program;
 
 		glUseProgram(program);
 

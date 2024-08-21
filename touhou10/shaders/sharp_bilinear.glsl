@@ -8,7 +8,7 @@
 	that are scaled by non-integer factors.
 */
 
-#version 330 core
+#ifdef FRAGMENT_SHADER
 
 layout(location = 0) out vec4 FragColor;
 
@@ -39,3 +39,5 @@ void main() {
 	vec4 color = texture(u_Texture, mod_texel / u_SourceSize);
 	FragColor = color * v_Color;
 }
+
+#endif

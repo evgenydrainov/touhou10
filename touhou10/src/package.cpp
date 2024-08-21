@@ -10,6 +10,10 @@ void Package::load(const char* _filename) {
 
 	open();
 
+	// 
+	// If "f" is null, then we're loading from disk.
+	// So, we don't have to read the header. (And will crash if we try to).
+	// 
 	if (!f) {
 		return;
 	}
@@ -70,7 +74,7 @@ void Package::load(const char* _filename) {
 		array_add(&entries, e);
 	}
 
-	log_info("Successfully read %u files from %s.", num_files, filename);
+	log_info("Read %u files from %s.", num_files, filename);
 }
 
 void Package::destroy() {
@@ -78,30 +82,23 @@ void Package::destroy() {
 }
 
 void Package::open() {
+	Assert(!f);
+	f = SDL_RWFromFile(filename, "rb");
+
 	if (!f) {
-		f = SDL_RWFromFile(filename, "rb");
+		log_info("Couldn't open package %s. Will try to load the files from disk.", filename);
 	}
 
-	// if (!f) {
-	// 	log_error("Couldn't open package %s", filename);
-	// }
-
-	if (!temp_buffer_for_files) {
-		temp_buffer_for_files = (u8*) malloc(TEMP_BUFFER_FOR_FILES);
-		Assert(temp_buffer_for_files);
-	}
+	Assert(!temp_buffer_for_files);
+	temp_buffer_for_files = (u8*) malloc(TEMP_BUFFER_FOR_FILES);
 }
 
 void Package::close() {
-	if (f) {
-		SDL_RWclose(f);
-		f = nullptr;
-	}
+	if (f) SDL_RWclose(f);
+	f = nullptr;
 
-	if (temp_buffer_for_files) {
-		free(temp_buffer_for_files);
-		temp_buffer_for_files = nullptr;
-	}
+	if (temp_buffer_for_files) free(temp_buffer_for_files);
+	temp_buffer_for_files = nullptr;
 }
 
 
@@ -128,9 +125,7 @@ u8* Package::get_file(string name, size_t* out_size) {
 			return nullptr;
 		}
 
-		if (!temp_buffer_for_files) {
-			return nullptr;
-		}
+		Assert(temp_buffer_for_files);
 
 		SDL_RWseek(f, e->offset, RW_SEEK_SET);
 
@@ -150,9 +145,7 @@ u8* Package::get_file(string name, size_t* out_size) {
 		SDL_RWops* src = SDL_RWFromFile(c_str, "rb");
 		defer { if (src) SDL_RWclose(src); };
 
-		if (!src) {
-			return nullptr;
-		}
+		Assert(src);
 
 		if (!temp_buffer_for_files) {
 			log_error("Package must be open to read files.");

@@ -35,6 +35,10 @@ double GetTime();
 void stop_sound(u32 sound_index);
 void play_sound(u32 sound_index);
 
+// Syntax sugar
+u8*    get_file(string filename, size_t* out_filesize);
+string get_file_string(string filename);
+
 struct Stats {
 	int score;
 	int lives = 3;
