@@ -1,3 +1,5 @@
+#line 2
+
 /*
 	Author: rsn8887 (based on TheMaister)
 	License: Public domain

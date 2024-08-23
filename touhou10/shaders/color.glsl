@@ -1,3 +1,5 @@
+#line 2
+
 #ifdef FRAGMENT_SHADER
 
 layout(location = 0) out vec4 FragColor;

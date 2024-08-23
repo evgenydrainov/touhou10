@@ -219,6 +219,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 				b->frame_index = 15;
 			}
 		}
+		play_sound(snd_kira);
 
 		wait(60);
 

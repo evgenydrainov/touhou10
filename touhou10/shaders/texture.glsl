@@ -1,3 +1,5 @@
+#line 2
+
 #ifdef VERTEX_SHADER
 
 layout(location = 0) in vec3 in_Position;

@@ -212,6 +212,17 @@ void Game::init() {
 	}
 #endif
 
+	{
+		int max_texture_size;
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+		log_info("GL max texture size = %d", max_texture_size);
+
+		log_info("GL vendor: %s",                   (const char*)glGetString(GL_VENDOR));
+		log_info("GL renderer: %s",                 (const char*)glGetString(GL_RENDERER));
+		log_info("GL version: %s",                  (const char*)glGetString(GL_VERSION));
+		log_info("GL shading language version: %s", (const char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+	}
+
 	SDL_GL_SetSwapInterval(0);
 
 	glDisable(GL_CULL_FACE);
