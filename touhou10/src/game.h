@@ -35,10 +35,6 @@ double GetTime();
 void stop_sound(u32 sound_index);
 void play_sound(u32 sound_index);
 
-// Syntax sugar
-u8*    get_file(string filename, size_t* out_filesize);
-string get_file_string(string filename);
-
 struct Stats {
 	int score;
 	int lives = 3;
@@ -141,4 +137,13 @@ static bool is_key_held(SDL_Scancode key) {
 	}
 
 	return result;
+}
+
+// Syntax sugar
+inline u8* get_file(string filename, size_t* out_filesize) {
+	return g->package.get_file(filename, out_filesize);
+}
+
+inline string get_file_string(string filename) {
+	return g->package.get_file_string(filename);
 }

@@ -1119,6 +1119,3 @@ void play_sound(u32 sound_index) {
 	Mix_Chunk* chunk = GetSound(sound_index);
 	Mix_PlayChannel(-1, chunk, 0);
 }
-
-u8*    get_file(string filename, size_t* out_filesize) { return g->package.get_file(filename, out_filesize); }
-string get_file_string(string filename)                { return g->package.get_file_string(filename);        }
