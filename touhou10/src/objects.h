@@ -128,6 +128,7 @@ struct Boss : Object {
 void boss_update(Boss* b, float delta);
 void boss_start_phase(Boss* b);
 void boss_end_phase(Boss* b);
+void boss_create_kira_particle(Object* b);
 
 struct Enemy : Object {
 	mco_coro* co;

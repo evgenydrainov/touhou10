@@ -281,3 +281,8 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 static int seconds(float sec) {
 	return (int) (sec * 60.0f);
 }
+
+static void Kira(Object* o) {
+	boss_create_kira_particle(o);
+	play_sound(snd_kira);
+}

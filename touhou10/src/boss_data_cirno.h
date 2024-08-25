@@ -219,7 +219,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 				b->frame_index = 15;
 			}
 		}
-		play_sound(snd_kira);
+		Kira(self);
 
 		wait(60);
 
@@ -244,6 +244,7 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 				b->acc = w->random.rangef(0.01f, 0.015f);
 			}
 		}
+		Kira(self);
 
 		wait(180);
 	}

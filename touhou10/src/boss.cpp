@@ -122,6 +122,8 @@ void boss_end_phase(Boss* b) {
 			PickupType type = (i == 4) ? PICKUP_TYPE_POWER_BIG : PICKUP_TYPE_POWER;
 			drop_pickup(x, y, type);
 		}
+
+		boss_create_kira_particle(b);
 	}
 
 	if (b->phase_index + 1 < data->phase_count) {
@@ -150,4 +152,18 @@ void boss_end_phase(Boss* b) {
 		object_cleanup(b);
 		b->flags |= FLAG_INSTANCE_DEAD;
 	}
+}
+
+void boss_create_kira_particle(Object* b) {
+	Particle p = {};
+	p.x = b->x;
+	p.y = b->y;
+	p.sprite_index = spr_kira_particle;
+	p.lifespan = 30;
+	p.scale_from = {2, 2};
+	p.scale_to   = {12, 12};
+	p.color_from = {1, 1, 1, 1};
+	p.color_to   = {1, 1, 1, 0};
+
+	array_add(&w->part_sys.particles, p);
 }

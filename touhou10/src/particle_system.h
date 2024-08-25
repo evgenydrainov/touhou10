@@ -21,7 +21,7 @@ struct Particle {
 	float acc;
 
 	float lifetime;
-	float lifespan;
+	float lifespan = 60;
 
 	u32 sprite_index;
 	float frame_index;

@@ -88,8 +88,10 @@ static Create_Sprite create_sprites[] = {
 
 	{"spr_bullet_small"      , "projectiles.png",   0, 240,  8,  8,  4,  4, 16,  8, 0.00f,  0,  8,  8},
 
+	// name                           texture                u    v    w   h   xo  yo  fc  row anim  loop xs  ys
 	{"spr_bullet_spawn_particle",     "projectiles.png",     0,   416, 32, 32, 16, 16,  8,  8},
 	{"spr_enemy_death_particle_blue", "projectiles_pcb.png", 192, 432, 64, 64, 32, 32,  1,  1},
+	{"spr_kira_particle",             "projectiles_pcb.png", 64,  464, 32, 32, 16, 16,  1,  1},
 
 	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
 	{"spr_boss_cirno_idle"   , "boss_cirno.png",  176, 160, 64, 64, 32, 32,  4,  4, 0.15f,  0, 64, 64},
