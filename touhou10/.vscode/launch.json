@@ -19,7 +19,7 @@
 				// 	"value": "${env:HOME}/source/repos/SDL-2.30.6/build:${env:HOME}/source/repos/SDL_mixer-2.8.0/build:${env:LD_LIBRARY_PATH}",
 				// },
 			],
-			"externalConsole": true,
+			"externalConsole": false,
 			"MIMode": "gdb",
 			"setupCommands": [
 				{
@@ -32,7 +32,8 @@
 					"text": "-gdb-set disassembly-flavor intel",
 					"ignoreFailures": true
 				},
-			]
+			],
+			"preLaunchTask": "CMake: build",
 		}
 	]
 }
