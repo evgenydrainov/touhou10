@@ -66,7 +66,11 @@ struct Rectf {
 //
 // For now, asserts will be enabled in release build. May help with finding bugs.
 //
-#define Assert SDL_enabled_assert
+#ifdef _MSC_VER
+#define Assert(expr) SDL_enabled_assert(expr) __analysis_assume(expr)
+#else
+#define Assert(expr) SDL_enabled_assert(expr)
+#endif
 
 #define panic_and_abort(fmt, ...) do { \
 		char buf[512]; \
