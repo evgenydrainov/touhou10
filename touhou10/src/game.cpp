@@ -346,6 +346,11 @@ void Game::init() {
 		float sound_volume  = 0.50f;
 		float music_volume  = 0.75f;
 
+		char* env_music_volume = SDL_getenv("TH_MUSIC_VOLUME"); // @Leak
+		if (env_music_volume) {
+			music_volume = SDL_atof(env_music_volume);
+		}
+
 		Mix_Volume(-1,  (int)(MIX_MAX_VOLUME * (master_volume * sound_volume)));
 		Mix_VolumeMusic((int)(MIX_MAX_VOLUME * (master_volume * music_volume)));
 	}
