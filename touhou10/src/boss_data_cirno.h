@@ -6,16 +6,16 @@ static void Cirno_Draw_Spellcard_Background(float delta) {
 	vec4 color = {1, 1, 1, w->boss_spellcard_background_alpha};
 	float scale = PLAY_AREA_W / (float)t->width;
 
-	int y = (SDL_GetTicks() / 50) % PLAY_AREA_W;
+	int y = ((SDL_GetTicks() / 50) % PLAY_AREA_W) - PLAY_AREA_W;
 
-	y -= PLAY_AREA_W;
 	r->draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
-
 	y += PLAY_AREA_W;
-	r->draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
 
-	y += PLAY_AREA_W;
 	r->draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
+	y += PLAY_AREA_W;
+
+	r->draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
+	y += PLAY_AREA_W;
 }
 
 #if 1
