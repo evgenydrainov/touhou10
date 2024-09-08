@@ -414,6 +414,125 @@ vec2 Renderer::measure_text(Sprite* font, string text, bool only_one_line) {
 	return {w, h};
 }
 
+vec2 Renderer::draw_text(Font* font, string text, float x, float y,
+						 HAlign halign, VAlign valign, vec4 color) {
+
+	switch (valign) {
+		case VALIGN_MIDDLE:
+			y -= measure_text(font, text).y / 2.0f;
+			break;
+		case VALIGN_BOTTOM:
+			y -= measure_text(font, text).y;
+			break;
+	}
+
+	float ch_x = x;
+	float ch_y = y;
+
+	switch (halign) {
+		case HALIGN_CENTER:
+			ch_x -= measure_text(font, text, true).x / 2.0f;
+			break;
+		case HALIGN_RIGHT:
+			ch_x -= measure_text(font, text, true).x;
+			break;
+	}
+
+	for (size_t i = 0; i < text.count; i++) {
+		u8 ch = (u8) text[i];
+
+		// If char isn't valid, set it to '?'
+		if (!((ch >= 32 && ch <= 127) || ch == '\n')) {
+			ch = '?';
+		}
+
+		if (ch == '\n') {
+			ch_x = x;
+			ch_y += font->line_height;
+
+			switch (halign) {
+				case HALIGN_CENTER:
+					ch_x -= measure_text(font, {text.data + i + 1, text.count - i - 1}, true).x / 2.0f;
+					break;
+				case HALIGN_RIGHT:
+					ch_x -= measure_text(font, {text.data + i + 1, text.count - i - 1}, true).x;
+					break;
+			}
+		} else {
+			Assert(font->num_glyphs == 95);
+			Glyph glyph = font->glyphs[ch - 32];
+
+			// If char isn't whitespace, draw it
+			if (ch != ' ') {
+				Texture* t = GetTexture(font->texture_index);
+				Rect src = {glyph.u, glyph.v, glyph.width, glyph.height};
+
+				vec2 pos;
+				pos.x = ch_x + glyph.xoffset;
+				pos.y = ch_y + glyph.yoffset;
+
+				pos = glm::floor(pos);
+
+				draw_texture(t, src, pos, {1, 1}, {}, 0, color);
+			}
+
+			ch_x += glyph.xadvance;
+		}
+	}
+
+	return {ch_x, ch_y};
+}
+
+vec2 Renderer::measure_text(Font* font, string text, bool only_one_line) {
+	float w = 0;
+	float h = font->size;
+
+	float ch_x = 0;
+	float ch_y = 0;
+
+	for (size_t i = 0; i < text.count; i++) {
+		u8 ch = (u8) text[i];
+
+		// If char isn't valid, set it to '?'
+		if (!((ch >= 32 && ch <= 127) || ch == '\n')) {
+			ch = '?';
+		}
+
+		if (ch == '\n') {
+			if (only_one_line) return {w, h};
+
+			ch_x = 0;
+			ch_y += font->line_height;
+		} else {
+			Assert(font->num_glyphs == 95);
+			Glyph glyph = font->glyphs[ch - 32];
+
+			// If char isn't whitespace, draw it
+			if (ch != ' ') {
+				vec2 pos;
+				pos.x = ch_x + glyph.xoffset;
+				pos.y = ch_y + glyph.yoffset;
+
+				pos = glm::floor(pos);
+
+				w = max(w, pos.x + glyph.width);
+				h = max(h, pos.y + font->size);
+			}
+
+			ch_x += glyph.xadvance;
+		}
+	}
+
+	return {w, h};
+}
+
+vec2 Renderer::draw_text_shadow(Font* font, string text, float x, float y,
+								HAlign halign, VAlign valign, vec4 color) {
+	draw_text(font, text, x + 1, y + 1, halign, valign, color_black);
+	vec2 result = draw_text(font, text, x, y, halign, valign, color);
+	return result;
+}
+
 void Renderer::break_batch() {
 	if (batch_vertices.count == 0) {
 		return;

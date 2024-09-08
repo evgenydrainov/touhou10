@@ -189,6 +189,7 @@
     <ClCompile Include="src\boss_and_stage_data.cpp" />
     <ClCompile Include="src\character_data.cpp" />
     <ClCompile Include="src\console.cpp" />
+    <ClCompile Include="src\font_data.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\objects.cpp" />

@@ -31,6 +31,7 @@ enum {
 	tex_pcb_youmu_stairs,
 	tex_pcb_youmu_bg,
 	tex_pcb_youmu_bg_flowers,
+	tex_font_cirno,
 
 	NUM_TEXTURES,
 };
@@ -194,3 +195,36 @@ Mix_Chunk* GetSound(u32 sound_index);
 // 
 
 extern AnimData anim_boss_spellcard;
+
+// 
+// Fonts
+// 
+
+struct Glyph {
+	int u;
+	int v;
+	int width;
+	int height;
+	int xoffset;
+	int yoffset;
+	int xadvance;
+};
+
+struct Font {
+	Glyph* glyphs;
+	int num_glyphs;
+	u32 texture_index;
+	int size;
+	int line_height;
+};
+
+enum {
+	fnt_cirno,
+	fnt_main,
+
+	NUM_FONTS,
+};
+
+extern Font font_data[NUM_FONTS];
+
+Font* GetFont(u32 font_index);

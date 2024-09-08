@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\create_fonts.cpp" />
     <ClCompile Include="src\create_package.cpp" />
     <ClCompile Include="src\create_texture_atlas.cpp" />
     <ClCompile Include="src\tools.cpp" />

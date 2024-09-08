@@ -360,7 +360,7 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 11, "");
+		static_assert(NUM_TEXTURES == 12, "");
 
 		// @Leak
 		texture_data[tex_atlas_0]                     = load_texture("textures/atlas_0.png", FILTER_FOR_SPRITES);
@@ -374,6 +374,8 @@ void Game::init() {
 		texture_data[tex_pcb_youmu_stairs]            = load_texture("textures/pcb_youmu_stairs.png");
 		texture_data[tex_pcb_youmu_bg]                = load_texture("textures/pcb_youmu_bg.png");
 		texture_data[tex_pcb_youmu_bg_flowers]        = load_texture("textures/pcb_youmu_bg_flowers.png");
+
+		texture_data[tex_font_cirno] = load_texture("fonts/cirno_0.png");
 	}
 
 	log_info("Loaded textures in %fms.", (GetTime() - loading_time) * 1000.0);

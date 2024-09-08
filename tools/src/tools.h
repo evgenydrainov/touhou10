@@ -7,3 +7,4 @@
 
 // #define CREATE_TEXTURE_ATLAS
 // #define CREATE_PACKAGE
+// #define CREATE_FONTS

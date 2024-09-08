@@ -23,3 +23,8 @@ Mix_Chunk* GetSound(u32 sound_index) {
 	Assert(sound_index < NUM_SOUNDS);
 	return sound_data[sound_index];
 }
+
+Font* GetFont(u32 font_index) {
+	Assert(font_index < NUM_FONTS);
+	return &font_data[font_index];
+}

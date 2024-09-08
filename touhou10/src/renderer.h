@@ -11,6 +11,7 @@ constexpr size_t BATCH_MAX_INDICES  = (BATCH_MAX_QUADS * INDICES_PER_QUAD);
 struct Renderer;
 struct Texture;
 struct Sprite;
+struct Font;
 
 extern Renderer* r;
 
@@ -105,6 +106,14 @@ struct Renderer {
 				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
 
 	vec2 measure_text(Sprite* font, string text, bool only_one_line = false);
+
+	vec2 draw_text(Font* font, string text, float x, float y,
+				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
+
+	vec2 measure_text(Font* font, string text, bool only_one_line = false);
+
+	vec2 draw_text_shadow(Font* font, string text, float x, float y,
+						  HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
 
 	void break_batch();
 

@@ -1052,7 +1052,7 @@ void World::draw(float delta_not_modified) {
 
 		// Draw phase name
 		{
-			r->draw_text(GetSprite(spr_font_main), phase->name, PLAY_AREA_W, 16, HALIGN_RIGHT);
+			r->draw_text_shadow(GetFont(fnt_cirno), phase->name, PLAY_AREA_W - 2, 16, HALIGN_RIGHT);
 		}
 	}
 

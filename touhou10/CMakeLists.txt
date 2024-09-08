@@ -53,6 +53,7 @@ set(SOURCES
 	src/boss.cpp
 	src/character_data.cpp
 	src/console.cpp
+	src/font_data.cpp
 	src/game.cpp
 	src/main.cpp
 	src/objects.cpp
