@@ -2,21 +2,7 @@
 
 #include "common.h"
 
-enum MenuState {
-	MENU_ANIM_IN,
-	MENU_NORMAL,
-	MENU_ANIM_OUT,
-	MENU_DONE,
-};
-
-struct Menu {
-	MenuState state;
-	float animation;
-	int cursor;
-	int num_items;
-};
-
-int menu_update(Menu* menu, float delta);
+#include "menu.h"
 
 struct Title_Screen {
 	enum State {

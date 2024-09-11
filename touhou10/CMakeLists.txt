@@ -56,6 +56,7 @@ set(SOURCES
 	src/font_data.cpp
 	src/game.cpp
 	src/main.cpp
+	src/menu.cpp
 	src/objects.cpp
 	src/package.cpp
 	src/particle_system.cpp

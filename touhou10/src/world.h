@@ -4,6 +4,7 @@
 
 #include "objects.h"
 #include "particle_system.h"
+#include "menu.h"
 
 #include "xoshiro128plus.h"
 #include <minicoro/minicoro.h>
@@ -56,6 +57,7 @@ struct World {
 	mco_coro* co;
 	xoshiro128plus random{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 	bool paused;
+	Menu pause_menu;
 
 	dynamic_array_cap<Animation> animations;
 	Particle_System part_sys;

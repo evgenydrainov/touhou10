@@ -361,6 +361,7 @@ void World::update(float delta_not_modified) {
 	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
 		if (!paused) {
 			paused = true;
+			pause_menu = {};
 			play_sound(snd_pause);
 		}
 	}
@@ -645,7 +646,13 @@ l_skip_update:
 
 	// Pause
 	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
-		paused ^= true;
+		if (paused) {
+			paused = false;
+		} else {
+			paused = true;
+			pause_menu = {};
+		}
+
 		play_sound(snd_pause);
 	}
 
