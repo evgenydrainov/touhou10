@@ -97,13 +97,16 @@ void Renderer::load_shaders() {
 		auto compile_shader = [&](GLenum type, string filename) {
 			string source = get_file_string(filename);
 
-			string define_string_vert =
-				"#version 330 core\n"
-				"#define VERTEX_SHADER\n";
-			string define_string_frag =
-				"#version 330 core\n"
-				"#define FRAGMENT_SHADER\n";
-			string define_string = (type == GL_VERTEX_SHADER) ? define_string_vert : define_string_frag;
+			string define_string = {};
+			if (type == GL_VERTEX_SHADER) {
+				define_string =
+					"#version 330 core\n"
+					"#define VERTEX_SHADER\n";
+			} else if (type == GL_FRAGMENT_SHADER) {
+				define_string =
+					"#version 330 core\n"
+					"#define FRAGMENT_SHADER\n";
+			}
 
 			u32 shader = glCreateShader(type);
 
@@ -131,7 +134,14 @@ void Renderer::load_shaders() {
 				glGetShaderInfoLog(shader, sizeof(buf), NULL, buf);
 				log_error("SHADER COMPILATION ERROR: %s", buf);
 			} else {
-				log_info("Loaded shader " Str_Fmt, Str_Arg(filename));
+				string str = {};
+				if (type == GL_VERTEX_SHADER) {
+					str = "fragment";
+				} else if (type == GL_FRAGMENT_SHADER) {
+					str = "vertex";
+				}
+
+				log_info("Loaded " Str_Fmt " shader " Str_Fmt, Str_Arg(str), Str_Arg(filename));
 			}
 
 			return shader;

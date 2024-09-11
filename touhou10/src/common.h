@@ -625,11 +625,15 @@ static char* to_c_string(string str) {
 
 // You have to free() string.data
 static string copy_string(string str) {
+	if (str.count == 0) return {};
+
 	string result;
 	result.data  = (char*) malloc(str.count);
 	result.count = str.count;
+
 	Assert(result.data);
 	memcpy(result.data, str.data, str.count);
+
 	return result;
 }
 

@@ -36,7 +36,7 @@ int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
 		}
 	};
 
-	const float anim_spd = 1.0f / 30.0f;
+	const float anim_spd = 1.0f / 15.0f;
 
 	switch (menu->state) {
 		case MENU_ANIM_IN: {
@@ -70,13 +70,13 @@ int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
 void menu_draw(Menu* menu, int num_items,
 			   float menu_start_x, float menu_start_y,
 			   float sep_x, float sep_y,
-			   string* labels) {
+			   string* labels, u32 flags) {
 	for (int i = 0; i < num_items; i++) {
 		float x = menu_start_x - sep_x * i;
 		float y = menu_start_y + sep_y * i;
 
 		// Animate.
-		float xoff = 100 * (1 - menu->animation);
+		float xoff = 50 * (1 - menu->animation);
 		if (i % 2) xoff = -xoff;
 
 		x += xoff;
@@ -86,6 +86,11 @@ void menu_draw(Menu* menu, int num_items,
 			color = color_yellow;
 		}
 
-		r->draw_text(GetSprite(spr_font_main), labels[i], x, y, HALIGN_LEFT, VALIGN_TOP, color);
+		HAlign halign = HALIGN_LEFT;
+		if (flags & MENU_DRAW_CENTERED) {
+			halign = HALIGN_CENTER;
+		}
+
+		r->draw_text(GetSprite(spr_font_main), labels[i], x, y, halign, VALIGN_TOP, color);
 	}
 }

@@ -192,6 +192,7 @@
     <ClCompile Include="src\font_data.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\objects.cpp" />
     <ClCompile Include="src\package.cpp" />
     <ClCompile Include="src\particle_system.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\console.h" />
     <ClInclude Include="src\game.h" />
+    <ClInclude Include="src\menu.h" />
     <ClInclude Include="src\objects.h" />
     <ClInclude Include="src\package.h" />
     <ClInclude Include="src\particle_system.h" />

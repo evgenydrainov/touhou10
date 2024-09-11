@@ -10,7 +10,8 @@ enum MenuState {
 };
 
 enum {
-	MENU_NO_FADEOUT = 1,
+	MENU_NO_FADEOUT    = 1,
+	MENU_DRAW_CENTERED = 1 << 1,
 };
 
 struct Menu {
@@ -24,4 +25,4 @@ int menu_update(Menu* menu, int num_items, float delta, u32 flags = 0);
 void menu_draw(Menu* menu, int num_items,
 			   float menu_start_x, float menu_start_y,
 			   float sep_x, float sep_y,
-			   string* labels);
+			   string* labels, u32 flags = 0);

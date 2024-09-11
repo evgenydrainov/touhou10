@@ -6,6 +6,8 @@
 
 World* w;
 
+#define PAUSE_MENU_SIZE 2
+
 void World::init() {
 	player_init(&player);
 
@@ -28,8 +30,9 @@ void World::init() {
 
 	temp_arena_for_boss = arena_create_from_arena(&g->arena, TEMP_STORAGE_FOR_BOSS);
 
-	Assert(stage->init_background);
-	stage->init_background();
+	if (stage->init_background) {
+		stage->init_background();
+	}
 }
 
 void World::destroy() {
@@ -644,16 +647,40 @@ void World::update(float delta_not_modified) {
 
 l_skip_update:
 
-	// Pause
-	if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
-		if (paused) {
-			paused = false;
-		} else {
-			paused = true;
-			pause_menu = {};
+	auto update_pause_menu = [&](float delta) {
+		if (pause_menu.state == MENU_NORMAL) {
+			if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+				pause_menu.cursor = 0;
+				pause_menu.state = MENU_ANIM_OUT;
+				pause_menu.animation = 1;
+				play_sound(snd_menu_cancel);
+				return;
+			}
 		}
 
-		play_sound(snd_pause);
+		int cursor = menu_update(&pause_menu, PAUSE_MENU_SIZE, delta);
+
+		static_assert(PAUSE_MENU_SIZE == 2);
+		switch (cursor) {
+			case 0: {
+				paused = false;
+				break;
+			}
+			case 1: {
+				g->next_state = Game::STATE_TITLE_SCREEN;
+				break;
+			}
+		}
+	};
+
+	if (paused) {
+		update_pause_menu(delta);
+	} else {
+		if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
+			paused = true;
+			pause_menu = {};
+			play_sound(snd_pause);
+		}
 	}
 
 	// Show hitboxes
@@ -1067,9 +1094,24 @@ void World::draw(float delta_not_modified) {
 	// Draw pause menu
 	// 
 	if (paused) {
+		// bg
 		r->draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0, 0, 0, 0.5f});
 
-		r->draw_text(GetSprite(spr_font_main), "Paused", PLAY_AREA_W / 2.0f, PLAY_AREA_H / 2.0f, HALIGN_CENTER, VALIGN_MIDDLE);
+		static_assert(PAUSE_MENU_SIZE == 2);
+		string labels[PAUSE_MENU_SIZE] = {
+			"Resume",
+			"Quit",
+		};
+
+		const float menu_start_x = PLAY_AREA_W * 0.50f;
+		const float menu_start_y = PLAY_AREA_H * 0.50f;
+
+		const float sep_x = 0;
+		const float sep_y = 50;
+
+		menu_draw(&pause_menu, PAUSE_MENU_SIZE,
+				  menu_start_x, menu_start_y,
+				  sep_x, sep_y, labels, MENU_DRAW_CENTERED);
 	}
 
 	r->break_batch();
