@@ -744,10 +744,7 @@ void Game::draw(float delta) {
 								 "frame arena: " Size_Fmt " / " Size_Fmt "\n"
 								 "draw calls: %d\n"
 								 "max batch: %zu / %zu\n"
-#if TH_DEBUG
-								 "COMPILED WITH DEBUG\n"
-#endif
-								 "__cplusplus=%ld\n",
+								 "debug build=%d\n",
 								 fps,
 								 update_took * 1000.0,
 								 draw_took   * 1000.0,
@@ -755,7 +752,7 @@ void Game::draw(float delta) {
 								 Size_Arg(frame_arena.count), Size_Arg(frame_arena.capacity),
 								 draw_calls,
 								 max_batch, BATCH_MAX_VERTICES,
-								 __cplusplus);
+								 TH_DEBUG);
 			pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
 			pos.y += 8;
 
