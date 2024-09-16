@@ -54,8 +54,7 @@ struct World {
 	dynamic_array_cap<Pickup>       pickups;
 
 	u64 next_instance_id = 1;
-	mco_coro* co;
-	float coro_timer;
+	Coroutine co;
 	xoshiro128plus random{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 	bool paused;
 	Menu pause_menu;

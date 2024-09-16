@@ -21,12 +21,12 @@ void boss_update(Boss* b, float delta) {
 			if (b->wait_timer <= 0.0f) {
 				b->state = BOSS_STATE_NORMAL;
 
-				BossPhase* phase = b->GetPhase();
-				Assert(phase->script);
-				Assert(!b->co);
+				coroutine_destroy(&b->co);
 
-				mco_desc desc = mco_desc_init(phase->script, 0);
-				mco_create(&b->co, &desc);
+				BossPhase* phase = b->GetPhase();
+				if (phase->script) {
+					coroutine_create(&b->co, phase->script);
+				}
 			}
 			break;
 		}
@@ -108,8 +108,7 @@ void boss_end_phase(Boss* b) {
 	w->delta_multiplier = 1;
 	w->boss_pcb_youmu_effect = 0;
 
-	if (b->co) mco_destroy(b->co);
-	b->co = nullptr;
+	coroutine_destroy(&b->co);
 
 	BossData*  data  = b->GetData();
 	BossPhase* phase = b->GetPhase();

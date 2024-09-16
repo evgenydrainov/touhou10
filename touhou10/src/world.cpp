@@ -23,9 +23,8 @@ void World::init() {
 
 	StageData* stage = GetStageData(g->stage_index);
 
-	{
-		mco_desc desc = mco_desc_init(stage->script, 0);
-		mco_create(&co, &desc);
+	if (stage->script) {
+		coroutine_create(&co, stage->script);
 	}
 
 	temp_arena_for_boss = arena_create_from_arena(&g->arena, TEMP_STORAGE_FOR_BOSS);
@@ -36,13 +35,9 @@ void World::init() {
 }
 
 void World::destroy() {
-
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 
-	if (co) {
-		mco_destroy(co);
-		co = nullptr;
-	}
+	coroutine_destroy(&co);
 
 	part_sys.destroy();
 
@@ -589,40 +584,39 @@ void World::update(float delta_not_modified) {
 
 	// Call coroutines
 	{
-		auto handle_coroutine = [&](mco_coro* &co, float& coro_timer, Object* self, float delta) {
-			coro_timer += delta;
-			while (coro_timer >= 1) {
-				if (co) {
-					if (co->state == MCO_SUSPENDED) {
-						co->user_data = self;
-						mco_resume(co);
-						// coro_memory += co->coro_size;
-					} else if (co->state == MCO_DEAD) {
-						mco_destroy(co);
-						co = nullptr;
+		auto handle_coroutine = [&](Coroutine* co, Object* self, float delta) {
+			co->timer += delta;
+			while (co->timer >= 1) {
+				if (co->handle) {
+					if (co->handle->state == MCO_SUSPENDED) {
+						co->handle->user_data = self;
+						mco_resume(co->handle);
+						// coro_memory += co->handle->coro_size;
+					} else if (co->handle->state == MCO_DEAD) {
+						coroutine_destroy(co);
 					} else {
 						Assert(!"unexpected mco_coro state");
 					}
 				}
 
-				coro_timer -= 1;
+				co->timer -= 1;
 			}
 		};
 
 		// coro_memory = 0;
 
-		handle_coroutine(co, coro_timer, nullptr, delta);
+		handle_coroutine(&co, nullptr, delta);
 
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			handle_coroutine(boss.co, boss.coro_timer, &boss, delta_not_modified); // Don't affect delta
+			handle_coroutine(&boss.co, &boss, delta_not_modified); // Don't affect delta
 		}
 
 		For (e, enemies) {
-			handle_coroutine(e->co, e->coro_timer, e, delta);
+			handle_coroutine(&e->co, e, delta);
 		}
 
 		For (b, bullets) {
-			handle_coroutine(b->co, b->coro_timer, b, delta);
+			handle_coroutine(&b->co, b, delta);
 		}
 	}
 

@@ -60,8 +60,7 @@ static Bullet* ShootExtO(Object* o,
 	}
 
 	if (script) {
-		mco_desc desc = mco_desc_init(script, 0);
-		mco_create(&b.co, &desc);
+		coroutine_create(&b.co, script);
 	}
 
 	play_sound(snd_enemy_shoot);
@@ -229,6 +228,8 @@ static Boss* CreateBoss(u32 boss_index,
 						float x = BOSS_STARTING_X, float y = BOSS_STARTING_Y) {
 	Boss* b = &w->boss;
 
+	// @Cleanup: Why is this commented out?
+	Assert(b->flags & FLAG_INSTANCE_DEAD);
 	// if (!(b->flags & FLAG_INSTANCE_DEAD)) {
 	// 	object_cleanup(b);
 	// }
@@ -267,8 +268,7 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.radius = 10;
 
 	if (script) {
-		mco_desc desc = mco_desc_init(script, 0);
-		mco_create(&e.co, &desc);
+		coroutine_create(&e.co, script);
 	}
 
 	e.death_callback = death_callback;

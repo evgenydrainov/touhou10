@@ -9,24 +9,15 @@ void object_init(Object* o, ObjType type) {
 void object_cleanup(Player* p) {}
 
 void object_cleanup(Boss* b) {
-	if (b->co) {
-		mco_destroy(b->co);
-		b->co = nullptr;
-	}
+	coroutine_destroy(&b->co);
 }
 
 void object_cleanup(Enemy* e) {
-	if (e->co) {
-		mco_destroy(e->co);
-		e->co = nullptr;
-	}
+	coroutine_destroy(&e->co);
 }
 
 void object_cleanup(Bullet* b) {
-	if (b->co) {
-		mco_destroy(b->co);
-		b->co = nullptr;
-	}
+	coroutine_destroy(&b->co);
 }
 
 void object_cleanup(PlayerBullet* b) {}
@@ -45,4 +36,15 @@ float object_animate(u32 sprite_index, float frame_index, float delta) {
 	}
 
 	return frame_index;
+}
+
+void coroutine_create(Coroutine* co, void (*func)(mco_coro*)) {
+	mco_desc desc = mco_desc_init(func, 0);
+	mco_result res = mco_create(&co->handle, &desc);
+	Assert(res == MCO_SUCCESS);
+}
+
+void coroutine_destroy(Coroutine* co) {
+	if (co->handle) mco_destroy(co->handle);
+	*co = {};
 }

@@ -94,6 +94,14 @@ void player_init(Player* p);
 void player_update(Player* p, float delta);
 void player_draw(Player* p, float delta);
 
+struct Coroutine {
+	mco_coro* handle;
+	float timer;
+};
+
+void coroutine_create(Coroutine* co, void (*func)(mco_coro*));
+void coroutine_destroy(Coroutine* co);
+
 #define BOSS_STATE_ENUM(X) \
 	X(BOSS_STATE_NORMAL) \
 	X(BOSS_WAITING_FOR_PHASE_TO_START) \
@@ -111,8 +119,7 @@ struct Boss : Object {
 	float timer;
 	float wait_timer;
 
-	mco_coro* co;
-	float coro_timer;
+	Coroutine co;
 
 	BossData* GetData() {
 		return GetBossData(boss_index);
@@ -132,8 +139,7 @@ void boss_end_phase(Boss* b);
 void boss_create_kira_particle(Object* b);
 
 struct Enemy : Object {
-	mco_coro* co;
-	float coro_timer;
+	Coroutine co;
 	float hp;
 	int drops;
 
@@ -151,8 +157,7 @@ enum BulletType {
 #define BULLET_SPAWN_PARTICLE_LIFESPAN 10.0f
 
 struct Bullet : Object {
-	mco_coro* co;
-	float coro_timer;
+	Coroutine co;
 	instance_id owner;
 	BulletType bullet_type;
 	float lifetime;
