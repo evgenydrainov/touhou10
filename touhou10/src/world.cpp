@@ -358,7 +358,6 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 }
 
 void World::update(float delta_not_modified) {
-
 	float delta = delta_not_modified * delta_multiplier;
 
 	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
@@ -378,7 +377,7 @@ void World::update(float delta_not_modified) {
 		player_update(&player, delta);
 
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			boss_update(&boss, delta);
+			boss_update(&boss, delta_not_modified); // Don't affect delta
 		}
 
 		size_t enemy_count = enemies.count;
@@ -583,35 +582,40 @@ void World::update(float delta_not_modified) {
 
 	// Call coroutines
 	{
-		auto handle_coroutine = [&](mco_coro* &co, Object* self) {
-			if (co) {
-				if (co->state == MCO_SUSPENDED) {
-					co->user_data = self;
-					mco_resume(co);
-					coro_memory += co->coro_size;
-				} else if (co->state == MCO_DEAD) {
-					mco_destroy(co);
-					co = nullptr;
-				} else {
-					Assert(!"unexpected mco_coro state");
+		auto handle_coroutine = [&](mco_coro* &co, float& coro_timer, Object* self, float delta) {
+			coro_timer += delta;
+			while (coro_timer >= 1) {
+				if (co) {
+					if (co->state == MCO_SUSPENDED) {
+						co->user_data = self;
+						mco_resume(co);
+						// coro_memory += co->coro_size;
+					} else if (co->state == MCO_DEAD) {
+						mco_destroy(co);
+						co = nullptr;
+					} else {
+						Assert(!"unexpected mco_coro state");
+					}
 				}
+
+				coro_timer -= 1;
 			}
 		};
 
-		coro_memory = 0;
+		// coro_memory = 0;
 
-		handle_coroutine(co, nullptr);
+		handle_coroutine(co, coro_timer, nullptr, delta);
 
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			handle_coroutine(boss.co, &boss);
+			handle_coroutine(boss.co, boss.coro_timer, &boss, delta_not_modified); // Don't affect delta
 		}
 
 		For (e, enemies) {
-			handle_coroutine(e->co, e);
+			handle_coroutine(e->co, e->coro_timer, e, delta);
 		}
 
 		For (b, bullets) {
-			handle_coroutine(b->co, b);
+			handle_coroutine(b->co, b->coro_timer, b, delta);
 		}
 	}
 
@@ -770,7 +774,6 @@ mat4 World::D3D::get_mvp() {
 }
 
 void World::draw(float delta_not_modified) {
-
 	float delta = delta_not_modified * delta_multiplier;
 
 	glViewport(g->game_viewport.x, g->game_viewport.y, g->game_viewport.w, g->game_viewport.h);

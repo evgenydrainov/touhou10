@@ -112,6 +112,7 @@ struct Boss : Object {
 	float wait_timer;
 
 	mco_coro* co;
+	float coro_timer;
 
 	BossData* GetData() {
 		return GetBossData(boss_index);
@@ -132,6 +133,7 @@ void boss_create_kira_particle(Object* b);
 
 struct Enemy : Object {
 	mco_coro* co;
+	float coro_timer;
 	float hp;
 	int drops;
 
@@ -150,6 +152,7 @@ enum BulletType {
 
 struct Bullet : Object {
 	mco_coro* co;
+	float coro_timer;
 	instance_id owner;
 	BulletType bullet_type;
 	float lifetime;

@@ -4,7 +4,6 @@
 // "M" for Midboss.
 // 
 static void M_Youmu_Nonspell_0(mco_coro* co) {
-
 	auto shoot = [&](int N, float x, float y, float dir, u32 sprite_index, int frame_index) {
 		ShootRadial(N, 180 / (float)N, [&]() {
 			return ShootExt(x, y, 1.15f, dir, 0, sprite_index, frame_index);
@@ -69,7 +68,6 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 }
 
 static void M_Youmu_Ghost_Sword(mco_coro* co) {
-	
 	auto bullet = [](mco_coro* co) {
 		// @Note: Object::dir automatically wraps around 360.
 		Repeat (360 / 3) {
