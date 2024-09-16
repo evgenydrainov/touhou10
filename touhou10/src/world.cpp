@@ -94,8 +94,7 @@ static bool player_collides_with_bullet(Player* p, float player_radius, Bullet* 
 	return result;
 }
 
-void World::physics_update(float delta) {
-
+void World::physics_update(float delta, float delta_not_modified) {
 	auto object_move = [](Object* o, float delta) {
 		o->x += o->spd * dcos(o->dir) * delta;
 		o->y -= o->spd * dsin(o->dir) * delta;
@@ -106,7 +105,9 @@ void World::physics_update(float delta) {
 	player.x += player.hsp * delta;
 	player.y += player.vsp * delta;
 
-	object_move(&boss, delta);
+	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+		object_move(&boss, delta_not_modified);
+	}
 
 	For (e, enemies) {
 		object_move(e, delta);
@@ -360,6 +361,11 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 void World::update(float delta_not_modified) {
 	float delta = delta_not_modified * delta_multiplier;
 
+	// 
+	// Disable in debug to be able to set a breakpoint and
+	// hit continue to skip a frame.
+	// 
+#if !TH_DEBUG
 	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
 		if (!paused) {
 			paused = true;
@@ -367,6 +373,7 @@ void World::update(float delta_not_modified) {
 			play_sound(snd_pause);
 		}
 	}
+#endif
 
 	if (paused || g->skip_frame) {
 		goto l_skip_update;
@@ -564,7 +571,7 @@ void World::update(float delta_not_modified) {
 		const int steps = 4;
 
 		for (int i = 0; i < steps; i++) {
-			physics_update(delta / (float)steps);
+			physics_update(delta / (float)steps, delta_not_modified / (float)steps);
 		}
 	}
 
@@ -651,6 +658,8 @@ void World::update(float delta_not_modified) {
 
 l_skip_update:
 
+	delta = delta_not_modified;
+
 	auto update_pause_menu = [&](float delta) {
 		if (pause_menu.state == MENU_NORMAL) {
 			if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
@@ -722,25 +731,21 @@ l_skip_update:
 			}
 
 			if (is_key_held(SDL_SCANCODE_W)) {
-				d3d.cam_pos.x += spd * dcos(d3d.yaw) * dcos(d3d.pitch);
-				d3d.cam_pos.y += spd * dsin(d3d.pitch);
-				d3d.cam_pos.z += spd * dsin(d3d.yaw) * dcos(d3d.pitch);
+				d3d.cam_pos += (spd * delta) * d3d.get_camera_forward();
 			}
 
 			if (is_key_held(SDL_SCANCODE_S)) {
-				d3d.cam_pos.x -= spd * dcos(d3d.yaw) * dcos(d3d.pitch);
-				d3d.cam_pos.y -= spd * dsin(d3d.pitch);
-				d3d.cam_pos.z -= spd * dsin(d3d.yaw) * dcos(d3d.pitch);
+				d3d.cam_pos -= (spd * delta) * d3d.get_camera_forward();
 			}
 
 			if (is_key_held(SDL_SCANCODE_A)) {
-				d3d.cam_pos.z += spd * dsin(d3d.yaw - 90);
-				d3d.cam_pos.x += spd * dcos(d3d.yaw - 90);
+				d3d.cam_pos.z += (spd * delta) * dsin(d3d.yaw - 90);
+				d3d.cam_pos.x += (spd * delta) * dcos(d3d.yaw - 90);
 			}
 
 			if (is_key_held(SDL_SCANCODE_D)) {
-				d3d.cam_pos.z += spd * dsin(d3d.yaw + 90);
-				d3d.cam_pos.x += spd * dcos(d3d.yaw + 90);
+				d3d.cam_pos.z += (spd * delta) * dsin(d3d.yaw + 90);
+				d3d.cam_pos.x += (spd * delta) * dcos(d3d.yaw + 90);
 			}
 		}
 

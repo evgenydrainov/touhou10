@@ -2,11 +2,8 @@ TODO:
 
 Pause Menu Juice
 Player God Mode
-Don't pause if lost focus when debugging
-delta_multiplier shouldn't apply to boss
 
 Score popups
 
 Stage music, boss music
 Dialogue
-Enemy death animation

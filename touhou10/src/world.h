@@ -88,7 +88,7 @@ struct World {
 	void init();
 	void destroy();
 
-	void physics_update(float delta);
+	void physics_update(float delta, float delta_not_modified);
 	void update(float delta_not_modified);
 	void draw(float delta_not_modified);
 
