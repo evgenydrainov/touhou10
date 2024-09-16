@@ -402,7 +402,7 @@ vec2 Renderer::measure_text(Sprite* font, string text, bool only_one_line) {
 			ch = '?';
 		}
 
-		if (!(ch == ' ' || ch == '\n')) {
+		if (!(ch == '\n')) {
 			w = max(w, ch_x + (float)font->width);
 			h = max(h, ch_y + (float)font->height);
 		}

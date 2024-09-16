@@ -5,13 +5,19 @@
 union SDL_Event;
 
 struct Console {
+	static constexpr size_t COMMAND_HISTORY = 5;
+
 	bool show;
 
-	char user_input_line_buf[32];
+	static char user_input_line_buf[64];
 	dynamic_array_cap<char> user_input_line;
 
-	char user_input_line_prev_buf[32];
-	dynamic_array_cap<char> user_input_line_prev;
+	int caret;
+
+	static char command_history_buf[COMMAND_HISTORY][64];
+	dynamic_array_cap<char> command_history[COMMAND_HISTORY];
+
+	int history_index = -1;
 
 	static char history_buf[1024];
 	dynamic_array_cap<char> history;

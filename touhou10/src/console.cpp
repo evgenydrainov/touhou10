@@ -6,13 +6,17 @@
 #include <string.h>
 
 char Console::history_buf[1024];
+char Console::command_history_buf[Console::COMMAND_HISTORY][64];
+char Console::user_input_line_buf[64];
 
 void Console::init() {
 	user_input_line.data     = user_input_line_buf;
 	user_input_line.capacity = ArrayLength(user_input_line_buf);
 
-	user_input_line_prev.data     = user_input_line_prev_buf;
-	user_input_line_prev.capacity = ArrayLength(user_input_line_prev_buf);
+	for (size_t i = 0; i < COMMAND_HISTORY; i++) {
+		command_history[i].data     = command_history_buf[i];
+		command_history[i].capacity = ArrayLength(command_history_buf[i]);
+	}
 
 	history.data     = history_buf;
 	history.capacity = ArrayLength(history_buf);
@@ -34,15 +38,23 @@ void Console::event(SDL_Event* ev) {
 			if (show) {
 				if (scancode == SDL_SCANCODE_GRAVE) {
 					show = false;
-
 				} else if (scancode == SDL_SCANCODE_BACKSPACE) {
-					if (user_input_line.count > 0) {
-						user_input_line.count--;
+					if (caret > 0) {
+						array_remove(&user_input_line, user_input_line.begin() + caret - 1);
+						caret--;
+					}
+				} else if (scancode == SDL_SCANCODE_DELETE) {
+					if (caret < user_input_line.count) {
+						array_remove(&user_input_line, user_input_line.begin() + caret);
+					}
+				} else if (scancode == SDL_SCANCODE_RETURN) {
+					for (size_t i = COMMAND_HISTORY; i-- != 1;) {
+						memcpy(command_history_buf[i], command_history_buf[i - 1], command_history[i - 1].count);
+						command_history[i].count = command_history[i - 1].count;
 					}
 
-				} else if (scancode == SDL_SCANCODE_RETURN) {
-					memcpy(user_input_line_prev_buf, user_input_line_buf, user_input_line.count);
-					user_input_line_prev.count = user_input_line.count;
+					memcpy(command_history_buf[0], user_input_line_buf, user_input_line.count);
+					command_history[0].count = user_input_line.count;
 
 					write(user_input_line);
 					write('\n');
@@ -50,20 +62,46 @@ void Console::event(SDL_Event* ev) {
 					execute();
 
 					user_input_line.count = 0;
-
+					history_index = -1;
+					caret = 0;
 				} else if (scancode == SDL_SCANCODE_UP) {
-					memcpy(user_input_line_buf, user_input_line_prev_buf, user_input_line_prev.count);
-					user_input_line.count = user_input_line_prev.count;
+					history_index++;
+					history_index = clamp(history_index, -1, (int)COMMAND_HISTORY - 1);
 
+					if (history_index != -1) {
+						memcpy(user_input_line_buf, command_history_buf[history_index], command_history[history_index].count);
+						user_input_line.count = command_history[history_index].count;
+						caret = user_input_line.count;
+					} else {
+						user_input_line.count = 0;
+						caret = 0;
+					}
 				} else if (scancode == SDL_SCANCODE_DOWN) {
-					user_input_line.count = 0;
+					history_index--;
+					history_index = clamp(history_index, -1, (int)COMMAND_HISTORY - 1);
 
+					if (history_index != -1) {
+						memcpy(user_input_line_buf, command_history_buf[history_index], command_history[history_index].count);
+						user_input_line.count = command_history[history_index].count;
+						caret = user_input_line.count;
+					} else {
+						user_input_line.count = 0;
+						caret = 0;
+					}
+				} else if (scancode == SDL_SCANCODE_RIGHT) {
+					caret++;
+					caret = clamp(caret, 0, (int)user_input_line.count);
+				} else if (scancode == SDL_SCANCODE_LEFT) {
+					caret--;
+					caret = clamp(caret, 0, (int)user_input_line.count);
 				}
 			} else {
 				if (scancode == SDL_SCANCODE_GRAVE) {
 					show = true;
 					user_input_line.count = 0;
-					scroll = 0;
+					scroll = -2;
+					history_index = -1;
+					caret = 0;
 				}
 			}
 			break;
@@ -74,7 +112,9 @@ void Console::event(SDL_Event* ev) {
 
 			if (show) {
 				if (ch != '`' && ch >= 32 && ch <= 127) {
-					array_add(&user_input_line, ch);
+					array_insert(&user_input_line, caret, ch);
+					caret++;
+					caret = clamp(caret, 0, (int)user_input_line.count);
 				}
 			}
 			break;
@@ -129,6 +169,8 @@ kill_player - Kills the player
 			} else if (token == "midboss") {
 				g->skip_to_midboss = true;
 			}
+		} else {
+			write("invalid stage index\n");
 		}
 		return;
 	}
@@ -165,7 +207,7 @@ kill_player - Kills the player
 		}
 	}
 
-	write("Unknown command \"");
+	write("unknown command \"");
 	write(command);
 	write("\"\n");
 }
@@ -205,16 +247,36 @@ void Console::draw(float delta) {
 	glScissor(0, backbuffer_h - console_h, console_w, console_h);
 	glEnable(GL_SCISSOR_TEST);
 
+	Sprite* font = GetSprite(spr_font_main);
+
 	// Draw text
-	r->draw_text(GetSprite(spr_font_main), history, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+	r->draw_text(font, history, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
 
 	// Draw shell thing
-	r->draw_text(GetSprite(spr_font_main), ">", x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+	r->draw_text(font, ">", x, y, HALIGN_LEFT, VALIGN_BOTTOM);
 
 	x += 16;
 
 	// Draw current cmd
-	r->draw_text(GetSprite(spr_font_main), user_input_line, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+	r->draw_text(font, user_input_line, x, y, HALIGN_LEFT, VALIGN_BOTTOM);
+
+	// Draw caret
+	{
+		vec4 color;
+		if ((SDL_GetTicks() % 800) > 400) {
+			color = {1, 1, 1, 1.00f};
+		} else {
+			color = {1, 1, 1, 0.50f};
+		}
+
+		string str;
+		str.data  = user_input_line.data;
+		str.count = caret;
+
+		vec2 text_size = r->measure_text(font, str);
+
+		r->draw_rectangle({(int)(x + text_size.x), (int)(y - text_size.y), 2, 16}, color);
+	}
 
 	r->break_batch();
 	glDisable(GL_SCISSOR_TEST);

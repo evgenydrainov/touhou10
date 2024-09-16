@@ -446,6 +446,30 @@ static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
 	return it;
 }
 
+template <typename T>
+static T* array_insert(dynamic_array_cap<T>* arr, size_t index, const T& val) {
+	Assert(arr->count <= arr->capacity);
+
+	//Assert(index >= 0);
+	Assert(index <= arr->count);
+
+	if (arr->count == arr->capacity) {
+		arr->count--;
+	}
+
+	index = min(index, arr->capacity - 1);
+
+	for (size_t i = arr->count; i-- > index;) {
+		arr->data[i + 1] = arr->data[i];
+	}
+
+	T* result = &(arr->data[index] = val);
+
+	arr->count++;
+
+	return result;
+}
+
 
 // -----------------------------------------------
 //             SECTION: String Type
