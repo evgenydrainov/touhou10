@@ -7,7 +7,8 @@
 #include <inttypes.h> // for PRIX64
 #include <string.h> // for memset
 
-Game* g;
+Game* g = nullptr;
+SDL_Window* global_window = nullptr;
 
 #if TH_DEBUG
 static void GLAPIENTRY glDebugOutput(GLenum source,
@@ -157,6 +158,7 @@ void Game::init() {
 		panic_and_abort("Couldn't create window: %s", SDL_GetError());
 	}
 
+	global_window = window;
 
 	// 
 	// A little workaround for Linux Mint Cinnamon.
@@ -348,7 +350,7 @@ void Game::init() {
 
 		char* env_music_volume = SDL_getenv("TH_MUSIC_VOLUME"); // @Leak
 		if (env_music_volume) {
-			music_volume = SDL_atof(env_music_volume);
+			music_volume = (float) SDL_atof(env_music_volume);
 		}
 
 		Mix_Volume(-1,  (int)(MIX_MAX_VOLUME * (master_volume * sound_volume)));
@@ -455,6 +457,8 @@ void Game::destroy() {
 	SDL_GL_DeleteContext(gl_context);
 
 	SDL_DestroyWindow(window);
+	window = nullptr;
+	global_window = nullptr;
 
 	SDL_Quit();
 }

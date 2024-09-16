@@ -66,20 +66,37 @@ struct Rectf {
 //
 // For now, asserts will be enabled in release build. May help with finding bugs.
 //
-#ifdef _MSC_VER
-#define Assert(expr) SDL_enabled_assert(expr) __analysis_assume(expr)
+#if TH_DEBUG
+	#define Assert(expr) while (!(expr)) trigger_breakpoint()
 #else
-#define Assert(expr) SDL_enabled_assert(expr)
+	#define Assert(expr) while (!(expr)) panic_and_abort("Assertion failed: " #expr)
 #endif
 
 #define panic_and_abort(fmt, ...) do { \
 		char buf[512]; \
-		stb_snprintf(buf, sizeof(buf), "%s:" STRINGIFY(__LINE__) ": " fmt, __FILE__, ##__VA_ARGS__); \
+		stb_snprintf(buf, sizeof(buf), __FILE__ ":" STRINGIFY(__LINE__) ": " fmt, ##__VA_ARGS__); \
 		log_error("%s", buf); \
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, g->window); \
+		try_to_exit_fullscreen_properly(); \
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, global_window); \
 		SDL_Quit(); \
 		exit(1); \
 	} while (0)
+
+#define trigger_breakpoint() do { \
+		try_to_exit_fullscreen_properly(); \
+		SDL_TriggerBreakpoint(); \
+	} while (0)
+
+extern SDL_Window* global_window;
+
+inline void try_to_exit_fullscreen_properly() {
+	// @Todo: Probably needed only for Windows
+	if (global_window) {
+		SDL_SetWindowFullscreen(global_window, 0);
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {}
+	}
+}
 
 // 
 // For loop

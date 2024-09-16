@@ -39,6 +39,11 @@ void get_power(int power);
 void get_graze(int graze);
 void get_points(int points);
 
+struct Coro_User_Data {
+	Coroutine* co;
+	Object* self;
+};
+
 struct World {
 	Player player;
 	Boss   boss;

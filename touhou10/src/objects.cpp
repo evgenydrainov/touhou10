@@ -39,8 +39,15 @@ float object_animate(u32 sprite_index, float frame_index, float delta) {
 }
 
 void coroutine_create(Coroutine* co, void (*func)(mco_coro*)) {
+	mco_result res;
+
 	mco_desc desc = mco_desc_init(func, 0);
-	mco_result res = mco_create(&co->handle, &desc);
+	res = mco_create(&co->handle, &desc);
+	Assert(res == MCO_SUCCESS);
+
+	float timer = 0;
+
+	res = mco_push(co->handle, &timer, sizeof timer);
 	Assert(res == MCO_SUCCESS);
 }
 

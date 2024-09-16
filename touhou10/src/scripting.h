@@ -2,7 +2,7 @@
 
 #include "game.h"
 
-#define self ((Object*)co->user_data)
+#define self (((Coro_User_Data*)co->user_data)->self)
 
 enum {
 	spr_bullet_pellet = spr_bullet_shard,
@@ -20,11 +20,36 @@ static void co_check_stack_usage(mco_coro* co) {
 	log_info("coroutine stack usage: %zu", (stack_max - stack_addr));
 }
 
-static void wait(int frames) {
-	while (frames--) {
-		mco_yield(mco_running());
-		// co_check_stack_usage(co);
+static void wait(float time) {
+	mco_coro* co = mco_running();
+	Assert(co);
+
+	mco_result res;
+
+#if 1
+	float timer;
+
+	res = mco_pop(co, &timer, sizeof timer);
+	Assert(res == MCO_SUCCESS);
+
+	timer += time;
+	while (timer >= 1) {
+		res = mco_yield(co);
+		Assert(res == MCO_SUCCESS);
+
+		timer -= 1;
 	}
+
+	res = mco_push(co, &timer, sizeof timer);
+	Assert(res == MCO_SUCCESS);
+#else
+	// unfinished
+	Coro_User_Data* user = (Coro_User_Data*) co->user_data;
+	user->co->timer -= time - 1;
+
+	res = mco_yield(co);
+	Assert(res == MCO_SUCCESS);
+#endif
 }
 
 static Bullet* ShootExtO(Object* o,
@@ -277,9 +302,8 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	return array_add(&w->enemies, e);
 }
 
-// Returns number of frames
-static int seconds(float sec) {
-	return (int) (sec * 60.0f);
+static float seconds(float sec) {
+	return sec * 60.0f;
 }
 
 static void Kira(Object* o) {

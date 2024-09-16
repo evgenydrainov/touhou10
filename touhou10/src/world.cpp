@@ -589,7 +589,12 @@ void World::update(float delta_not_modified) {
 			while (co->timer >= 1) {
 				if (co->handle) {
 					if (co->handle->state == MCO_SUSPENDED) {
-						co->handle->user_data = self;
+						Coro_User_Data user;
+						user.co = co;
+						user.self = self;
+
+						co->handle->user_data = &user;
+
 						mco_resume(co->handle);
 						// coro_memory += co->handle->coro_size;
 					} else if (co->handle->state == MCO_DEAD) {
