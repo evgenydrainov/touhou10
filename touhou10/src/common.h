@@ -237,6 +237,11 @@ static T clamp(T a, T mn, T mx) {
 }
 
 template <typename T>
+static void Clamp(T* a, T mn, T mx) {
+	*a = clamp(*a, mn, mx);
+}
+
+template <typename T>
 static T lerp(T a, T b, float f) {
 	return a + (b - a) * f;
 }
