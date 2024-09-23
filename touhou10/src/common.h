@@ -246,6 +246,12 @@ static T lerp(T a, T b, float f) {
 	return a + (b - a) * f;
 }
 
+template <typename T>
+static T lerp_delta(T a, T b, float f, float delta) {
+	f = 1.0f - f;
+	return lerp(a, b, 1.0f - powf(f, delta));
+}
+
 static vec2 normalize0(vec2 v) {
 	float length = sqrtf(v.x * v.x + v.y * v.y);
 	if (length != 0) {
