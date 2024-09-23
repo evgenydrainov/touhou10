@@ -162,10 +162,10 @@ void World::physics_update(float delta, float delta_not_modified) {
 						Particle p = {};
 						p.x            = player.x;
 						p.y            = player.y;
-						p.spd          = g->random_visual.rangef(4, 6);
-						p.dir          = g->random_visual.rangef(0, 360);
+						p.spd          = random_rangef(&g->rng_visual, 4, 6);
+						p.dir          = random_rangef(&g->rng_visual, 0, 360);
 						p.acc          = -0.25f;
-						p.lifespan     = g->random_visual.rangef(10, 15);
+						p.lifespan     = random_rangef(&g->rng_visual, 10, 15);
 						p.sprite_index = spr_particle_graze;
 						p.color_from   = {1, 1, 1, 0.5f};
 						p.color_to     = p.color_from;
@@ -338,16 +338,19 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 	// 
 
 	switch (drops) {
-		case 2:
-			// A power or a point at a 50% chance
-			if (!(w->random.rangef(0.0f, 1.0f) < 0.5f)) {
-				break;
-			}
-			// Fallthrough
 		case 1: {
 			// A power or a point
 			PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
-			drop_pickup(x, y, w->random.index(types));
+			drop_pickup(x, y, random_choose(&w->rng, types));
+			break;
+		}
+
+		case 2: {
+			// A power or a point at a 50% chance
+			if (random_chance(&w->rng, 0.5f)) {
+				PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
+				drop_pickup(x, y, random_choose(&w->rng, types));
+			}
 			break;
 		}
 	}

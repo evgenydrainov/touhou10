@@ -116,8 +116,8 @@ void boss_end_phase(Boss* b) {
 	if (phase->type == PHASE_SPELLCARD) {
 		// Drop some pickups
 		for (int i = 0; i < 5; i++) {
-			float x = b->x + w->random.rangef(-50.0f, 50.0f);
-			float y = b->y + w->random.rangef(-50.0f, 50.0f);
+			float x = b->x + random_rangef(&w->rng, -50.0f, 50.0f);
+			float y = b->y + random_rangef(&w->rng, -50.0f, 50.0f);
 			PickupType type = (i == 4) ? PICKUP_TYPE_POWER_BIG : PICKUP_TYPE_POWER;
 			drop_pickup(x, y, type);
 		}

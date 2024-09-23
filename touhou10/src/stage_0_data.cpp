@@ -15,8 +15,8 @@ void Stage_0_Script(mco_coro* co) {
 		};
 
 		auto OnDeath = [](Object* o) {
-			u32 r = w->random.next() % 3;
-			float dir = w->random.rangef(0.0f, 360.0f);
+			int r = random_range(&w->rng, 0, 3);
+			float dir = random_rangef(&w->rng, 0.0f, 360.0f);
 			if (r == 0) {
 				ShootO(o, 2, dir,       0, spr_bullet_rice, 2);
 				ShootO(o, 2, dir +  90, 0, spr_bullet_rice, 2);
@@ -34,10 +34,10 @@ void Stage_0_Script(mco_coro* co) {
 			((Enemy*)o)->angle += 10 * delta;
 		};
 
-		float x = w->random.rangef(0.0f, (float)PLAY_AREA_W);
+		float x = random_rangef(&w->rng, 0.0f, (float)PLAY_AREA_W);
 		float y = 0;
 
-		CreateEnemy(x, y, 2, 270 + w->random.rangef(-30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
+		CreateEnemy(x, y, 2, 270 + random_rangef(&w->rng, -30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
 

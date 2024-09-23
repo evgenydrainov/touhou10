@@ -162,8 +162,8 @@ void player_update(Player* p, float delta) {
 							drop--;
 							type = PICKUP_TYPE_POWER;
 						}
-						float x = p->x + w->random.rangef(-50.0f, 50.0f);
-						float y = p->y + w->random.rangef(-50.0f, 50.0f);
+						float x = p->x + random_rangef(&w->rng, -50.0f, 50.0f);
+						float y = p->y + random_rangef(&w->rng, -50.0f, 50.0f);
 						drop_pickup(x, y, type);
 					}
 				} else {

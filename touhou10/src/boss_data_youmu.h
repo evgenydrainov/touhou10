@@ -75,7 +75,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 			wait(1);
 		}
 
-		float target_spd = w->random.rangef(2.50f, 3.50f);
+		float target_spd = random_rangef(&w->rng, 2.50f, 3.50f);
 		float acc = 0.05f;
 		while (self->spd != target_spd) {
 			self->spd = approach(self->spd, target_spd, acc);
@@ -85,8 +85,8 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 	auto shoot = [&](float x, float y) {
 		int N = 18;
-		float dir1 = w->random.rangef(0, 360);
-		float dir2 = w->random.rangef(0, 360);
+		float dir1 = random_rangef(&w->rng, 0, 360);
+		float dir2 = random_rangef(&w->rng, 0, 360);
 		for (int i = 0; i < N; i++) {
 			float t = i / (float)N;
 			ShootExt(x, y, 1.3f, dir1 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);

@@ -91,7 +91,7 @@ struct Game {
 
 	Mix_Music* music;
 
-	xoshiro128plus random_visual{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
+	xoshiro128plus rng_visual{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 
 	u32 key_pressed[(SDL_SCANCODE_UP + 1 + 31) / 32];
 	u32 key_repeat [(SDL_SCANCODE_UP + 1 + 31) / 32];

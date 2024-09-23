@@ -94,7 +94,7 @@ static void Cirno_Nonspell_0(mco_coro* co) {
 
 	while (true) {
 		ShootRadial(5, 360.0f / 5.0f, [&]() {
-			return Shoot(w->random.rangef(2.0f, 3.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
+			return Shoot(random_rangef(&w->rng, 2.0f, 3.0f), dir, 0.0f, sprite_index[w->random.next() % ArrayLength(sprite_index)], w->random.next() % 16, 0, [](mco_coro* co) {
 				for (;;) {
 					self->dir += 2;
 					wait(1);
@@ -204,8 +204,8 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 		Repeat (100) {
 			Repeat (2) {
 				int colors[] = {2, 6, 10, 13, 14};
-				int color = w->random.index(colors);
-				bullets[nbullets++] = Shoot(w->random.rangef(1.0f, 4.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_outline, color)->id;
+				int color = random_choose(&w->rng, colors);
+				bullets[nbullets++] = Shoot(random_rangef(&w->rng, 1.0f, 4.0f), random_rangef(&w->rng, 0.0f, 360.0f), 0, spr_bullet_outline, color)->id;
 			}
 
 			wait(1);
@@ -240,8 +240,8 @@ static void Cirno_Perfect_Freeze(mco_coro* co) {
 		for (instance_id id : bullets) {
 			if (Bullet* b = w->find_bullet(id)) {
 				b->spd = 0;
-				b->dir = w->random.rangef(0.0f, 360.0f);
-				b->acc = w->random.rangef(0.01f, 0.015f);
+				b->dir = random_rangef(&w->rng, 0.0f, 360.0f);
+				b->acc = random_rangef(&w->rng, 0.01f, 0.015f);
 			}
 		}
 		Kira(self);
@@ -255,19 +255,19 @@ static void Cirno_Diamond_Blizzard(mco_coro* co) {
 		Repeat (30) {
 			instance_id bullets[6] = {};
 
-			float x = self->x + w->random.rangef(-50.0f, 50.0f);
-			float y = self->y + w->random.rangef(-50.0f, 50.0f);
+			float x = self->x + random_rangef(&w->rng, -50.0f, 50.0f);
+			float y = self->y + random_rangef(&w->rng, -50.0f, 50.0f);
 
-			int n = 4 + w->random.next() % 3;
+			int n = random_range(&w->rng, 4, 7);
 			for (int i = 0; i < n; i++) {
-				bullets[i] = ShootExt(x, y, w->random.rangef(4.0f, 5.0f), w->random.rangef(0.0f, 360.0f), 0, spr_bullet_pellet, 6)->id;
+				bullets[i] = ShootExt(x, y, random_rangef(&w->rng, 4.0f, 5.0f), random_rangef(&w->rng, 0.0f, 360.0f), 0, spr_bullet_pellet, 6)->id;
 			}
 
 			wait(4);
 
 			for (int i = 0; i < n; i++) {
 				if (Bullet* b = w->find_bullet(bullets[i])) {
-					b->spd = w->random.rangef(1.0f, 2.0f);
+					b->spd = random_rangef(&w->rng, 1.0f, 2.0f);
 				}
 			}
 		}

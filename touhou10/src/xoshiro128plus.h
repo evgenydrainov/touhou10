@@ -25,50 +25,112 @@ right shifts to extract subsets of bits.
 The state must be seeded so that it is not everywhere zero. */
 
 struct xoshiro128plus {
-	uint32_t s[4];
-
-	static uint32_t rotl(const uint32_t x, int k) {
-		return (x << k) | (x >> (32 - k));
-	}
-
-	uint32_t next(void) {
-		const uint32_t result = s[0] + s[3];
-
-		const uint32_t t = s[1] << 9;
-
-		s[2] ^= s[0];
-		s[3] ^= s[1];
-		s[1] ^= s[2];
-		s[0] ^= s[3];
-
-		s[2] ^= t;
-
-		s[3] = rotl(s[3], 11);
-
-		return result;
-	}
-
-	// 
-	// [a, b)
-	// Lower bound inclusive, upper bound exclusive.
-	// 
-	float rangef(float a, float b) {
-		uint32_t x = next();
-
-		float f = (x >> 8) * 0x1.0p-24f;
-		Assert(f >= 0);
-		Assert(f < 1);
-
-		float result = a + (b - a) * f;
-		Assert(result >= a);
-		Assert(result < b || (b - a == 0)); // Range can be zero.
-
-		return result;
-	}
-
-	template <typename T, size_t N>
-	T index(T (&arr)[N]) {
-		static_assert(N < (size_t)UINT32_MAX, "");
-		return arr[next() % (uint32_t)N];
-	}
+	u32 s[4];
 };
+
+inline u32 random_next(xoshiro128plus* rng) {
+	auto rotl = [](const u32 x, int k) -> u32 {
+		return (x << k) | (x >> (32 - k));
+	};
+
+	const u32 result = rng->s[0] + rng->s[3];
+
+	const u32 t = rng->s[1] << 9;
+
+	rng->s[2] ^= rng->s[0];
+	rng->s[3] ^= rng->s[1];
+	rng->s[1] ^= rng->s[2];
+	rng->s[0] ^= rng->s[3];
+
+	rng->s[2] ^= t;
+
+	rng->s[3] = rotl(rng->s[3], 11);
+
+	return result;
+}
+
+// 
+// [a, b)
+// Lower bound inclusive, upper bound exclusive.
+// 
+inline float random_rangef(xoshiro128plus* rng, float a, float b) {
+	u32 x = random_next(rng); // @Note: don't touch the RNG if range is zero?
+
+	float f = (x >> 8) * 0x1.0p-24f;
+	// Assert(f >= 0);
+	// Assert(f < 1);
+
+	float result = a + (b - a) * f;
+	Assert(result >= a);
+	Assert(result < b || (b - a == 0)); // Range can be zero.
+
+	return result;
+}
+
+// 
+// [a, b)
+// Lower bound inclusive, upper bound exclusive.
+// 
+inline int random_range(xoshiro128plus* rng, int a, int b) {
+	u32 x = random_next(rng); // @Note: don't touch the RNG if range is zero?
+
+	if (a > b) {
+		int temp = a;
+		a = b;
+		b = temp;
+	}
+
+	int range = b - a;
+	if (range == 0) return a;
+
+	int result = a + (x % range);
+	return result;
+}
+
+template <typename T, size_t N>
+inline T random_choose(xoshiro128plus* rng, T (&arr)[N]) {
+	static_assert(N >= 1, "");
+	static_assert(N < (size_t)UINT32_MAX, "");
+
+	T result = arr[random_next(rng) % (u32)N];
+
+	return result;
+}
+
+inline bool random_chance(xoshiro128plus* rng, float chance) {
+	float f = random_rangef(rng, 0, 1);
+	return f < chance;
+}
+
+// 
+// Weighted Random
+// 
+
+template <typename T>
+struct Random_Weight {
+	T value;
+	float weight;
+};
+
+template <typename T, size_t N>
+inline T random_weighted(xoshiro128plus* rng, Random_Weight<T> (&arr)[N]) {
+	static_assert(N >= 1, "");
+
+	float total_weight = 0;
+	for (size_t i = 0; i < N; i++) {
+		total_weight += arr[i].weight;
+	}
+
+	float f = random_rangef(rng, 0, total_weight);
+
+	for (size_t i = 0; i < N; i++) {
+		if (f < arr[i].weight) {
+			return arr[i].value;
+		}
+
+		f -= arr[i].weight;
+	}
+
+	Assert(false);
+	return arr[N - 1].value;
+}

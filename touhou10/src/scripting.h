@@ -236,8 +236,8 @@ static float DirToPlayer(Object* o) {
 }
 
 static void Wander(Object* o) {
-	float target_x = w->random.rangef(32.0f, (float)PLAY_AREA_W - 32.0f);
-	float target_y = w->random.rangef(32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
+	float target_x = random_rangef(&w->rng, 32.0f, (float)PLAY_AREA_W - 32.0f);
+	float target_y = random_rangef(&w->rng, 32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
 	float x = o->x;
 	float y = o->y;
 	target_x = clamp(target_x, x - 80.0f, x + 80.0f);
