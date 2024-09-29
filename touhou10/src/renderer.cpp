@@ -495,7 +495,7 @@ vec2 Renderer::draw_text(Font* font, string text, float x, float y,
 
 vec2 Renderer::measure_text(Font* font, string text, bool only_one_line) {
 	float w = 0;
-	float h = font->size;
+	float h = (float) font->size;
 
 	float ch_x = 0;
 	float ch_y = 0;

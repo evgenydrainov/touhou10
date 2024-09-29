@@ -71,7 +71,7 @@ void Console::event(SDL_Event* ev) {
 					if (history_index != -1) {
 						memcpy(user_input_line_buf, command_history_buf[history_index], command_history[history_index].count);
 						user_input_line.count = command_history[history_index].count;
-						caret = user_input_line.count;
+						caret = (int) user_input_line.count;
 					} else {
 						user_input_line.count = 0;
 						caret = 0;
@@ -83,7 +83,7 @@ void Console::event(SDL_Event* ev) {
 					if (history_index != -1) {
 						memcpy(user_input_line_buf, command_history_buf[history_index], command_history[history_index].count);
 						user_input_line.count = command_history[history_index].count;
-						caret = user_input_line.count;
+						caret = (int) user_input_line.count;
 					} else {
 						user_input_line.count = 0;
 						caret = 0;

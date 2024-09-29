@@ -549,7 +549,6 @@ void Game::run() {
 
 		float delta = 60.0f / (float)TARGET_FPS;
 
-		// @Todo: Coroutines broken
 		if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
 		if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
 
@@ -652,10 +651,10 @@ void Game::draw(float delta) {
 		game_viewport_scale = game_texture_scale;
 #endif
 
-		play_area_viewport.x = game_viewport.x + PLAY_AREA_X * game_viewport_scale;
-		play_area_viewport.y = game_viewport.y + PLAY_AREA_Y * game_viewport_scale;
-		play_area_viewport.w = PLAY_AREA_W * game_viewport_scale;
-		play_area_viewport.h = PLAY_AREA_H * game_viewport_scale;
+		play_area_viewport.x = (int) (game_viewport.x + PLAY_AREA_X * game_viewport_scale);
+		play_area_viewport.y = (int) (game_viewport.y + PLAY_AREA_Y * game_viewport_scale);
+		play_area_viewport.w = (int) (PLAY_AREA_W * game_viewport_scale);
+		play_area_viewport.h = (int) (PLAY_AREA_H * game_viewport_scale);
 		play_area_viewport_scale = game_viewport_scale;
 	}
 
@@ -680,7 +679,7 @@ void Game::draw(float delta) {
 	}
 
 	glViewport(0, 0, backbuffer_width, backbuffer_height);
-	r->proj = glm::ortho<float>(0, backbuffer_width, backbuffer_height, 0);
+	r->proj = glm::ortho(0.0f, (float)backbuffer_width, (float)backbuffer_height, 0.0f);
 
 #if RENDER_GAME_TO_TEXTURE
 	glClearColor(0, 0, 0, 1);
