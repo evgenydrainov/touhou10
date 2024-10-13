@@ -1,11 +1,15 @@
 {
 	"cmake.configureSettings": {
-		"TEMP_USE_CUSTOM_SDL": "OFF",
+		// Example
+		// "SDL2_INCLUDE_DIRS": "",
+		// "SDL2_LIBRARIES": "",
+		// "SDL2_MIXER_INCLUDE_DIRS": "",
+		// "SDL2_MIXER_LIBRARIES": "",
 	},
 	"cmake.debugConfig": {
 		"cwd": "${workspaceFolder}",
 		"environment": [
-			// Uncomment if using TEMP_USE_CUSTOM_SDL
+			// Example
 			// {
 			// 	"name": "LD_LIBRARY_PATH",
 			// 	"value": "${env:HOME}/source/repos/SDL-2.30.6/build:${env:HOME}/source/repos/SDL_mixer-2.8.0/build",

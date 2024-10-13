@@ -121,7 +121,7 @@ void Renderer::load_shaders() {
 				(int)source.count,
 			};
 
-			Assert(ArrayLength(sources) == ArrayLength(lengths));
+			static_assert(ArrayLength(sources) == ArrayLength(lengths));
 
 			glShaderSource(shader, ArrayLength(sources), sources, lengths);
 

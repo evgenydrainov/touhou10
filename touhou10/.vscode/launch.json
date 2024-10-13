@@ -13,7 +13,7 @@
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [
-				// Uncomment if using TEMP_USE_CUSTOM_SDL
+				// Example
 				// {
 				// 	"name": "LD_LIBRARY_PATH",
 				// 	"value": "${env:HOME}/source/repos/SDL-2.30.6/build:${env:HOME}/source/repos/SDL_mixer-2.8.0/build:${env:LD_LIBRARY_PATH}",

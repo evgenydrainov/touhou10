@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.20)
 project(touhou10)
 
 # 
@@ -18,31 +18,27 @@ add_compile_definitions($<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 # 
 # Include stuff.
 # 
-include_directories(touhou10 ../external/glad/include)
-include_directories(touhou10 ../external/glm/include)
-include_directories(touhou10 ../external/minicoro/include)
-include_directories(touhou10 ../external/qoi/include)
-include_directories(touhou10 ../external/stb/include)
+include_directories(${PROJECT_NAME} ../external/glad/include)
+include_directories(${PROJECT_NAME} ../external/glm/include)
+include_directories(${PROJECT_NAME} ../external/minicoro/include)
+include_directories(${PROJECT_NAME} ../external/qoi/include)
+include_directories(${PROJECT_NAME} ../external/stb/include)
 
 # 
-# Include SDL.
-# See .vscode/launch.json and .vscode/settings.json if using TEMP_USE_CUSTOM_SDL
+# You can set SDL2_INCLUDE_DIRS, SDL2_LIBRARIES, SDL2_MIXER_INCLUDE_DIRS and SDL2_MIXER_LIBRARIES.
+# If you change SDL2_LIBRARIES, you'll probably also want to setup LD_LIBRARY_PATH.
+# See .vscode/
 # 
-if(NOT DEFINED TEMP_USE_CUSTOM_SDL)
-	set(TEMP_USE_CUSTOM_SDL OFF)
+if(NOT SDL2_INCLUDE_DIRS)
+	find_package(SDL2 REQUIRED)
 endif()
 
-MESSAGE(STATUS "INFO: TEMP_USE_CUSTOM_SDL is ${TEMP_USE_CUSTOM_SDL}")
+MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
+include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})
 
-if(NOT TEMP_USE_CUSTOM_SDL)
-	find_package(SDL2 REQUIRED)
-	MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
-	MESSAGE(STATUS "INFO: SDL2_LIBRARIES is ${SDL2_LIBRARIES}")
-
-	include_directories(touhou10 ${SDL2_INCLUDE_DIRS})
-else()
-	include_directories(touhou10 $ENV{HOME}/source/repos/SDL-2.30.6/include)
-	include_directories(touhou10 $ENV{HOME}/source/repos/SDL_mixer-2.8.0/include)
+if(SDL2_MIXER_INCLUDE_DIRS)
+	MESSAGE(STATUS "INFO: SDL2_MIXER_INCLUDE_DIRS is ${SDL2_MIXER_INCLUDE_DIRS}")
+	include_directories(${PROJECT_NAME} ${SDL2_MIXER_INCLUDE_DIRS})
 endif()
 
 set(SOURCES
@@ -68,14 +64,16 @@ set(SOURCES
 	src/title_screen.cpp
 	src/world.cpp)
 
-add_executable(touhou10 ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-if(NOT TEMP_USE_CUSTOM_SDL)
-	target_link_libraries(touhou10 ${SDL2_LIBRARIES})
-	target_link_libraries(touhou10 SDL2_mixer)
+MESSAGE(STATUS "INFO: SDL2_LIBRARIES is ${SDL2_LIBRARIES}")
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+
+if(SDL2_MIXER_LIBRARIES)
+	MESSAGE(STATUS "INFO: SDL2_MIXER_LIBRARIES is ${SDL2_MIXER_LIBRARIES}")
+	target_link_libraries(${PROJECT_NAME} ${SDL2_MIXER_LIBRARIES})
 else()
-	target_link_libraries(touhou10 "-L$ENV{HOME}/source/repos/SDL-2.30.6/build      -lSDL2")
-	target_link_libraries(touhou10 "-L$ENV{HOME}/source/repos/SDL_mixer-2.8.0/build -lSDL2_mixer")
+	target_link_libraries(${PROJECT_NAME} SDL2_mixer)
 endif()
 
-target_precompile_headers(touhou10 PRIVATE src/stdafx.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE src/stdafx.h)

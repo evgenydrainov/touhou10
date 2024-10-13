@@ -187,6 +187,10 @@ void Game::init() {
 		});
 
 		log_info("Loaded GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+
+		if (version == 0) {
+			panic_and_abort("Couldn't load OpenGL.");
+		}
 	}
 
 
