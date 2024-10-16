@@ -84,6 +84,12 @@ void Renderer::destroy() {
 	glDeleteVertexArrays(1, &batch_vao);
 }
 
+#ifdef __EMSCRIPTEN__
+#define VERSION_STRING "#version 300 es\n"
+#else
+#define VERSION_STRING "#version 330 core\n"
+#endif
+
 void Renderer::load_shaders() {
 
 	// 
@@ -100,11 +106,11 @@ void Renderer::load_shaders() {
 			string define_string = {};
 			if (type == GL_VERTEX_SHADER) {
 				define_string =
-					"#version 330 core\n"
+					VERSION_STRING
 					"#define VERTEX_SHADER\n";
 			} else if (type == GL_FRAGMENT_SHADER) {
 				define_string =
-					"#version 330 core\n"
+					VERSION_STRING
 					"#define FRAGMENT_SHADER\n";
 			}
 

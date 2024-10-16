@@ -2,6 +2,15 @@
 
 #include "game.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+static void emscripten_main_loop() {
+	g->tick();
+}
+
+#endif
+
 int main(int argc, char* argv[]) {
 	Game game = {};
 
@@ -10,7 +19,11 @@ int main(int argc, char* argv[]) {
 
 	g->init();
 
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(emscripten_main_loop, 60, 1);
+#else
 	g->run();
+#endif
 
 	g->destroy();
 
@@ -23,10 +36,11 @@ int main(int argc, char* argv[]) {
 #define MINICORO_IMPL
 #define MCO_DEFAULT_STACK_SIZE 8*1024
 #define MCO_MIN_STACK_SIZE 0
-#include <minicoro/minicoro.h>
+#include <minicoro/minicoro.h> // emscripten has to be included before minicoro
 #undef MINICORO_IMPL
 
 #define GLAD_GL_IMPLEMENTATION
+#define GLAD_GLES2_IMPLEMENTATION
 #include <glad/gl.h>
 #undef GLAD_GL_IMPLEMENTATION
 

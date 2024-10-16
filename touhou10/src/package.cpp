@@ -145,7 +145,10 @@ u8* Package::get_file(string name, size_t* out_size) {
 		SDL_RWops* src = SDL_RWFromFile(c_str, "rb");
 		defer { if (src) SDL_RWclose(src); };
 
-		Assert(src);
+		if (!src) {
+			log_error("Couldn't open file \"" Str_Fmt "\"", Str_Arg(name));
+			return nullptr;
+		}
 
 		if (!temp_buffer_for_files) {
 			log_error("Package must be open to read files.");

@@ -99,6 +99,7 @@ struct Game {
 	double fps;
 	double update_took;
 	double draw_took;
+	double prev_time;
 
 	bool quit;
 	bool show_debug_info;
@@ -108,6 +109,7 @@ struct Game {
 	void init();
 	void destroy();
 	void run();
+	void tick();
 
 	void update(float delta);
 	void draw(float delta);

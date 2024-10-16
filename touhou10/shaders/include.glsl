@@ -29,6 +29,10 @@ vec4 apply_directional_light(vec4 color, mat4 model, vec3 normal) {
 
 #ifdef FRAGMENT_SHADER
 
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 uniform float u_FogStart;   // @Todo: don't pay for what you don't use
 uniform float u_FogEnd;
 uniform vec4  u_FogColor;

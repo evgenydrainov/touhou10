@@ -86,6 +86,7 @@ static string sounds_filenames[] = {
 	"sounds/kira.wav",
 };
 
+#define TARGET_FPS 60
 
 void Game::init() {
 	// SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
@@ -170,21 +171,39 @@ void Game::init() {
 
 	SDL_SetWindowMinimumSize(window, GAME_W, GAME_H);
 
+
+#ifdef __EMSCRIPTEN__
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
+
 
 #if TH_DEBUG
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
+#ifdef __EMSCRIPTEN__
+#error "No debug build for web yet."
+#endif
 #endif
 
 	gl_context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, gl_context);
 
 	{
+#ifdef __EMSCRIPTEN__
+		int version = gladLoadGLES2([](const char* name) {
+			return (GLADapiproc) SDL_GL_GetProcAddress(name);
+		});
+#else
 		int version = gladLoadGL([](const char* name) {
 			return (GLADapiproc) SDL_GL_GetProcAddress(name);
 		});
+#endif
 
 		log_info("Loaded GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
@@ -434,10 +453,10 @@ void Game::init() {
 
 	console.init();
 
+	prev_time = GetTime() - (1.0 / (double)TARGET_FPS);
 }
 
 void Game::destroy() {
-
 	console.destroy();
 
 	if (music) Mix_FreeMusic(music);
@@ -471,113 +490,112 @@ double GetTime() {
 	return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
 }
 
-#define TARGET_FPS 60
-
 void Game::run() {
-
-	double prev_time = GetTime() - (1.0 / (double)TARGET_FPS);
-
 	while (!quit) {
+		tick();
+	}
+}
 
-		double time = GetTime();
-		double frame_end_time = time + (1.0 / (double)TARGET_FPS);
-		fps = 1.0 / (time - prev_time);
-		prev_time = time;
+void Game::tick() {
+	double time = GetTime();
+	double frame_end_time = time + (1.0 / (double)TARGET_FPS);
+	fps = 1.0 / (time - prev_time);
+	prev_time = time;
 
-		memset(key_pressed, 0, sizeof(key_pressed));
-		memset(key_repeat, 0, sizeof(key_repeat));
+	memset(key_pressed, 0, sizeof(key_pressed));
+	memset(key_repeat, 0, sizeof(key_repeat));
 
-		skip_frame = frame_advance;
+	skip_frame = frame_advance;
 
-		{
-			SDL_Event ev;
-			while (SDL_PollEvent(&ev)) {
-				switch (ev.type) {
-					case SDL_QUIT: {
-						quit = true;
-						break;
-					}
-
-					case SDL_KEYDOWN: {
-						SDL_Scancode scancode = ev.key.keysym.scancode;
-
-						switch (scancode) {
-							case SDL_SCANCODE_F1: {
-								show_debug_info ^= true;
-								break;
-							}
-
-							case SDL_SCANCODE_F4: {
-								if (ev.key.keysym.mod != 0) {
-									break;
-								}
-								if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
-									SDL_SetWindowFullscreen(window, 0);
-								} else {
-									SDL_DisplayMode mode;
-									int display = SDL_GetWindowDisplayIndex(window);
-									SDL_GetDesktopDisplayMode(display, &mode);
-									SDL_SetWindowDisplayMode(window, &mode);
-									SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-								}
-								break;
-							}
-
-							case SDL_SCANCODE_F5: {
-								frame_advance = true;
-								skip_frame = false;
-								break;
-							}
-
-							case SDL_SCANCODE_F6: {
-								frame_advance = false;
-								break;
-							}
-						}
-
-						if (scancode < SDL_SCANCODE_UP + 1) {
-							if (ev.key.repeat) {
-								key_repeat[scancode / 32] |= 1 << (scancode % 32);
-							} else {
-								key_pressed[scancode / 32] |= 1 << (scancode % 32);
-							}
-						}
-
-						break;
-					}
+	{
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {
+			switch (ev.type) {
+				case SDL_QUIT: {
+					quit = true;
+					break;
 				}
 
-				console.event(&ev);
+				case SDL_KEYDOWN: {
+					SDL_Scancode scancode = ev.key.keysym.scancode;
+
+					switch (scancode) {
+						case SDL_SCANCODE_F1: {
+							show_debug_info ^= true;
+							break;
+						}
+
+						case SDL_SCANCODE_F4: {
+							if (ev.key.keysym.mod != 0) {
+								break;
+							}
+							if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
+								SDL_SetWindowFullscreen(window, 0);
+							} else {
+								SDL_DisplayMode mode;
+								int display = SDL_GetWindowDisplayIndex(window);
+								SDL_GetDesktopDisplayMode(display, &mode);
+								SDL_SetWindowDisplayMode(window, &mode);
+								SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+							}
+							break;
+						}
+
+						case SDL_SCANCODE_F5: {
+							frame_advance = true;
+							skip_frame = false;
+							break;
+						}
+
+						case SDL_SCANCODE_F6: {
+							frame_advance = false;
+							break;
+						}
+					}
+
+					if (scancode < SDL_SCANCODE_UP + 1) {
+						if (ev.key.repeat) {
+							key_repeat[scancode / 32] |= 1 << (scancode % 32);
+						} else {
+							key_pressed[scancode / 32] |= 1 << (scancode % 32);
+						}
+					}
+
+					break;
+				}
 			}
-		}
 
-		float delta = 60.0f / (float)TARGET_FPS;
-
-		if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
-		if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
-
-		update(delta);
-
-		// @Temp Don't draw if minimized?
-		if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
-			draw(delta);
-		}
-
-		// 
-		// If you don't swap the window when window is minimized,
-		// then you won't be able to alt-tab from it in fullscreen.
-		// 
-		SDL_GL_SwapWindow(window);
-
-		double time_left = frame_end_time - GetTime();
-		if (time_left > 0.0) {
-			double time_to_sleep = time_left * 0.95;
-			SDL_Delay((u32)(time_to_sleep * 1000.0));
-
-			while (GetTime() < frame_end_time) {}
+			console.event(&ev);
 		}
 	}
 
+	float delta = 60.0f / (float)TARGET_FPS;
+
+	if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
+	if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
+
+	update(delta);
+
+	// @Temp Don't draw if minimized?
+	if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
+		draw(delta);
+	}
+
+	// 
+	// If you don't swap the window when window is minimized,
+	// then you won't be able to alt-tab from it in fullscreen.
+	// 
+	SDL_GL_SwapWindow(window);
+
+#ifndef __EMSCRIPTEN__
+	double time_left = frame_end_time - GetTime();
+	if (time_left > 0.0) {
+		double time_to_sleep = time_left * 0.95;
+		SDL_Delay((u32)(time_to_sleep * 1000.0));
+
+		while (GetTime() < frame_end_time) {}
+	}
+#endif
 }
 
 void Game::update(float delta) {

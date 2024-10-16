@@ -60,8 +60,40 @@ struct Rectf {
 // Logging and assert
 // 
 
-#define log_info(fmt, ...)  SDL_LogInfo (SDL_LOG_CATEGORY_APPLICATION, fmt, ##__VA_ARGS__)
-#define log_error(fmt, ...) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, fmt, ##__VA_ARGS__)
+// @Todo: GCC does not allow 'format' attribute in this position on a function definition
+inline void log_info(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) SDL_PRINTF_VARARG_FUNC(1) {
+	va_list va;
+	va_start(va, fmt);
+
+#ifdef __EMSCRIPTEN__
+	// 
+	// printf is better than SDL_Log on emscripten...
+	// 
+	vprintf(fmt, va);
+	printf("\n");
+#else
+	SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, va);
+#endif
+
+	va_end(va);
+}
+
+inline void log_error(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) SDL_PRINTF_VARARG_FUNC(1) {
+	va_list va;
+	va_start(va, fmt);
+
+#ifdef __EMSCRIPTEN__
+	// 
+	// printf is better than SDL_Log on emscripten...
+	// 
+	vfprintf(stderr, fmt, va);
+	fprintf(stderr, "\n");
+#else
+	SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, va);
+#endif
+
+	va_end(va);
+}
 
 //
 // For now, asserts will be enabled in release build. May help with finding bugs.
