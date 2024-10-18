@@ -27,7 +27,7 @@ include_directories(${PROJECT_NAME} ../external/stb/include)
 # 
 # You can set SDL2_INCLUDE_DIRS, SDL2_LIBRARIES, SDL2_MIXER_INCLUDE_DIRS and SDL2_MIXER_LIBRARIES.
 # If you change SDL2_LIBRARIES, you'll probably also want to setup LD_LIBRARY_PATH.
-# See .vscode/
+# See .vscode/settings.json and .vscode/launch.json
 # 
 if(NOT SDL2_INCLUDE_DIRS)
 	find_package(SDL2 REQUIRED)
