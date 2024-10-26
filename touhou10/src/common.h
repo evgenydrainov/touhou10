@@ -61,7 +61,7 @@ struct Rectf {
 // 
 
 // @Todo: GCC does not allow 'format' attribute in this position on a function definition
-inline void log_info(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) SDL_PRINTF_VARARG_FUNC(1) {
+inline void SDL_PRINTF_VARARG_FUNC(1) log_info(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
 
@@ -78,7 +78,7 @@ inline void log_info(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) SDL_PRINTF_V
 	va_end(va);
 }
 
-inline void log_error(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) SDL_PRINTF_VARARG_FUNC(1) {
+inline void SDL_PRINTF_VARARG_FUNC(1) log_error(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
 
