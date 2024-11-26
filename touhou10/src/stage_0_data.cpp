@@ -121,7 +121,7 @@ static const u32 indices[] = {
 	2, 3, 0,
 };
 
-static char vert_src[] = R"(
+static const char vert_src[] = R"(
 #version 330 core
 
 #ifdef GL_ES
@@ -152,7 +152,7 @@ void main() {
 }
 )";
 
-static char frag_src[] = R"(
+static const char frag_src[] = R"(
 #version 330 core
 
 #ifdef GL_ES
@@ -251,6 +251,7 @@ void Stage_0_Init_Background() {
 		u32 frag = compile_shader(GL_FRAGMENT_SHADER, frag_src);
 		defer { glDeleteShader(frag); };
 
+		// @Leak
 		program = link_program(vert, frag);
 	}
 }

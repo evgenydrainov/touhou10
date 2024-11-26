@@ -1,6 +1,7 @@
 #include "scripting.h"
 
 #include "renderer.h"
+#include "util.h"
 
 void Stage_1_Script(mco_coro* co) {
 	wait(60);
@@ -10,11 +11,10 @@ void Stage_1_Script(mco_coro* co) {
 
 
 static void draw_world_origin_axis(float delta) {
-	#if 0
 	static u32 vao;
 
 	const float size = 10;
-	const Vertex vertices[] = {
+	static const Vertex vertices[] = {
 		{{0,    0, 0}, {}, color_red},
 		{{size, 0, 0}, {}, color_red},
 
@@ -30,7 +30,7 @@ static void draw_world_origin_axis(float delta) {
 		vao = create_vertex_array_obj(vertices, ArrayLength(vertices));
 	}
 
-	u32 program = r->shader_color_program;
+	u32 program = renderer.texture_shader;
 
 	glUseProgram(program);
 	defer { glUseProgram(0); };
@@ -40,6 +40,9 @@ static void draw_world_origin_axis(float delta) {
 	int u_MVP = glGetUniformLocation(program, "u_MVP");
 	glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
+	glBindTexture(GL_TEXTURE_2D, renderer.stub_texture);
+	defer { glBindTexture(GL_TEXTURE_2D, 0); };
+
 	glBindVertexArray(vao);
 	defer { glBindVertexArray(0); };
 
@@ -47,13 +50,118 @@ static void draw_world_origin_axis(float delta) {
 	defer { glDisable(GL_DEPTH_TEST); };
 
 	glDrawArrays(GL_LINES, 0, ArrayLength(vertices));
-	r->draw_calls++;
-	#endif
+	renderer.curr_draw_calls++;
 }
 
 
+static const char vert_src[] = R"(
+#version 330 core
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+layout(location = 0) in vec3 in_Position;
+layout(location = 1) in vec3 in_Normal;
+layout(location = 2) in vec4 in_Color;
+layout(location = 3) in vec2 in_TexCoord;
+
+out vec4 v_Color;
+out vec2 v_TexCoord;
+out vec3 v_MVPposition;
+
+uniform mat4 u_Model;
+uniform mat4 u_View;
+uniform mat4 u_Proj;
+
+
+/* DIRECTIONAL LIGHTING */
+
+uniform vec3 u_LightDirection;
+// uniform vec4 u_LightColor;
+
+vec4 apply_directional_light(vec4 color, mat4 model, vec3 normal) {
+	// vec4 lightAmbient = vec4(0.0, 0.0, 0.0, 1.0);
+	vec3 lightDir = normalize(-u_LightDirection);
+	vec3 worldNormal = normalize(model * vec4(normal, 0.0)).xyz;
+
+	float lightAngleDifference = max(dot(worldNormal, lightDir), 0.0);
+
+	// color.rgb *= min(lightAmbient + u_LightColor * lightAngleDifference, vec4(1.0)).rgb;
+
+	float low = 0.5;
+	color.rgb *= low + ((1.0 - low) * lightAngleDifference);
+	return color;
+}
+
+/* DIRECTIONAL LIGHTING */
+
+
+void main() {
+	mat4 MVP = (u_Proj * u_View) * u_Model;
+
+	gl_Position = MVP * vec4(in_Position, 1.0);
+
+	vec4 color = in_Color;
+
+	color = apply_directional_light(color, u_Model, in_Normal);
+
+	v_Color       = color;
+	v_TexCoord    = in_TexCoord;
+	v_MVPposition = gl_Position.xyz;
+}
+)";
+
+static const char frag_src[] = R"(
+#version 330 core
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+layout(location = 0) out vec4 FragColor;
+
+in vec4 v_Color;
+in vec2 v_TexCoord;
+in vec3 v_MVPposition;
+
+uniform sampler2D u_Texture;
+
+
+/* FOG */
+
+uniform float u_FogStart;
+uniform float u_FogEnd;
+uniform vec4  u_FogColor;
+
+vec4 apply_fog(vec4 color, vec3 MVPposition) {
+	const vec3  FogOrigin = vec3(0.0, 0.0, 0.0);
+	const float FogMax    = 0.95;
+
+	float dist = length(MVPposition - FogOrigin);
+	float fraction = clamp((dist - u_FogStart) / (u_FogEnd - u_FogStart), 0.0, FogMax);
+
+	color = mix(color, u_FogColor, fraction);
+	return color;
+}
+
+/* FOG */
+
+
+void main() {
+	vec4 color = texture(u_Texture, v_TexCoord);
+
+	color *= v_Color;
+
+	color = apply_fog(color, v_MVPposition);
+
+	FragColor = color;
+}
+)";
+
 static u32 vao;
 static int num_vertices;
+static u32 program;
 
 void Stage_1_Init_Background() {
 	world.d3d.cam_pos = {0, 10.0f, 10.0f};
@@ -64,11 +172,23 @@ void Stage_1_Init_Background() {
 		// @Leak
 		vao = load_3d_model_from_obj_file("models/pcb_youmu_stairs.obj", &num_vertices);
 	}
+
+	if (!program) {
+		u32 vert = compile_shader(GL_VERTEX_SHADER, vert_src);
+		defer { glDeleteShader(vert); };
+
+		u32 frag = compile_shader(GL_FRAGMENT_SHADER, frag_src);
+		defer { glDeleteShader(frag); };
+
+		// @Leak
+		program = link_program(vert, frag);
+	}
 }
 
 void Stage_1_Draw_Background(float delta) {
-	#if 0
 	const vec4 fog_color = get_color(0xB08190FFu);
+
+	break_batch();
 
 	glClearColor(fog_color.r, fog_color.g, fog_color.b, fog_color.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -78,8 +198,6 @@ void Stage_1_Draw_Background(float delta) {
 	}
 
 	{
-		u32 program = r->shader_3d_program;
-
 		glUseProgram(program);
 		defer { glUseProgram(0); };
 
@@ -106,7 +224,7 @@ void Stage_1_Draw_Background(float delta) {
 		glUniform4fv(u_FogColor, 1, &fog_color[0]);
 		glUniform3f(u_LightDirection, 0, -1, 0);
 
-		glBindTexture(GL_TEXTURE_2D, GetTexture(tex_pcb_youmu_stairs)->ID);
+		glBindTexture(GL_TEXTURE_2D, get_texture(tex_pcb_youmu_stairs).ID);
 		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glBindVertexArray(vao);
@@ -119,7 +237,6 @@ void Stage_1_Draw_Background(float delta) {
 		defer { glDisable(GL_CULL_FACE); };
 
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
-		r->draw_calls++;
+		renderer.curr_draw_calls++;
 	}
-	#endif
 }

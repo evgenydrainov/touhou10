@@ -4,6 +4,7 @@
 #include "renderer.h"
 #include "package.h"
 #include "console.h"
+#include "util.h"
 
 #include <qoi/qoi.h>
 
@@ -213,17 +214,27 @@ void Game::draw(float delta) {
 		}
 	}
 
+	glViewport(0, 0, GAME_W, GAME_H);
+	renderer.proj_mat = glm::ortho<float>(0, GAME_W, GAME_H, 0);
+
+	// draw fps
+	{
+		char buf[10];
+		string str = Sprintf(buf, "%.0ffps", roundf(window.avg_fps));
+		draw_text(get_font(fnt_main), str, {35 * 16, 29 * 16});
+	}
+
 	break_batch();
 }
 
 
 void Game::late_draw(float delta) {
 	auto world_to_screen_x = [&](float x) {
-		return 0.0f; //(x + PLAY_AREA_X) * game_texture_scale + game_texture_pos.x;
+		return (x + PLAY_AREA_X) * renderer.game_texture_scale + renderer.game_texture_rect.x;
 	};
 
 	auto world_to_screen_y = [&](float y) {
-		return 0.0f; //(y + PLAY_AREA_Y) * game_texture_scale + game_texture_pos.y;
+		return (y + PLAY_AREA_Y) * renderer.game_texture_scale + renderer.game_texture_rect.y;
 	};
 
 	vec2 pos = {};
@@ -272,7 +283,7 @@ void Game::late_draw(float delta) {
 				string str = Sprintf(buf, "%d %s\n", i, filename);
 
 				vec4 color = Mix_Playing(i) ? color_white : vec4{0.5f, 0.5f, 0.5f, 1};
-				//pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y, HALIGN_LEFT, VALIGN_TOP, color);
+				pos = draw_text(get_font(fnt_main), str, pos, HALIGN_LEFT, VALIGN_TOP, color);
 			}
 
 			pos.y += 8;
@@ -297,7 +308,7 @@ void Game::late_draw(float delta) {
 								Size_Arg(world.coro_memory),
 								world.animations.count, world.animations.capacity,
 								Size_Arg(world.temp_arena_for_boss.count), Size_Arg(world.temp_arena_for_boss.capacity));
-			//pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
+			pos = draw_text(get_font(fnt_main), str, pos);
 			pos.y += 8;
 
 #define Object_Fmt "id: %" PRIX64 "\n"
@@ -323,11 +334,10 @@ void Game::late_draw(float delta) {
 									p->timer,
 									p->bomb_timer,
 									p->lazer_graze_timer);
-				//r->draw_text(GetSprite(spr_font_main), str, world_to_screen_x(p->x), world_to_screen_y(p->y));
+				draw_text(get_font(fnt_main), str, {world_to_screen_x(p->x), world_to_screen_y(p->y)});
 			}
 
 			if (!(world.boss.flags & FLAG_INSTANCE_DEAD)) {
-
 				Boss* b = &world.boss;
 
 				char buf[256];
@@ -346,15 +356,17 @@ void Game::late_draw(float delta) {
 									b->hp,
 									b->timer,
 									b->wait_timer);
-				//r->draw_text(GetSprite(spr_font_main), str, world_to_screen_x(b->x), world_to_screen_y(b->y));
+				draw_text(get_font(fnt_main), str, {world_to_screen_x(b->x), world_to_screen_y(b->y)});
 			}
 		}
 	}
 
 	if (frame_advance) {
 		string str = "F5 - Next Frame\nF6 - Disable Frame Advance Mode\n";
-		//pos = r->draw_text(GetSprite(spr_font_main), str, pos.x, pos.y);
+		pos = draw_text(get_font(fnt_main), str, pos);
 	}
+
+	break_batch();
 }
 
 
@@ -499,8 +511,7 @@ u32 load_3d_model_from_obj_file(const char* fname, int* out_num_vertices) {
 	}
 
 	*out_num_vertices = (int) vertices.count;
-	//return create_vertex_array_obj(vertices.data, vertices.count);
-	return 0;
+	return create_vertex_array_obj(vertices.data, vertices.count);
 };
 
 void stop_sound(u32 sound_index) {

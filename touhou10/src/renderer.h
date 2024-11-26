@@ -50,8 +50,11 @@ struct Renderer {
 	u32 stub_texture; // 1x1 white texture
 
 	u32 game_texture;      // Game is renderer to a framebuffer, and then the framebuffer is
+	u32 game_depth_texture;
 	u32 game_framebuffer;  // rendered to the screen.
+
 	Rect game_texture_rect;
+	float game_texture_scale;
 
 	mat4 proj_mat = {1};
 	mat4 view_mat = {1};

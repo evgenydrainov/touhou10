@@ -230,12 +230,27 @@ void init_renderer() {
 	}
 
 	{
+		glGenTextures(1, &renderer.game_depth_texture); // @Leak
+
+		glBindTexture(GL_TEXTURE_2D, renderer.game_depth_texture);
+
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, window.game_width, window.game_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	{
 		glGenFramebuffers(1, &renderer.game_framebuffer); // @Leak
 
 		glBindFramebuffer(GL_FRAMEBUFFER, renderer.game_framebuffer);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer.game_texture, 0);
-		// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, game_depth_texture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, renderer.game_depth_texture, 0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -267,7 +282,7 @@ void render_begin_frame(vec4 clear_color) {
 }
 
 void render_end_frame() {
-	break_batch();
+	Assert(renderer.vertices.count == 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -298,6 +313,7 @@ void render_end_frame() {
 		renderer.game_texture_rect.h = (int) (window.game_height * scale);
 		renderer.game_texture_rect.x = (backbuffer_width  - renderer.game_texture_rect.w) / 2;
 		renderer.game_texture_rect.y = (backbuffer_height - renderer.game_texture_rect.h) / 2;
+		renderer.game_texture_scale = scale;
 
 		{
 			int u_SourceSize = glGetUniformLocation(program, "u_SourceSize");

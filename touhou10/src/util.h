@@ -41,8 +41,8 @@ inline u32 link_program(u32 vertex_shader, u32 fragment_shader) {
 }
 
 inline u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
-								   const u32* indices, size_t num_indices,
-								   u32* out_vbo, u32* out_ebo) {
+								   const u32* indices = nullptr, size_t num_indices = 0,
+								   u32* out_vbo = nullptr, u32* out_ebo = nullptr) {
 	u32 vao = 0;
 	u32 vbo = 0;
 	u32 ebo = 0;
