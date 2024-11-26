@@ -1,26 +1,25 @@
 #pragma once
 
 static void Cirno_Draw_Spellcard_Background(float delta) {
-	Texture* t = GetTexture(tex_cirno_spellcard_background);
+	const Texture& t = get_texture(tex_cirno_spellcard_background);
 
 	vec4 color = {1, 1, 1, world.boss_spellcard_background_alpha};
-	float scale = PLAY_AREA_W / (float)t->width;
+	float scale = PLAY_AREA_W / (float)t.width;
 
 	int y = ((SDL_GetTicks() / 50) % PLAY_AREA_W) - PLAY_AREA_W;
 
-	draw_texture(*t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
+	draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
 	y += PLAY_AREA_W;
 
-	draw_texture(*t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
+	draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
 	y += PLAY_AREA_W;
 
-	draw_texture(*t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
+	draw_texture(t, {}, {0, (float)y}, {scale, scale}, {}, 0, color);
 	y += PLAY_AREA_W;
 }
 
 #if 1
 static void Cirno_Nonspell_0(mco_coro* co) {
-
 	auto shoot_radial_bullets = [&]() {
 		ShootRadial(17, 360.0f / 17.0f, [&]() {
 			return Shoot(3.5f, DirToPlayer(self), 0.0f, spr_bullet_outline, 6);

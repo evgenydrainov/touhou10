@@ -2,9 +2,9 @@
 
 Texture texture_data[NUM_TEXTURES];
 
-Texture* GetTexture(u32 texture_index) {
+const Texture& get_texture(u32 texture_index) {
 	Assert(texture_index < NUM_TEXTURES);
-	return &texture_data[texture_index];
+	return texture_data[texture_index];
 }
 
 const Sprite& get_sprite(u32 sprite_index) {
@@ -24,7 +24,7 @@ Mix_Chunk* GetSound(u32 sound_index) {
 	return sound_data[sound_index];
 }
 
-Font* GetFont(u32 font_index) {
+const Font& get_font(u32 font_index) {
 	Assert(font_index < NUM_FONTS);
-	return &font_data[font_index];
+	return font_data[font_index];
 }

@@ -22,6 +22,8 @@ struct Vertex {
 	vec2 uv;
 };
 
+void set_vertex_attribs();
+
 enum RenderMode {
 	MODE_NONE,
 	MODE_QUADS,

@@ -4,8 +4,6 @@
 #include "renderer.h"
 #include "game.h"
 
-#include <glad/gl.h>
-
 #define MENU_SIZE         3
 #define OPTIONS_MENU_SIZE 3
 

@@ -94,6 +94,6 @@ void menu_draw(Menu* menu, int num_items,
 			halign = HALIGN_CENTER;
 		}
 
-		draw_text(game.font_main, labels[i], {x, y}, halign, VALIGN_TOP, color);
+		draw_text(get_font(fnt_main), labels[i], {x, y}, halign, VALIGN_TOP, color);
 	}
 }

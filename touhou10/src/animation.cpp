@@ -44,13 +44,13 @@ void Animation::draw(float delta) {
 		vec4 modulate = get_track_value(sprite_track->modulate, time, color_white);
 		vec2 scale    = get_track_value(sprite_track->scale,    time, {1, 1});
 
-		Texture* t = GetTexture(sprite_track->texture_index);
+		const Texture& t = get_texture(sprite_track->texture_index);
 
 		vec2 origin = {
-			t->width  / 2.0f,
-			t->height / 2.0f,
+			t.width  / 2.0f,
+			t.height / 2.0f,
 		};
 
-		draw_texture(*t, {}, position, scale, origin, 0, modulate);
+		draw_texture(t, {}, position, scale, origin, 0, modulate);
 	}
 }

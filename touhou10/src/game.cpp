@@ -3,6 +3,7 @@
 #include "window_creation.h"
 #include "renderer.h"
 #include "package.h"
+#include "console.h"
 
 #include <qoi/qoi.h>
 
@@ -31,8 +32,6 @@ static const char* sounds_filenames[] = {
 	"sounds/spellcard.wav",
 	"sounds/kira.wav",
 };
-
-#define TARGET_FPS 60
 
 void Game::init() {
 	Mix_Init(MIX_INIT_MP3);
@@ -87,13 +86,13 @@ void Game::init() {
 
 	// load textures
 	{
-		static_assert(NUM_TEXTURES == 12, "");
+		static_assert(NUM_TEXTURES == 13, "");
 
 		// @Leak
 		load_texture_from_file(&texture_data[tex_atlas_0],                     "textures/atlas_0.png", FILTER_FOR_SPRITES);
 		load_texture_from_file(&texture_data[tex_eosd_misty_lake],             "textures/eosd_misty_lake.png", GL_LINEAR, GL_MIRRORED_REPEAT);
 		load_texture_from_file(&texture_data[tex_cirno_spellcard_background],  "textures/cirno_spellcard_background.png");
-		load_texture_from_file(&texture_data[tex_background],                  "textures/background.png");
+		load_texture_from_file(&texture_data[tex_background],                  "textures/background.png", GL_NEAREST, GL_REPEAT);
 		load_texture_from_file(&texture_data[tex_white],                       "textures/white.png");
 		load_texture_from_file(&texture_data[tex_boss_cirno_portrait],         "textures/boss_cirno_portrait.png");
 		load_texture_from_file(&texture_data[tex_boss_youmu_portrait],         "textures/boss_youmu_portrait.png");
@@ -101,6 +100,7 @@ void Game::init() {
 		load_texture_from_file(&texture_data[tex_pcb_youmu_stairs],            "textures/pcb_youmu_stairs.png");
 		load_texture_from_file(&texture_data[tex_pcb_youmu_bg],                "textures/pcb_youmu_bg.png");
 		load_texture_from_file(&texture_data[tex_pcb_youmu_bg_flowers],        "textures/pcb_youmu_bg_flowers.png");
+		load_texture_from_file(&texture_data[tex_font_main],                   "textures/font_main.png");
 
 		load_texture_from_file(&texture_data[tex_font_cirno], "fonts/cirno_0.png");
 	}
@@ -110,7 +110,6 @@ void Game::init() {
 
 	// load sounds
 	{
-
 		// @Leak
 		for (int i = 0; i < NUM_SOUNDS; i++) {
 			sound_data[i] = load_sound(sounds_filenames[i]);
@@ -129,23 +128,8 @@ void Game::init() {
 	Mix_PlayMusic(music, -1);
 
 	{
-		const Sprite& s = get_sprite(spr_font_main);
-
-		font_main.atlas = *GetTexture(s.texture_index);
-		font_main.glyphs = calloc_array<Glyph>(95);
-		font_main.size = 15;
-		font_main.line_height = 15;
-
-		for (int i = 0; i < 95; i++) {
-			Glyph glyph = {};
-			glyph.u = s.frames[i].u;
-			glyph.v = s.frames[i].v;
-			glyph.width = s.frames[i].w;
-			glyph.height = s.frames[i].h;
-			glyph.xadvance = s.frames[i].w;
-
-			font_main.glyphs[i] = glyph;
-		}
+		load_bmfont_file(&font_data[fnt_cirno], "fonts/cirno.fnt", "fonts/cirno_0.png");
+		load_font_from_texture(&font_data[fnt_main], get_texture(tex_font_main), 15, 15, 15, 16, 16);
 	}
 }
 
@@ -175,7 +159,7 @@ void Game::update(float delta) {
 		set_fullscreen(!is_fullscreen());
 	}
 
-	if (is_key_pressed(SDL_SCANCODE_F5)) {
+	if (is_key_pressed(SDL_SCANCODE_F5, true)) {
 		frame_advance = true;
 		skip_frame = false;
 	}
@@ -190,14 +174,14 @@ void Game::update(float delta) {
 	if (!skip_frame || state == STATE_PLAYING) {
 		switch (state) {
 			case STATE_TITLE_SCREEN: title_screen.update(delta); break;
-			case STATE_PLAYING:      world.update(delta);           break;
+			case STATE_PLAYING:      world.update(delta);        break;
 		}
 	}
 
 	if (next_state != STATE_NONE) {
 		switch (state) {
 			case STATE_TITLE_SCREEN: title_screen.deinit(); break;
-			case STATE_PLAYING:      world.deinit();           break;
+			case STATE_PLAYING:      world.deinit();        break;
 		}
 
 		state      = next_state;
@@ -265,7 +249,7 @@ void Game::late_draw(float delta) {
 							renderer.draw_calls,
 							renderer.max_batch, BATCH_MAX_VERTICES,
 							debug_build);
-		pos = draw_text(game.font_main, str, pos);
+		pos = draw_text(get_font(fnt_main), str, pos);
 		pos.y += 8;
 
 		// Audio Debug
@@ -516,6 +500,7 @@ u32 load_3d_model_from_obj_file(const char* fname, int* out_num_vertices) {
 
 	*out_num_vertices = (int) vertices.count;
 	//return create_vertex_array_obj(vertices.data, vertices.count);
+	return 0;
 };
 
 void stop_sound(u32 sound_index) {
@@ -535,3 +520,81 @@ void play_sound(u32 sound_index) {
 	Mix_Chunk* chunk = GetSound(sound_index);
 	Mix_PlayChannel(-1, chunk, 0);
 }
+
+#if defined(DEVELOPER)
+bool console_callback(string str, void* userdata) {
+	eat_whitespace(&str);
+	string command = eat_non_whitespace(&str);
+
+	if (command == "h" || command == "help") {
+		string s = "Commands:\n"
+			"skip - Skips boss's phase\n"
+			"full_power - Get full power\n"
+			"life - Get a life\n"
+			"kill_player - Kills the player\n";
+		console.write(s);
+		return true;
+	}
+
+	if (command == "stage") {
+		eat_whitespace(&str);
+		string stage_index_str = eat_non_whitespace(&str);
+
+		bool done;
+		u32 stage_index = string_to_u32(stage_index_str, &done);
+
+		if (done && stage_index < STAGE_COUNT) {
+			game.stage_index     = stage_index;
+			game.skip_to_boss    = false;
+			game.skip_to_midboss = false;
+			game.next_state      = Game::STATE_PLAYING;
+
+			eat_whitespace(&str);
+			string token = eat_non_whitespace(&str);
+
+			if (token == "boss") {
+				game.skip_to_boss = true;
+			} else if (token == "midboss") {
+				game.skip_to_midboss = true;
+			}
+		} else {
+			console.write("invalid stage index\n");
+		}
+		return true;
+	}
+
+	if (command == "title") {
+		game.next_state = Game::STATE_TITLE_SCREEN;
+		return true;
+	}
+
+	if (game.state == Game::STATE_PLAYING) {
+		if (command == "skip") {
+			if (!(world.boss.flags & FLAG_INSTANCE_DEAD)) {
+				world.boss.timer = 0;
+				world.boss.wait_timer = 0;
+			}
+			return true;
+		}
+
+		if (command == "full_power") {
+			get_power(MAX_POWER);
+			return true;
+		}
+
+		if (command == "life") {
+			get_lives(1);
+			return true;
+		}
+
+		if (command == "kill_player") {
+			world.player.state = PLAYER_STATE_DYING;
+			world.player.timer = PLAYER_DEATH_TIME;
+			play_sound(snd_pichuun);
+			return true;
+		}
+	}
+
+	return false;
+}
+#endif

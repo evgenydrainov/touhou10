@@ -1,7 +1,6 @@
 #include "scripting.h"
 
 #include "renderer.h"
-#include <glad/gl.h>
 
 void Stage_1_Script(mco_coro* co) {
 	wait(60);

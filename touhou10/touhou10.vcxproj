@@ -90,7 +90,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TH_DEBUG=1;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEVELOPER;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)external\SDL2\include;$(SolutionDir)external\SDL2_mixer\include;$(SolutionDir)external\SDL2_image\include;$(SolutionDir)external\stb\include;$(SolutionDir)external\glm\include;$(SolutionDir)external\glad\include;$(SolutionDir)external\minicoro\include;$(SolutionDir)external\qoi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4505;4459;4457;5045</DisableSpecificWarnings>
@@ -119,7 +119,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TH_DEBUG=0;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEVELOPER;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)external\SDL2\include;$(SolutionDir)external\SDL2_mixer\include;$(SolutionDir)external\SDL2_image\include;$(SolutionDir)external\stb\include;$(SolutionDir)external\glm\include;$(SolutionDir)external\glad\include;$(SolutionDir)external\minicoro\include;$(SolutionDir)external\qoi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4505;4459;4457;5045</DisableSpecificWarnings>
@@ -148,7 +148,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TH_DEBUG=1;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEVELOPER;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)external\SDL2\include;$(SolutionDir)external\SDL2_mixer\include;$(SolutionDir)external\SDL2_image\include;$(SolutionDir)external\stb\include;$(SolutionDir)external\glm\include;$(SolutionDir)external\glad\include;$(SolutionDir)external\minicoro\include;$(SolutionDir)external\qoi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4505;4459;4457;5045</DisableSpecificWarnings>
@@ -177,7 +177,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>TH_DEBUG=0;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEVELOPER;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)external\SDL2\include;$(SolutionDir)external\SDL2_mixer\include;$(SolutionDir)external\SDL2_image\include;$(SolutionDir)external\stb\include;$(SolutionDir)external\glm\include;$(SolutionDir)external\glad\include;$(SolutionDir)external\minicoro\include;$(SolutionDir)external\qoi\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4505;4459;4457;5045</DisableSpecificWarnings>
@@ -213,6 +213,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile Include="src\boss_and_stage_data.cpp" />
     <ClCompile Include="src\character_data.cpp" />
     <ClCompile Include="src\console.cpp" />
+    <ClCompile Include="src\font.cpp" />
     <ClCompile Include="src\font_data.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -222,6 +223,8 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile Include="src\particle_system.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\renderer.cpp" />
+    <ClCompile Include="src\single_header.cpp" />
+    <ClCompile Include="src\sprite.cpp" />
     <ClCompile Include="src\sprite_data.cpp" />
     <ClCompile Include="src\stage_0_data.cpp" />
     <ClCompile Include="src\stage_1_data.cpp" />
@@ -231,7 +234,9 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\texture.cpp" />
     <ClCompile Include="src\title_screen.cpp" />
+    <ClCompile Include="src\window_creation.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -243,6 +248,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClInclude Include="src\character_data_reimu.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\console.h" />
+    <ClInclude Include="src\font.h" />
     <ClInclude Include="src\game.h" />
     <ClInclude Include="src\menu.h" />
     <ClInclude Include="src\objects.h" />
@@ -250,9 +256,13 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClInclude Include="src\particle_system.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scripting.h" />
+    <ClInclude Include="src\sprite.h" />
     <ClInclude Include="src\sprite_indices.h" />
     <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\texture.h" />
     <ClInclude Include="src\title_screen.h" />
+    <ClInclude Include="src\util.h" />
+    <ClInclude Include="src\window_creation.h" />
     <ClInclude Include="src\world.h" />
     <ClInclude Include="src\xoshiro128plus.h" />
   </ItemGroup>

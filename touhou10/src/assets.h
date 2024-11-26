@@ -29,13 +29,14 @@ enum {
 	tex_pcb_youmu_bg,
 	tex_pcb_youmu_bg_flowers,
 	tex_font_cirno,
+	tex_font_main,
 
 	NUM_TEXTURES,
 };
 
 extern Texture texture_data[NUM_TEXTURES];
 
-Texture* GetTexture(u32 texture_index);
+const Texture& get_texture(u32 texture_index);
 
 // 
 // Sprites
@@ -187,4 +188,4 @@ enum {
 
 extern Font font_data[NUM_FONTS];
 
-Font* GetFont(u32 font_index);
+const Font& get_font(u32 font_index);

@@ -4,8 +4,6 @@
 #include "renderer.h"
 #include "game.h"
 
-#include <glad/gl.h>
-
 World world;
 
 #define PAUSE_MENU_SIZE 2
@@ -371,8 +369,8 @@ void World::update(float delta_not_modified) {
 	// Disable in debug to be able to set a breakpoint and
 	// hit continue to skip a frame.
 	// 
-#if !_DEBUG
-	if (!(SDL_GetWindowFlags(game.window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(game.window) & SDL_WINDOW_MINIMIZED)) {
+#if !defined(_DEBUG)
+	if (!(SDL_GetWindowFlags(window.handle) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(window.handle) & SDL_WINDOW_MINIMIZED)) {
 		if (!paused) {
 			paused = true;
 			pause_menu = {};
@@ -799,7 +797,7 @@ void World::draw(float delta_not_modified) {
 		auto draw = [&](int x, int y, int width, int height) {
 			Rect src = {x, y, width, height};
 			vec2 pos = {x, y};
-			draw_texture(*GetTexture(tex_background), src, pos);
+			draw_texture(get_texture(tex_background), src, pos);
 		};
 
 		draw(0, 0, PLAY_AREA_X, GAME_H);
@@ -821,31 +819,31 @@ void World::draw(float delta_not_modified) {
 		string str;
 
 		str = Sprintf(buf, "HiScore %d", 0);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16;
 
 		str = Sprintf(buf, "Score %d", game.stats.score);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16 * 2;
 
 		str = Sprintf(buf, "Player %d", game.stats.lives);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16;
 
 		str = Sprintf(buf, "Bomb %d", game.stats.bombs);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16 * 2;
 
 		str = Sprintf(buf, "Power %d", game.stats.power);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16;
 
 		str = Sprintf(buf, "Graze %d", game.stats.graze);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16;
 
 		str = Sprintf(buf, "Point %d", game.stats.points);
-		draw_text(game.font_main, str, {x, y});
+		draw_text(get_font(fnt_main), str, {x, y});
 		y += 16;
 	}
 
@@ -1076,11 +1074,11 @@ void World::draw(float delta_not_modified) {
 
 		// Draw healthbar
 		{
-			const int healthbar_x = 32 + 2;
-			const int healthbar_y = 6;
-			const int healthbar_w = PLAY_AREA_W - 64 - 4;
-			const int healthbar_h = 2;
-			const int reduced_w = (int) ((float)healthbar_w * (b->hp / phase->hp));
+			const float healthbar_x = 32 + 2;
+			const float healthbar_y = 6;
+			const float healthbar_w = PLAY_AREA_W - 64 - 4;
+			const float healthbar_h = 2;
+			float reduced_w = healthbar_w * (b->hp / phase->hp);
 
 			draw_rectangle({healthbar_x, healthbar_y + 1, reduced_w, healthbar_h}, color_black);
 			draw_rectangle({healthbar_x, healthbar_y, reduced_w, healthbar_h}, color_white);
@@ -1090,19 +1088,19 @@ void World::draw(float delta_not_modified) {
 		{
 			char buf[10];
 			string str = Sprintf(buf, "%d", data->phase_count - b->phase_index - 1);
-			draw_text(game.font_main, str, {0, 0});
+			draw_text(get_font(fnt_main), str, {0, 0});
 		}
 
 		// Draw timer
 		{
 			char buf[10];
 			string str = Sprintf(buf, "%d", (int)b->timer / 60);
-			draw_text(game.font_main, str, {PLAY_AREA_W, 0}, HALIGN_RIGHT);
+			draw_text(get_font(fnt_main), str, {PLAY_AREA_W, 0}, HALIGN_RIGHT);
 		}
 
 		// Draw phase name
 		{
-			draw_text_shadow(*GetFont(fnt_cirno), phase->name, {PLAY_AREA_W - 2, 16}, HALIGN_RIGHT);
+			draw_text_shadow(get_font(fnt_cirno), phase->name, {PLAY_AREA_W - 2, 16}, HALIGN_RIGHT);
 		}
 	}
 

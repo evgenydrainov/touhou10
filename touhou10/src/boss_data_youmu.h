@@ -175,13 +175,12 @@ static BossPhase boss_youmu_midboss_phases[] = {
 };
 
 static void Youmu_Draw_Spellcard_Background(float delta) {
-
 	{
-		Texture* t = GetTexture(tex_pcb_youmu_bg);
+		const Texture& t = get_texture(tex_pcb_youmu_bg);
 
 		vec2 scale;
-		scale.x = (PLAY_AREA_W + 5) / (float)t->width; // floating point thing
-		scale.y = (PLAY_AREA_H + 5) / (float)t->height;
+		scale.x = (PLAY_AREA_W + 5) / (float)t.width; // floating point thing
+		scale.y = (PLAY_AREA_H + 5) / (float)t.height;
 
 		const vec4 color_from = {1,    1, 1, 1};
 		const vec4 color_to   = {0.5f, 0, 0, 0.15f};
@@ -190,21 +189,21 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		color.a *= world.boss_spellcard_background_alpha; // is 1 most of the time
 
 		vec2 pos = {-1, -1}; // floating point thing
-		draw_texture(*t, {}, pos, scale, {}, 0, color);
+		draw_texture(t, {}, pos, scale, {}, 0, color);
 	}
 
 	{
-		Texture* t = GetTexture(tex_pcb_youmu_bg_flowers);
+		const Texture& t = get_texture(tex_pcb_youmu_bg_flowers);
 
 		vec2  pos    = {PLAY_AREA_W / 2.0f, PLAY_AREA_H / 2.0f};
 		vec2  scale  = {2, 2};
-		vec2  origin = {t->width / 2.0f, t->height / 2.0f};
+		vec2  origin = {t.width / 2.0f, t.height / 2.0f};
 		float angle  = SDL_GetTicks() / 50.0f;
 
 		vec4 color = color_white;
 		color.a = lerp(0.5f, 0.4f, world.boss_pcb_youmu_effect);
 		color.a *= world.boss_spellcard_background_alpha; // is 1 most of the time
 
-		draw_texture(*t, {}, pos, scale, origin, angle, color);
+		draw_texture(t, {}, pos, scale, origin, angle, color);
 	}
 }

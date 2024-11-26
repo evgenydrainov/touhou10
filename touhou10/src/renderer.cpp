@@ -120,7 +120,7 @@ void main() {
 
 
 
-static void set_vertex_attribs() {
+void set_vertex_attribs() {
 	// Position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
 	glEnableVertexAttribArray(0);
@@ -485,6 +485,8 @@ void draw_texture(Texture t, Rect src,
 		log_error("Trying to draw invalid texture.");
 		return;
 	}
+
+	pos = glm::floor(pos);
 
 	if (src.w == 0 && src.h == 0) {
 		src.w = t.width;

@@ -1,7 +1,5 @@
 #include "assets.h"
 
-#include <glad/gl.h>
-
 #include "renderer.h"
 #include "scripting.h"
 

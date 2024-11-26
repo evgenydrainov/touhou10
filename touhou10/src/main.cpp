@@ -23,7 +23,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 	defer { game.deinit(); };
 
 #if defined(DEVELOPER)
-	console.init(nullptr, nullptr, *GetFont(fnt_cirno));
+	console.init(console_callback, nullptr, get_font(fnt_main));
 	defer { console.deinit(); };
 #endif
 
@@ -47,7 +47,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 #endif
 
 		// render
-		vec4 clear_color = color_cornflower_blue;
+		vec4 clear_color = color_black;
 		render_begin_frame(clear_color);
 
 		game.draw(window.delta);

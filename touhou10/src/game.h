@@ -43,8 +43,6 @@ struct Game {
 	State state;
 	State next_state;
 
-	Font font_main;
-
 	Stats stats;
 	u32 stage_index;
 	bool skip_to_boss;
@@ -67,3 +65,7 @@ struct Game {
 };
 
 extern Game game;
+
+#if defined(DEVELOPER)
+bool console_callback(string str, void* userdata);
+#endif
