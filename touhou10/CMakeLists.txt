@@ -42,26 +42,26 @@ if(NOT SDL2_INCLUDE_DIRS AND NOT SDL2_LIBRARIES AND NOT SDL2_MIXER_INCLUDE_DIRS 
 	if(EXISTS /usr/include/SDL2/SDL.h)
 		MESSAGE(STATUS "INFO: Found SDL2 in /usr/include/SDL2.")
 		set(SDL2_INCLUDE_DIRS /usr/include/SDL2)
+		set(SDL2_LIBRARIES SDL2)
 	elseif(EXISTS /usr/local/include/SDL2/SDL.h)
 		MESSAGE(STATUS "INFO: Found SDL2 in /usr/local/include/SDL2.")
 		set(SDL2_INCLUDE_DIRS /usr/local/include/SDL2)
+		set(SDL2_LIBRARIES "-L/usr/local/lib -lSDL2") # Mac
 	else()
 		MESSAGE(FATAL_ERROR "FATAL: Couldn't find SDL2.")
 	endif()
 
-	set(SDL2_LIBRARIES SDL2)
-
 	if(EXISTS /usr/include/SDL2/SDL_mixer.h)
 		MESSAGE(STATUS "INFO: Found SDL2_mixer in /usr/include/SDL2.")
 		set(SDL2_MIXER_INCLUDE_DIRS /usr/include/SDL2)
+		set(SDL2_MIXER_LIBRARIES SDL2_mixer)
 	elseif(EXISTS /usr/local/include/SDL2/SDL_mixer.h)
 		MESSAGE(STATUS "INFO: Found SDL2_mixer in /usr/local/include/SDL2.")
 		set(SDL2_MIXER_INCLUDE_DIRS /usr/local/include/SDL2)
+		set(SDL2_MIXER_LIBRARIES "-L/usr/local/lib -lSDL2_mixer") # Mac
 	else()
 		MESSAGE(FATAL_ERROR "FATAL: Couldn't find SDL2_mixer.")
 	endif()
-
-	set(SDL2_MIXER_LIBRARIES SDL2_mixer)
 endif()
 
 MESSAGE(STATUS "INFO: SDL2_INCLUDE_DIRS is ${SDL2_INCLUDE_DIRS}")
