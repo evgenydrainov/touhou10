@@ -90,7 +90,7 @@ static Bullet* ShootExtO(Object* o,
 
 	play_sound(snd_enemy_shoot);
 
-	return array_add(&w->bullets, b);
+	return array_add(&world.bullets, b);
 }
 
 static Bullet* ShootO(Object* o,
@@ -125,7 +125,7 @@ static Bullet* ShootLazerO(Object* o,
 
 	play_sound(snd_lazer);
 
-	return array_add(&w->bullets, b);
+	return array_add(&world.bullets, b);
 }
 
 
@@ -168,7 +168,7 @@ static void ShootRadial(int count, float dir_diff, const Func& func) {
 
 		} else if constexpr (std::is_same_v<decltype(res), array<instance_id>>) {
 			For (it, res) {
-				Bullet* b = w->find_bullet(*it);
+				Bullet* b = world.find_bullet(*it);
 				Assert(b);
 
 				b->dir += dir_diff * mul;
@@ -183,7 +183,7 @@ static void ShootRadial(int count, float dir_diff, const Func& func) {
 // 
 // "A" stands for alloc.
 // 
-// Allocates from temporary arena (w->temp_arena_for_boss). You have to
+// Allocates from temporary arena (world.temp_arena_for_boss). You have to
 // clear it once in a while in your script if you use functions that allocate.
 // 
 template <typename Func>
@@ -194,7 +194,7 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 	// I use arena_push here to get an aligned pointer
 	// 
 	array<instance_id> bullets;
-	bullets.data  = (instance_id*) arena_push(&w->temp_arena_for_boss, 0);
+	bullets.data  = (instance_id*) arena_push(&world.temp_arena_for_boss, 0);
 	bullets.count = 0;
 
 	for (int i = 0; i < count; i++) {
@@ -208,18 +208,18 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 			b->dir += dir_diff * mul;
 
 			// Make sure there is no alignment.
-			arena_push(&w->temp_arena_for_boss, sizeof(instance_id), 1);
+			arena_push(&world.temp_arena_for_boss, sizeof(instance_id), 1);
 			bullets.data[bullets.count++] = b->id;
 
 		} else if constexpr (std::is_same_v<decltype(res), array<instance_id>>) {
 			For (it, res) {
-				Bullet* b = w->find_bullet(*it);
+				Bullet* b = world.find_bullet(*it);
 				Assert(b);
 
 				b->dir += dir_diff * mul;
 
 				// Make sure there is no alignment.
-				arena_push(&w->temp_arena_for_boss, sizeof(instance_id), 1);
+				arena_push(&world.temp_arena_for_boss, sizeof(instance_id), 1);
 				bullets.data[bullets.count++] = b->id;
 			}
 
@@ -232,12 +232,12 @@ static array<instance_id> ShootRadialA(int count, float dir_diff, const Func& fu
 }
 
 static float DirToPlayer(Object* o) {
-	return point_direction(o->x, o->y, w->player.x, w->player.y);
+	return point_direction(o->x, o->y, world.player.x, world.player.y);
 }
 
 static void Wander(Object* o) {
-	float target_x = random_rangef(&w->rng, 32.0f, (float)PLAY_AREA_W - 32.0f);
-	float target_y = random_rangef(&w->rng, 32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
+	float target_x = random_rangef(&world.rng, 32.0f, (float)PLAY_AREA_W - 32.0f);
+	float target_y = random_rangef(&world.rng, 32.0f, (float)BOSS_STARTING_Y * 2.0f - 32.0f);
 	float x = o->x;
 	float y = o->y;
 	target_x = clamp(target_x, x - 80.0f, x + 80.0f);
@@ -251,7 +251,7 @@ static void GoBack(Object* o) {
 
 static Boss* CreateBoss(u32 boss_index,
 						float x = BOSS_STARTING_X, float y = BOSS_STARTING_Y) {
-	Boss* b = &w->boss;
+	Boss* b = &world.boss;
 
 	// @Cleanup: Why is this commented out?
 	Assert(b->flags & FLAG_INSTANCE_DEAD);
@@ -299,7 +299,7 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.death_callback = death_callback;
 	e.update_callback = update_callback;
 
-	return array_add(&w->enemies, e);
+	return array_add(&world.enemies, e);
 }
 
 static float seconds(float sec) {

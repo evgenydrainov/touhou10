@@ -7,9 +7,9 @@ Texture* GetTexture(u32 texture_index) {
 	return &texture_data[texture_index];
 }
 
-Sprite* GetSprite(u32 sprite_index) {
+const Sprite& get_sprite(u32 sprite_index) {
 	Assert(sprite_index < NUM_SPRITES);
-	return &sprite_data[sprite_index];
+	return sprite_data[sprite_index];
 }
 
 Character* GetCharacter(u32 character_index) {

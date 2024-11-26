@@ -1,10 +1,10 @@
 {
 	"cmake.configureSettings": {
 		// Example
-		// "SDL2_INCLUDE_DIRS": "",
-		// "SDL2_LIBRARIES": "",
-		// "SDL2_MIXER_INCLUDE_DIRS": "",
-		// "SDL2_MIXER_LIBRARIES": "",
+		// "SDL2_INCLUDE_DIRS": "${env:HOME}/source/repos/SDL-2.30.6/include",
+		// "SDL2_LIBRARIES": "-L${env:HOME}/source/repos/SDL-2.30.6/build -lSDL2",
+		// "SDL2_MIXER_INCLUDE_DIRS": "${env:HOME}/source/repos/SDL_mixer-2.8.0/include",
+		// "SDL2_MIXER_LIBRARIES": "-L${env:HOME}/source/repos/SDL_mixer-2.8.0/build -lSDL2_mixer",
 	},
 	"cmake.debugConfig": {
 		"cwd": "${workspaceFolder}",

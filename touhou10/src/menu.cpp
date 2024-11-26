@@ -1,5 +1,8 @@
 #include "menu.h"
 
+#include "window_creation.h"
+#include "renderer.h"
+#include "font.h"
 #include "game.h"
 
 int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
@@ -91,6 +94,6 @@ void menu_draw(Menu* menu, int num_items,
 			halign = HALIGN_CENTER;
 		}
 
-		r->draw_text(GetSprite(spr_font_main), labels[i], x, y, halign, VALIGN_TOP, color);
+		draw_text(game.font_main, labels[i], {x, y}, halign, VALIGN_TOP, color);
 	}
 }

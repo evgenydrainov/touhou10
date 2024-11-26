@@ -1,5 +1,6 @@
 #include "objects.h"
 
+#include "window_creation.h"
 #include "game.h"
 
 #define POINT_OF_COLLECTION 96.0f
@@ -48,7 +49,7 @@ static void player_animate(Player* p, float delta) {
 		}
 	} else {
 		if (p->sprite_index == character->spr_left || p->sprite_index == character->spr_right) {
-			p->frame_index -= p->GetSprite()->anim_spd * delta;
+			p->frame_index -= p->GetSprite().anim_spd * delta;
 			p->frame_index = fminf(p->frame_index, 3.0f);
 			if (p->frame_index < 0.0f) {
 				p->sprite_index = character->spr_idle;
@@ -70,11 +71,11 @@ void player_update(Player* p, float delta) {
 	auto try_use_bomb = [&]() {
 		if (is_key_pressed(SDL_SCANCODE_X)) {
 			if (p->bomb_timer <= 0) {
-				if (g->stats.bombs > 0) {
+				if (game.stats.bombs > 0) {
 					Assert(character->bomb);
 					character->bomb(p);
 
-					g->stats.bombs--;
+					game.stats.bombs--;
 					p->bomb_timer = PLAYER_BOMB_TIME;
 
 					// Deathbomb
@@ -129,7 +130,7 @@ void player_update(Player* p, float delta) {
 			player_animate(p, delta);
 
 			if (p->y < POINT_OF_COLLECTION) {
-				For (it, w->pickups) {
+				For (it, world.pickups) {
 					it->homing_target = p->id;
 				}
 			}
@@ -146,11 +147,11 @@ void player_update(Player* p, float delta) {
 
 			p->timer -= delta;
 			if (p->timer <= 0) {
-				if (g->stats.lives > 0) {
-					g->stats.lives--;
+				if (game.stats.lives > 0) {
+					game.stats.lives--;
 
-					int drop = min(g->stats.power, 16);
-					g->stats.power -= drop;
+					int drop = min(game.stats.power, 16);
+					game.stats.power -= drop;
 					drop = min(drop, 12);
 
 					while (drop > 0) {
@@ -162,8 +163,8 @@ void player_update(Player* p, float delta) {
 							drop--;
 							type = PICKUP_TYPE_POWER;
 						}
-						float x = p->x + random_rangef(&w->rng, -50.0f, 50.0f);
-						float y = p->y + random_rangef(&w->rng, -50.0f, 50.0f);
+						float x = p->x + random_rangef(&world.rng, -50.0f, 50.0f);
+						float y = p->y + random_rangef(&world.rng, -50.0f, 50.0f);
 						drop_pickup(x, y, type);
 					}
 				} else {
@@ -221,7 +222,7 @@ void player_draw(Player* p, float delta) {
 			}
 		}
 
-		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y}, scale, 0, color);
+		draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y}, scale, 0, color);
 	}
 
 	if (p->character_index == CHARACTER_REIMU) {
@@ -241,13 +242,13 @@ void player_draw(Player* p, float delta) {
 		float orb_y1 = p->y + lengthdir_y(26, dir1);
 		float orb_y2 = p->y + lengthdir_y(26, dir2);
 
-		r->draw_sprite(GetSprite(spr_reimu_orb), 1, {orb_x1, orb_y1}, {1, 1}, angle1, color);
-		r->draw_sprite(GetSprite(spr_reimu_orb), 1, {orb_x2, orb_y2}, {1, 1}, angle2, color);
+		draw_sprite(get_sprite(spr_reimu_orb), 1, {orb_x1, orb_y1}, {1, 1}, angle1, color);
+		draw_sprite(get_sprite(spr_reimu_orb), 1, {orb_x2, orb_y2}, {1, 1}, angle2, color);
 	}
 
 	if (p->hitbox_alpha > 0.0f) {
 		float angle = SDL_GetTicks() / 20.0f;
 		vec4 color = {1.0f, 1.0f, 1.0f, p->hitbox_alpha};
-		r->draw_sprite(GetSprite(spr_player_hitbox), 0, {p->x, p->y}, {1.0f, 1.0f}, angle, color);
+		draw_sprite(get_sprite(spr_player_hitbox), 0, {p->x, p->y}, {1.0f, 1.0f}, angle, color);
 	}
 }

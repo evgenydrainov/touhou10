@@ -1,4 +1,6 @@
 #include "scripting.h"
+
+#include "renderer.h"
 #include <glad/gl.h>
 
 void Stage_1_Script(mco_coro* co) {
@@ -9,6 +11,7 @@ void Stage_1_Script(mco_coro* co) {
 
 
 static void draw_world_origin_axis(float delta) {
+	#if 0
 	static u32 vao;
 
 	const float size = 10;
@@ -33,7 +36,7 @@ static void draw_world_origin_axis(float delta) {
 	glUseProgram(program);
 	defer { glUseProgram(0); };
 
-	mat4 MVP = w->d3d.get_mvp();
+	mat4 MVP = world.d3d.get_mvp();
 
 	int u_MVP = glGetUniformLocation(program, "u_MVP");
 	glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -46,6 +49,7 @@ static void draw_world_origin_axis(float delta) {
 
 	glDrawArrays(GL_LINES, 0, ArrayLength(vertices));
 	r->draw_calls++;
+	#endif
 }
 
 
@@ -53,9 +57,9 @@ static u32 vao;
 static int num_vertices;
 
 void Stage_1_Init_Background() {
-	w->d3d.cam_pos = {0, 10.0f, 10.0f};
-	w->d3d.pitch   = -10;
-	w->d3d.yaw     = -90;
+	world.d3d.cam_pos = {0, 10.0f, 10.0f};
+	world.d3d.pitch   = -10;
+	world.d3d.yaw     = -90;
 
 	if (!vao) {
 		// @Leak
@@ -64,6 +68,7 @@ void Stage_1_Init_Background() {
 }
 
 void Stage_1_Draw_Background(float delta) {
+	#if 0
 	const vec4 fog_color = get_color(0xB08190FFu);
 
 	glClearColor(fog_color.r, fog_color.g, fog_color.b, fog_color.a);
@@ -83,8 +88,8 @@ void Stage_1_Draw_Background(float delta) {
 		float z =  wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
 
 		mat4 model = glm::translate(mat4{1}, vec3{0, y, z});
-		mat4 view  = w->d3d.get_view_mat();
-		mat4 proj  = w->d3d.get_proj_mat();
+		mat4 view  = world.d3d.get_view_mat();
+		mat4 proj  = world.d3d.get_proj_mat();
 
 		int u_Model          = glGetUniformLocation(program, "u_Model");
 		int u_View           = glGetUniformLocation(program, "u_View");
@@ -117,4 +122,5 @@ void Stage_1_Draw_Background(float delta) {
 		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
 		r->draw_calls++;
 	}
+	#endif
 }

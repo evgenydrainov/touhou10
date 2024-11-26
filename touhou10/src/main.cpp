@@ -1,60 +1,67 @@
-#define _CRT_SECURE_NO_WARNINGS // for qoi
-
+#include "common.h"
+#include "window_creation.h"
 #include "game.h"
+#include "renderer.h"
+#include "package.h"
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-
-static void emscripten_main_loop() {
-	g->tick();
-}
-
+#if defined(DEVELOPER)
+#include "console.h"
 #endif
 
-int main(int argc, char* argv[]) {
-	Game game = {};
 
-	// Yeah I know. Single letter global variables.
-	g = &game;
+int main(int /*argc*/, char* /*argv*/[]) {
+	init_window_and_opengl("touhou10", 640, 480, 2, false, false);
+	defer { deinit_window_and_opengl(); };
 
-	g->init();
+	init_package();
+	defer { deinit_package(); };
 
-#ifdef __EMSCRIPTEN__
-	emscripten_set_main_loop(emscripten_main_loop, 60, 1);
-#else
-	g->run();
+	init_renderer();
+	defer { deinit_renderer(); };
+
+	game.init();
+	defer { game.deinit(); };
+
+#if defined(DEVELOPER)
+	console.init(nullptr, nullptr, *GetFont(fnt_cirno));
+	defer { console.deinit(); };
 #endif
 
-	g->destroy();
+	while (!window.should_quit) {
+		begin_frame();
+
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {
+			handle_event(ev);
+
+#if defined(DEVELOPER)
+			console.handle_event(ev);
+#endif
+		}
+
+		// update
+		game.update(window.delta);
+
+#if defined(DEVELOPER)
+		console.update(window.delta);
+#endif
+
+		// render
+		vec4 clear_color = color_cornflower_blue;
+		render_begin_frame(clear_color);
+
+		game.draw(window.delta);
+
+		render_end_frame();
+
+		game.late_draw(window.delta);
+
+#if defined(DEVELOPER)
+		console.draw(window.delta);
+#endif
+
+		swap_buffers();
+	}
 
 	return 0;
 }
-
-#pragma warning(push, 0)
-#pragma warning(disable : 5045)
-
-#define MINICORO_IMPL
-#define MCO_DEFAULT_STACK_SIZE 8*1024
-#define MCO_MIN_STACK_SIZE 0
-#include <minicoro/minicoro.h> // emscripten has to be included before minicoro
-#undef MINICORO_IMPL
-
-#define GLAD_GL_IMPLEMENTATION
-#define GLAD_GLES2_IMPLEMENTATION
-#include <glad/gl.h>
-#undef GLAD_GL_IMPLEMENTATION
-
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_PNG
-#include <stb/stb_image.h>
-#undef STB_IMAGE_IMPLEMENTATION
-
-#define STB_SPRINTF_IMPLEMENTATION
-#include <stb/stb_sprintf.h>
-#undef STB_SPRINTF_IMPLEMENTATION
-
-#define QOI_IMPLEMENTATION
-#include <qoi/qoi.h>
-#undef QOI_IMPLEMENTATION
-
-#pragma warning(pop)

@@ -55,12 +55,12 @@ static void M_Youmu_Nonspell_0(mco_coro* co) {
 		}
 
 		Repeat (2) {
-			slash(self->x, self->y, w->player.x, w->player.y, spr_bullet_arrow, 6);
+			slash(self->x, self->y, world.player.x, world.player.y, spr_bullet_arrow, 6);
 
 			wait(50);
 
-			slash(self->x - 50.0f, self->y, w->player.x - 70.0f, w->player.y, spr_bullet_arrow, 2);
-			slash(self->x + 50.0f, self->y, w->player.x + 70.0f, w->player.y, spr_bullet_arrow, 2);
+			slash(self->x - 50.0f, self->y, world.player.x - 70.0f, world.player.y, spr_bullet_arrow, 2);
+			slash(self->x + 50.0f, self->y, world.player.x + 70.0f, world.player.y, spr_bullet_arrow, 2);
 
 			wait(60);
 		}
@@ -75,7 +75,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 			wait(1);
 		}
 
-		float target_spd = random_rangef(&w->rng, 2.50f, 3.50f);
+		float target_spd = random_rangef(&world.rng, 2.50f, 3.50f);
 		float acc = 0.05f;
 		while (self->spd != target_spd) {
 			self->spd = approach(self->spd, target_spd, acc);
@@ -85,8 +85,8 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 	auto shoot = [&](float x, float y) {
 		int N = 18;
-		float dir1 = random_rangef(&w->rng, 0, 360);
-		float dir2 = random_rangef(&w->rng, 0, 360);
+		float dir1 = random_rangef(&world.rng, 0, 360);
+		float dir2 = random_rangef(&world.rng, 0, 360);
 		for (int i = 0; i < N; i++) {
 			float t = i / (float)N;
 			ShootExt(x, y, 1.3f, dir1 + 360 * t, 0, spr_bullet_arrow, 6, 0, bullet);
@@ -113,12 +113,12 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 	};
 
 	auto speed_up = [&]() {
-		float delta_multiplier_start      = w->delta_multiplier;
-		float boss_pcb_youmu_effect_start = w->boss_pcb_youmu_effect;
+		float delta_multiplier_start      = world.delta_multiplier;
+		float boss_pcb_youmu_effect_start = world.boss_pcb_youmu_effect;
 
 		for (int i = 1; i <= 30; i++) {
-			w->delta_multiplier      = lerp(delta_multiplier_start,      1.0f, i / 30.0f);
-			w->boss_pcb_youmu_effect = lerp(boss_pcb_youmu_effect_start, 0.0f, i / 30.0f);
+			world.delta_multiplier      = lerp(delta_multiplier_start,      1.0f, i / 30.0f);
+			world.boss_pcb_youmu_effect = lerp(boss_pcb_youmu_effect_start, 0.0f, i / 30.0f);
 
 			wait(1);
 		}
@@ -136,8 +136,8 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		slash(0, PLAY_AREA_W, self->y);
 		wait(seconds(2.6f));
 
-		w->boss_pcb_youmu_effect = 1;
-		w->delta_multiplier = 0.25f;
+		world.boss_pcb_youmu_effect = 1;
+		world.delta_multiplier = 0.25f;
 		play_sound(snd_kira);
 
 		wait(seconds(2.1f));
@@ -149,8 +149,8 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 		slash(PLAY_AREA_W, 0, self->y);
 		wait(seconds(2.6f));
 
-		w->boss_pcb_youmu_effect = 1;
-		w->delta_multiplier = 0.25f;
+		world.boss_pcb_youmu_effect = 1;
+		world.delta_multiplier = 0.25f;
 		play_sound(snd_kira);
 
 		wait(seconds(2.1f));
@@ -186,11 +186,11 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		const vec4 color_from = {1,    1, 1, 1};
 		const vec4 color_to   = {0.5f, 0, 0, 0.15f};
 
-		vec4 color = lerp(color_from, color_to, w->boss_pcb_youmu_effect);
-		color.a *= w->boss_spellcard_background_alpha; // is 1 most of the time
+		vec4 color = lerp(color_from, color_to, world.boss_pcb_youmu_effect);
+		color.a *= world.boss_spellcard_background_alpha; // is 1 most of the time
 
 		vec2 pos = {-1, -1}; // floating point thing
-		r->draw_texture(t, {}, pos, scale, {}, 0, color);
+		draw_texture(*t, {}, pos, scale, {}, 0, color);
 	}
 
 	{
@@ -202,9 +202,9 @@ static void Youmu_Draw_Spellcard_Background(float delta) {
 		float angle  = SDL_GetTicks() / 50.0f;
 
 		vec4 color = color_white;
-		color.a = lerp(0.5f, 0.4f, w->boss_pcb_youmu_effect);
-		color.a *= w->boss_spellcard_background_alpha; // is 1 most of the time
+		color.a = lerp(0.5f, 0.4f, world.boss_pcb_youmu_effect);
+		color.a *= world.boss_spellcard_background_alpha; // is 1 most of the time
 
-		r->draw_texture(t, {}, pos, scale, origin, angle, color);
+		draw_texture(*t, {}, pos, scale, origin, angle, color);
 	}
 }

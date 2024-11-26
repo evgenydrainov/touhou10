@@ -1,4 +1,6 @@
+#include "renderer.h"
 #include "scripting.h"
+
 #include <glad/gl.h>
 
 void Stage_0_Script(mco_coro* co) {
@@ -15,8 +17,8 @@ void Stage_0_Script(mco_coro* co) {
 		};
 
 		auto OnDeath = [](Object* o) {
-			int r = random_range(&w->rng, 0, 3);
-			float dir = random_rangef(&w->rng, 0.0f, 360.0f);
+			int r = random_range(&world.rng, 0, 3);
+			float dir = random_rangef(&world.rng, 0.0f, 360.0f);
 			if (r == 0) {
 				ShootO(o, 2, dir,       0, spr_bullet_rice, 2);
 				ShootO(o, 2, dir +  90, 0, spr_bullet_rice, 2);
@@ -34,18 +36,18 @@ void Stage_0_Script(mco_coro* co) {
 			((Enemy*)o)->angle += 10 * delta;
 		};
 
-		float x = random_rangef(&w->rng, 0.0f, (float)PLAY_AREA_W);
+		float x = random_rangef(&world.rng, 0.0f, (float)PLAY_AREA_W);
 		float y = 0;
 
-		CreateEnemy(x, y, 2, 270 + random_rangef(&w->rng, -30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
+		CreateEnemy(x, y, 2, 270 + random_rangef(&world.rng, -30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
 
-	if (g->skip_to_boss) {
+	if (game.skip_to_boss) {
 		goto l_boss;
 	}
 
-	if (g->skip_to_midboss) {
+	if (game.skip_to_midboss) {
 		goto l_midboss;
 	}
 
@@ -69,7 +71,7 @@ void Stage_0_Script(mco_coro* co) {
 				}
 				float y = 0;
 
-				CreateEnemy(x, y, 2, point_direction(x, y, w->player.x, w->player.y), 0, spr_fairy_0, 10, 2);
+				CreateEnemy(x, y, 2, point_direction(x, y, world.player.x, world.player.y), 0, spr_fairy_0, 10, 2);
 
 				if (i >= 12) {
 					spawn_spinner();
@@ -89,7 +91,7 @@ l_midboss:
 
 	{
 		instance_id dai_chan = CreateBoss(BOSS_DAIYOUSEI_MIDBOSS)->id;
-		while (w->find_boss(dai_chan)) {
+		while (world.find_boss(dai_chan)) {
 			wait(1);
 		}
 	}
@@ -100,7 +102,7 @@ l_boss:
 
 	{
 		instance_id baka = CreateBoss(BOSS_CIRNO)->id;
-		// while (w->find_boss(baka)) {
+		// while (world.find_boss(baka)) {
 		// 	wait(1);
 		// }
 	}
@@ -121,9 +123,9 @@ static const u32 indices[] = {
 };
 
 void Stage_0_Init_Background() {
-	w->d3d.cam_pos = {0, 10, 0};
-	w->d3d.pitch   = -45;
-	w->d3d.yaw     = -90;
+	world.d3d.cam_pos = {0, 10, 0};
+	world.d3d.pitch   = -45;
+	world.d3d.yaw     = -90;
 
 	if (!vao) {
 		Assert(!vbo);
@@ -147,11 +149,12 @@ void Stage_0_Init_Background() {
 		};
 
 		// @Leak
-		vao = create_vertex_array_obj(vertices, ArrayLength(vertices), indices, ArrayLength(indices), &vbo, &ebo);
+		//vao = create_vertex_array_obj(vertices, ArrayLength(vertices), indices, ArrayLength(indices), &vbo, &ebo);
 	}
 }
 
 void Stage_0_Draw_Background(float delta) {
+	#if 0
 	const vec4 fog_color = {1, 1, 1, 1};
 
 	glClearColor(fog_color.r, fog_color.g, fog_color.b, fog_color.a);
@@ -163,8 +166,8 @@ void Stage_0_Draw_Background(float delta) {
 		glUseProgram(program);
 
 		mat4 model = {1};
-		mat4 view  = w->d3d.get_view_mat();
-		mat4 proj  = w->d3d.get_proj_mat();
+		mat4 view  = world.d3d.get_view_mat();
+		mat4 proj  = world.d3d.get_proj_mat();
 
 		int u_Model    = glGetUniformLocation(program, "u_Model");
 		int u_View     = glGetUniformLocation(program, "u_View");
@@ -193,4 +196,5 @@ void Stage_0_Draw_Background(float delta) {
 
 		glUseProgram(0);
 	}
+	#endif
 }

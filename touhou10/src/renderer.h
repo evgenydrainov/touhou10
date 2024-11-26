@@ -1,19 +1,19 @@
 #pragma once
 
 #include "common.h"
+#include "texture.h"
+
+/*
+* A basic 2D batch renderer.
+* 
+* Call break_batch() before making opengl calls or modifying renderer's matrices or renderer's current shader.
+*/
 
 constexpr size_t BATCH_MAX_QUADS    = 10'000;
 constexpr size_t VERTICES_PER_QUAD  = 4;
 constexpr size_t INDICES_PER_QUAD   = 6;
 constexpr size_t BATCH_MAX_VERTICES = (BATCH_MAX_QUADS * VERTICES_PER_QUAD);
 constexpr size_t BATCH_MAX_INDICES  = (BATCH_MAX_QUADS * INDICES_PER_QUAD);
-
-struct Renderer;
-struct Texture;
-struct Sprite;
-struct Font;
-
-extern Renderer* r;
 
 struct Vertex {
 	vec3 pos;
@@ -22,99 +22,80 @@ struct Vertex {
 	vec2 uv;
 };
 
-constexpr vec4 color_white  = { 1.00f, 1.00f, 1.00f, 1.00f };
-constexpr vec4 color_black  = { 0.00f, 0.00f, 0.00f, 1.00f };
-constexpr vec4 color_red    = { 1.00f, 0.00f, 0.00f, 1.00f };
-constexpr vec4 color_green  = { 0.00f, 1.00f, 0.00f, 1.00f };
-constexpr vec4 color_blue   = { 0.00f, 0.00f, 1.00f, 1.00f };
-constexpr vec4 color_yellow = { 1.00f, 1.00f, 0.00f, 1.00f };
-
-enum HAlign {
-	HALIGN_LEFT,
-	HALIGN_CENTER,
-	HALIGN_RIGHT,
+enum RenderMode {
+	MODE_NONE,
+	MODE_QUADS,
+	MODE_TRIANGLES,
+	MODE_LINES,
+	MODE_POINTS,
+	MODE_CIRCLES,
 };
-
-enum VAlign {
-	VALIGN_TOP,
-	VALIGN_MIDDLE,
-	VALIGN_BOTTOM,
-};
-
-u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
-							const u32* indices = nullptr, size_t num_indices = 0,
-							u32* out_vbo = nullptr, u32* out_ebo = nullptr);
-
-void set_vertex_attribs();
 
 struct Renderer {
+	u32 current_texture;
+	RenderMode current_mode;
+	bump_array<Vertex> vertices;
 
-	enum Mode {
-		MODE_NONE,
-		MODE_QUADS,
-		MODE_TRIANGLES,
-	};
+	u32 texture_shader;  // These shaders should be handled by an asset system maybe
+	u32 circle_shader;
+	u32 sharp_bilinear_shader;
 
-	Mode mode;
+	u32 current_shader;
 
-	u32 shader_texture_program;
-	u32 shader_color_program;
-	u32 shader_misty_lake_program;
-	u32 shader_sharp_bilinear_program;
-	u32 shader_3d_program;
-
-	u32 current_texture_shader;
-	u32 current_color_shader;
-
-	dynamic_array_cap<Vertex> batch_vertices;
 	u32 batch_vao;
 	u32 batch_vbo;
 	u32 batch_ebo;
-	u32 batch_texture;
+	u32 stub_texture; // 1x1 white texture
 
-	mat4 model;
-	mat4 view;
-	mat4 proj;
+	u32 game_texture;      // Game is renderer to a framebuffer, and then the framebuffer is
+	u32 game_framebuffer;  // rendered to the screen.
+	Rect game_texture_rect;
+
+	mat4 proj_mat = {1};
+	mat4 view_mat = {1};
+	mat4 model_mat = {1};
 
 	int draw_calls;
 	size_t max_batch;
+	int total_triangles;
 
-	void init();
-	void destroy();
+	int curr_draw_calls;  // These values change during the frame, use draw_calls and max_batch for metrics
+	size_t curr_max_batch;
+	int curr_total_triangles;
 
-	void load_shaders();
-
-	void draw_texture(Texture* t, Rect src = {},
-					  vec2 pos = {}, vec2 scale = {1.0f, 1.0f},
-					  vec2 origin = {}, float angle = 0.0f, vec4 color = color_white, glm::bvec2 flip = {});
-
-	void draw_rectangle(Rect rect, vec4 color);
-
-	// @Temp This is temporary. Draws a 16x16 rect
-	void draw_rectangle_ext(vec2 pos, vec2 scale = {1.0f, 1.0f},
-							vec2 origin = {}, float angle = 0.0f, vec4 color = color_white);
-
-	void draw_sprite(Sprite* s, int frame_index,
-					 vec2 pos, vec2 scale = {1.0f, 1.0f},
-					 float angle = 0.0f, vec4 color = color_white, glm::bvec2 flip = {});
-
-	void draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color = color_white);
-
-	void draw_circle(vec2 pos, float radius, vec4 color = color_white, int precision = 6);
-
-	vec2 draw_text(Sprite* font, string text, float x, float y,
-				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
-
-	vec2 measure_text(Sprite* font, string text, bool only_one_line = false);
-
-	vec2 draw_text(Font* font, string text, float x, float y,
-				   HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
-
-	vec2 measure_text(Font* font, string text, bool only_one_line = false);
-
-	vec2 draw_text_shadow(Font* font, string text, float x, float y,
-						  HAlign halign = HALIGN_LEFT, VAlign valign = VALIGN_TOP, vec4 color = color_white);
-
-	void break_batch();
-
+	double draw_took;
+	double draw_took_t;
 };
+
+extern Renderer renderer;
+
+void init_renderer(); // assumes opengl is initialized
+void deinit_renderer();
+
+void render_begin_frame(vec4 clear_color);
+void render_end_frame();
+
+void break_batch(); // makes the draw call
+
+void draw_texture(Texture t, Rect src = {},
+				  vec2 pos = {}, vec2 scale = {1, 1},
+				  vec2 origin = {}, float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
+
+void draw_texture_centered(Texture t,
+						   vec2 pos = {}, vec2 scale = {1, 1},
+						   float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
+
+void draw_rectangle(Rectf rect, vec4 color);
+
+void draw_rectangle(Rectf rect, vec2 scale,
+					vec2 origin, float angle, vec4 color);
+
+void draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color);
+
+void draw_circle(vec2 pos, float radius, vec4 color, int precision = 12);
+
+void draw_line(vec2 p1, vec2 p2, vec4 color);
+
+void draw_point(vec2 point, vec4 color);
+
+void draw_rectangle_outline(Rectf rect, vec4 color);

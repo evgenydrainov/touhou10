@@ -98,12 +98,4 @@ static Glyph fnt_cirno_glyphs[] = {
 	{ 0    , 52  ,  10   , 4   ,  0   ,  12  ,  10  },
 };
 
-Font font_data[NUM_FONTS] = {
-	/* [fnt_cirno] = */ {
-		/* .glyphs        = */ fnt_cirno_glyphs,
-		/* .num_glyphs    = */ ArrayLength(fnt_cirno_glyphs),
-		/* .texture_index = */ tex_font_cirno,
-		/* .size          = */ 25,
-		/* .line_height   = */ 25,
-	},
-};
+Font font_data[NUM_FONTS] = {};

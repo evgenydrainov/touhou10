@@ -3,10 +3,12 @@
 #include "game.h"
 
 void Particle_System::init() {
-	particles = dynamic_array_cap_from_arena<Particle>(&g->arena, MAX_PARTICLES);
+	particles = malloc_bump_array<Particle>(MAX_PARTICLES);
 }
 
-void Particle_System::destroy() {}
+void Particle_System::deinit() {
+	free(particles.data);
+}
 
 void Particle_System::update(float delta) {
 	For (p, particles) {
@@ -33,6 +35,6 @@ void Particle_System::draw(float delta) {
 		vec2 scale = lerp(p->scale_from, p->scale_to, f);
 		vec4 color = lerp(p->color_from, p->color_to, f);
 
-		r->draw_sprite(GetSprite(p->sprite_index), (int)p->frame_index, {p->x, p->y}, scale, 0, color);
+		draw_sprite(get_sprite(p->sprite_index), (int)p->frame_index, {p->x, p->y}, scale, 0, color);
 	}
 }

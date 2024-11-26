@@ -1,5 +1,6 @@
 #include "assets.h"
 
+#include "window_creation.h"
 #include "game.h"
 
 #include "character_data_reimu.h"

@@ -41,8 +41,8 @@ struct Object {
 	u32 sprite_index;
 	float frame_index;
 
-	Sprite* GetSprite() {
-		return ::GetSprite(sprite_index);
+	const Sprite& GetSprite() {
+		return ::get_sprite(sprite_index);
 	}
 
 	ObjType GetType() {

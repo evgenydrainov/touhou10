@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 
+#include "renderer.h"
 #include "scripting.h"
 
 #include "boss_data_cirno.h"

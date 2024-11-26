@@ -1,38 +1,38 @@
 #pragma once
 
-#include "common.h"
+#if defined(DEVELOPER) && !defined(EDITOR)
 
-union SDL_Event;
+#include "common.h"
+#include "font.h"
+
+typedef bool (*ConsoleCallbackFn)(string str, void* userdata);
 
 struct Console {
-	static constexpr size_t COMMAND_HISTORY = 5;
-
 	bool show;
-
-	static char user_input_line_buf[64];
-	dynamic_array_cap<char> user_input_line;
-
-	int caret;
-
-	static char command_history_buf[COMMAND_HISTORY][64];
-	dynamic_array_cap<char> command_history[COMMAND_HISTORY];
-
-	int history_index = -1;
-
-	static char history_buf[1024];
-	dynamic_array_cap<char> history;
-
 	float scroll;
+	bump_array<char> cmd;
+	bump_array<char> history;
 
-	void init();
-	void destroy();
+	ConsoleCallbackFn callback;
+	void* callback_userdata;
 
-	void update(float delta);
-	void event(SDL_Event* ev);
+	Font font;
+	vec4 bg_color = get_color(0, 0, 0, 128);
+
+	void init(ConsoleCallbackFn _callback, void* _callback_userdata, Font _font);
+	void deinit();
+
+	void handle_event(const SDL_Event& ev);
+
 	void execute();
 
 	void write(char ch);
 	void write(string str);
 
+	void update(float delta);
 	void draw(float delta);
 };
+
+extern Console console;
+
+#endif

@@ -15,7 +15,7 @@ static void reimu_shot_type(Player* p, float delta) {
 		b.dmg = dmg;
 		b.type = PLAYER_BULLET_REIMU_CARD;
 
-		array_add(&w->p_bullets, b);
+		array_add(&world.p_bullets, b);
 	};
 
 	auto reimu_shoot_orb = [](float x, float y, float dir, float dmg) {
@@ -31,7 +31,7 @@ static void reimu_shot_type(Player* p, float delta) {
 		b.dmg = dmg;
 		b.type = PLAYER_BULLET_REIMU_ORB_SHOT;
 
-		array_add(&w->p_bullets, b);
+		array_add(&world.p_bullets, b);
 	};
 
 	p->reimu.fire_timer += delta;
@@ -47,7 +47,7 @@ static void reimu_shot_type(Player* p, float delta) {
 			int card_shot_type = 0;
 			int orb_shot_type = 0;
 
-			int power = g->stats.power;
+			int power = game.stats.power;
 
 			if (power >= 128) {
 				card_shot_type = 3;
@@ -181,17 +181,17 @@ static void reimu_shot_type(Player* p, float delta) {
 
 static void reimu_bomb(Player* p) {
 
-	For (b, w->bullets) {
+	For (b, world.bullets) {
 		object_cleanup(b);
 	}
-	w->bullets.count = 0;
+	world.bullets.count = 0;
 
-	For (e, w->enemies) {
+	For (e, world.enemies) {
 		object_cleanup(e);
 	}
-	w->enemies.count = 0;
+	world.enemies.count = 0;
 
-	For (it, w->pickups) {
+	For (it, world.pickups) {
 		it->homing_target = p->id;
 	}
 

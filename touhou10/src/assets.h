@@ -3,6 +3,9 @@
 #include "common.h"
 #include "sprite_indices.h"
 #include "animation.h"
+#include "texture.h"
+#include "sprite.h"
+#include "font.h"
 
 #include <minicoro/minicoro.h>
 #include <SDL_mixer.h>
@@ -12,12 +15,6 @@ struct Player;
 // 
 // Textures
 // 
-
-struct Texture {
-	u32 ID;
-	int width;
-	int height;
-};
 
 enum {
 	tex_atlas_0,
@@ -44,28 +41,9 @@ Texture* GetTexture(u32 texture_index);
 // Sprites
 // 
 
-struct SpriteFrame {
-	int u;
-	int v;
-	int w;
-	int h;
-};
-
-struct Sprite {
-	u32 texture_index;
-	SpriteFrame* frames;
-	int frame_count;
-	int xorigin;
-	int yorigin;
-	int loop_frame; // The frame from which animation will loop.
-	float anim_spd; // Animation speed
-	int width;
-	int height;
-};
-
 extern Sprite sprite_data[NUM_SPRITES];
 
-Sprite* GetSprite(u32 sprite_index);
+const Sprite& get_sprite(u32 sprite_index);
 
 // 
 // Characters
@@ -199,24 +177,6 @@ extern AnimData anim_boss_spellcard;
 // 
 // Fonts
 // 
-
-struct Glyph {
-	int u;
-	int v;
-	int width;
-	int height;
-	int xoffset;
-	int yoffset;
-	int xadvance;
-};
-
-struct Font {
-	Glyph* glyphs;
-	int num_glyphs;
-	u32 texture_index;
-	int size;
-	int line_height;
-};
 
 enum {
 	fnt_cirno,

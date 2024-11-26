@@ -1,6 +1,7 @@
 #include "animation.h"
 
-#include "game.h"
+#include "renderer.h"
+#include "assets.h"
 
 static vec2 interpolate(vec2 a, vec2 b, float f) {
 	return lerp(a, b, f);
@@ -50,6 +51,6 @@ void Animation::draw(float delta) {
 			t->height / 2.0f,
 		};
 
-		r->draw_texture(t, {}, position, scale, origin, 0, modulate);
+		draw_texture(*t, {}, position, scale, origin, 0, modulate);
 	}
 }

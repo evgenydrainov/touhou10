@@ -25,9 +25,6 @@
 #define MAX_ANIMATIONS 1'000
 #define TEMP_STORAGE_FOR_BOSS Kilobytes(10)
 
-struct World;
-extern World* w;
-
 void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc);
 
 void drop_pickup(float x, float y, PickupType type);
@@ -53,10 +50,10 @@ struct World {
 	// When array runs out of capacity and replaces the
 	// last object, it doesn't get cleaned up.
 	// 
-	dynamic_array_cap<Enemy>        enemies;
-	dynamic_array_cap<Bullet>       bullets;
-	dynamic_array_cap<PlayerBullet> p_bullets;
-	dynamic_array_cap<Pickup>       pickups;
+	bump_array<Enemy>        enemies;
+	bump_array<Bullet>       bullets;
+	bump_array<PlayerBullet> p_bullets;
+	bump_array<Pickup>       pickups;
 
 	u64 next_instance_id = 1;
 	Coroutine co;
@@ -64,7 +61,7 @@ struct World {
 	bool paused;
 	Menu pause_menu;
 
-	dynamic_array_cap<Animation> animations;
+	bump_array<Animation> animations;
 	Particle_System part_sys;
 	float delta_multiplier = 1;
 
@@ -90,7 +87,7 @@ struct World {
 	} d3d;
 
 	void init();
-	void destroy();
+	void deinit();
 
 	void physics_update(float delta, float delta_not_modified);
 	void update(float delta_not_modified);
@@ -104,3 +101,5 @@ struct World {
 
 	Object* find_object(instance_id id);
 };
+
+extern World world;

@@ -2,22 +2,19 @@
 
 
 // -----------------------------------------------------------
-//        SECTION: Stuff specific to this project.
-// -----------------------------------------------------------
-
-#if !defined(TH_DEBUG)
-#error "You have to define TH_DEBUG as 1 or 0 whether this is a debug build. (-DTH_DEBUG=1)"
-#endif
-
-
-// -----------------------------------------------------------
 //                 SECTION: Common types.
 // -----------------------------------------------------------
+
+#if !defined(_DEBUG) && !defined(NDEBUG)
+#error You have to define _DEBUG or NDEBUG.
+#endif
 
 #include <SDL.h>
 #include <stb/stb_sprintf.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glad/gl.h>
+
 #include <math.h>
 #include <stdint.h>
 #include <stdarg.h>   // for va_list
@@ -60,75 +57,61 @@ struct Rectf {
 // Logging and assert
 // 
 
-// @Todo: GCC does not allow 'format' attribute in this position on a function definition
-inline void SDL_PRINTF_VARARG_FUNC(1) log_info(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
+#define log_info(fmt, ...)  _my_log(SDL_LOG_PRIORITY_INFO,  fmt, ##__VA_ARGS__)
+#define log_warn(fmt, ...)  _my_log(SDL_LOG_PRIORITY_WARN,  fmt, ##__VA_ARGS__)
+#define log_error(fmt, ...) _my_log(SDL_LOG_PRIORITY_ERROR, fmt, ##__VA_ARGS__)
+
+inline void SDL_PRINTF_VARARG_FUNC(2) _my_log(SDL_LogPriority priority, SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
+	static char buf[512];
+
+	// SDL_snprintf doesn't support %g.
 	va_list va;
 	va_start(va, fmt);
-
-#ifdef __EMSCRIPTEN__
-	// 
-	// printf is better than SDL_Log on emscripten...
-	// 
-	vprintf(fmt, va);
-	printf("\n");
-#else
-	SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, fmt, va);
-#endif
-
+	stb_vsnprintf(buf, sizeof(buf), fmt, va);
 	va_end(va);
-}
 
-inline void SDL_PRINTF_VARARG_FUNC(1) log_error(SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
-	va_list va;
-	va_start(va, fmt);
-
-#ifdef __EMSCRIPTEN__
-	// 
-	// printf is better than SDL_Log on emscripten...
-	// 
-	vfprintf(stderr, fmt, va);
-	fprintf(stderr, "\n");
-#else
-	SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, fmt, va);
-#endif
-
-	va_end(va);
+	SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, priority, "%s", buf);
 }
 
 //
-// For now, asserts will be enabled in release build. May help with finding bugs.
+// For now, asserts will be enabled in release build.
 //
-#if TH_DEBUG
-	#define Assert(expr) while (!(expr)) trigger_breakpoint()
+#ifdef NDEBUG
+	#define Assert(expr) while (!(expr)) panic_and_abort("Assertion Failed: " #expr)
 #else
-	#define Assert(expr) while (!(expr)) panic_and_abort("Assertion failed: " #expr)
+	#define Assert(expr) while (!(expr)) { try_to_exit_fullscreen_properly(); SDL_TriggerBreakpoint(); }
 #endif
 
-#define panic_and_abort(fmt, ...) do { \
-		char buf[512]; \
-		stb_snprintf(buf, sizeof(buf), __FILE__ ":" STRINGIFY(__LINE__) ": " fmt, ##__VA_ARGS__); \
-		log_error("%s", buf); \
-		try_to_exit_fullscreen_properly(); \
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, global_window); \
-		SDL_Quit(); \
-		exit(1); \
-	} while (0)
+#define panic_and_abort(fmt, ...) _panic_and_abort(__FILE__ ":" STRINGIFY(__LINE__) ": " fmt, ##__VA_ARGS__)
 
-#define trigger_breakpoint() do { \
-		try_to_exit_fullscreen_properly(); \
-		SDL_TriggerBreakpoint(); \
-	} while (0)
-
-extern SDL_Window* global_window;
+extern SDL_Window* get_window_handle(); // defined in window_creation.h
 
 inline void try_to_exit_fullscreen_properly() {
 	// @Todo: Probably needed only for Windows
-	if (global_window) {
-		SDL_SetWindowFullscreen(global_window, 0);
+	if (SDL_Window* window = get_window_handle()) {
+		SDL_SetWindowFullscreen(window, 0);
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev)) {}
 	}
 }
+
+SDL_NORETURN inline void _panic_and_abort(const char* fmt, ...) {
+	char buf[512];
+
+	va_list va;
+	va_start(va, fmt);
+	stb_vsnprintf(buf, sizeof(buf), fmt, va);
+	va_end(va);
+
+	log_error("%s", buf);
+
+	try_to_exit_fullscreen_properly();
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", buf, get_window_handle());
+
+	SDL_Quit();
+	exit(1);
+}
+
 
 // 
 // For loop
@@ -137,7 +120,7 @@ inline void try_to_exit_fullscreen_properly() {
 #define For(it, arr)    for (auto it = arr.begin(); it != arr.end(); it++)
 #define Remove(it, arr) (it = array_remove(&arr, it), it--)
 
-#define Repeat(n)       for (int CONCAT(_i_, __LINE__) = (int)(n); CONCAT(_i_, __LINE__)--;)
+#define Repeat(n)       for (int CONCAT(_i__, __LINE__) = (int)(n); CONCAT(_i__, __LINE__)--;)
 
 #define CONCAT_INTERNAL(x, y) x##y
 #define CONCAT(x, y) CONCAT_INTERNAL(x, y)
@@ -152,21 +135,25 @@ inline void try_to_exit_fullscreen_properly() {
 
 template<typename T>
 struct ExitScope {
-    T lambda;
-    ExitScope(T lambda):lambda(lambda){}
-    ~ExitScope(){lambda();}
-    ExitScope(const ExitScope&);
-  private:
-    ExitScope& operator =(const ExitScope&);
-};
- 
-class ExitScopeHelp {
-  public:
-    template<typename T>
-        ExitScope<T> operator+(T t){ return t;}
+	T lambda;
+	ExitScope(T lambda):lambda(lambda){}
+	~ExitScope(){lambda();}
+	ExitScope(const ExitScope&);
+private:
+	ExitScope& operator =(const ExitScope&);
 };
 
+class ExitScopeHelp {
+public:
+	template<typename T>
+	ExitScope<T> operator+(T t){ return t;}
+};
+
+#ifdef _MSC_VER
+#define defer __pragma(warning(push)) __pragma(warning(disable:4189)) const auto& CONCAT(_defer__, __LINE__) = ExitScopeHelp() + [&]() __pragma(warning(pop))
+#else
 #define defer const auto& CONCAT(_defer__, __LINE__) = ExitScopeHelp() + [&]()
+#endif
 
 // 
 // Automatically convert an enum to a string.
@@ -175,28 +162,24 @@ class ExitScopeHelp {
 #define GENERATE_ENUM(x) x,
 #define GENERATE_STRING(x) #x,
 
-
-// 
-// @Todo: The "Get##Type##Name" function is static, so I think the "names" array is
-// copied a bunch of times.
-// 
 #define DEFINE_NAMED_ENUM(Type, List) \
-enum Type { List(GENERATE_ENUM) }; \
-static const char* Get##Type##Name(Type val) { \
-	static const char* names[] = { List(GENERATE_STRING) }; \
-	Assert(val >= 0); \
-	Assert(val < ArrayLength(names)); \
-	return names[val]; \
-}
+	enum Type { List(GENERATE_ENUM) }; \
+	inline const char* Get##Type##Name(Type val) { \
+		static const char* names[] = { List(GENERATE_STRING) }; \
+		Assert(val >= 0); \
+		Assert(val < ArrayLength(names)); \
+		return names[val]; \
+	}
 
 // 
 // Human-readable printing for filesizes.
 // 
 
+// NOTE: SDL_snprintf doesn't support %g
 #define Size_Fmt "%.7g %s"
 #define Size_Arg(size) format_size_float(size), format_size_string(size)
 
-static float format_size_float(size_t bytes) {
+inline float format_size_float(size_t bytes) {
 	float result = (float)bytes;
 	if (bytes >= 1024) {
 		result /= 1024.0f;
@@ -214,7 +197,7 @@ static float format_size_float(size_t bytes) {
 	return result;
 }
 
-static const char* format_size_string(size_t bytes) {
+inline const char* format_size_string(size_t bytes) {
 	const char* result = "bytes";
 	if (bytes >= 1024) {
 		result = "KB";
@@ -232,14 +215,36 @@ static const char* format_size_string(size_t bytes) {
 }
 
 
-static vec4 get_color(u32 rgba) {
-	vec4 result;
-	result.r = ((rgba >> 24) & 0xFF) / 255.0f;
-	result.g = ((rgba >> 16) & 0xFF) / 255.0f;
-	result.b = ((rgba >>  8) & 0xFF) / 255.0f;
-	result.a = ((rgba >>  0) & 0xFF) / 255.0f;
-	return result;
+inline constexpr vec4 get_color(u32 rgba) {
+	return {((rgba >> 24) & 0xFF) / 255.0f,
+			((rgba >> 16) & 0xFF) / 255.0f,
+			((rgba >>  8) & 0xFF) / 255.0f,
+			((rgba >>  0) & 0xFF) / 255.0f};
 }
+
+inline constexpr vec4 get_color(u8 r, u8 g, u8 b, u8 a) {
+	return {r / 255.0f,
+			g / 255.0f,
+			b / 255.0f,
+			a / 255.0f};
+}
+
+inline constexpr vec4 get_color_4bit(u16 rgba) {
+	return {((rgba >> 12) & 0xF) / 15.0f,
+			((rgba >>  8) & 0xF) / 15.0f,
+			((rgba >>  4) & 0xF) / 15.0f,
+			((rgba >>  0) & 0xF) / 15.0f};
+}
+
+
+constexpr vec4 color_white  = get_color(0xffffffff);
+constexpr vec4 color_black  = get_color(0x000000ff);
+constexpr vec4 color_red    = get_color(0xff0000ff);
+constexpr vec4 color_green  = get_color(0x00ff00ff);
+constexpr vec4 color_blue   = get_color(0x0000ffff);
+constexpr vec4 color_yellow = get_color(0xffff00ff);
+
+constexpr vec4 color_cornflower_blue = get_color(0x6495edff);
 
 
 
@@ -254,37 +259,32 @@ static vec4 get_color(u32 rgba) {
 // 
 
 template <typename T>
-static T min(T a, T b) {
+inline T min(T a, T b) {
 	return (a < b) ? a : b;
 }
 
 template <typename T>
-static T max(T a, T b) {
+inline T max(T a, T b) {
 	return (a > b) ? a : b;
 }
 
 template <typename T>
-static T clamp(T a, T mn, T mx) {
+inline T clamp(T a, T mn, T mx) {
 	return max(min(a, mx), mn);
 }
 
 template <typename T>
-static void Clamp(T* a, T mn, T mx) {
-	*a = clamp(*a, mn, mx);
-}
-
-template <typename T>
-static T lerp(T a, T b, float f) {
+inline T lerp(T a, T b, float f) {
 	return a + (b - a) * f;
 }
 
 template <typename T>
-static T lerp_delta(T a, T b, float f, float delta) {
+inline T lerp_delta(T a, T b, float f, float delta) {
 	f = 1.0f - f;
 	return lerp(a, b, 1.0f - powf(f, delta));
 }
 
-static vec2 normalize0(vec2 v) {
+inline vec2 normalize0(vec2 v) {
 	float length = sqrtf(v.x * v.x + v.y * v.y);
 	if (length != 0) {
 		return {v.x / length, v.y / length};
@@ -294,34 +294,42 @@ static vec2 normalize0(vec2 v) {
 }
 
 template <typename T>
-static T approach(T start, T end, T shift) {
+inline T approach(T start, T end, T shift) {
 	return start + clamp(end - start, -shift, shift);
 }
 
-static float to_degrees(float rad) { return glm::degrees(rad); }
-static float to_radians(float deg) { return glm::radians(deg); }
+inline float to_degrees(float rad) { return glm::degrees(rad); }
+inline float to_radians(float deg) { return glm::radians(deg); }
 
-static float dsin(float deg) { return sinf(to_radians(deg)); }
-static float dcos(float deg) { return cosf(to_radians(deg)); }
+inline float dsin(float deg) { return sinf(to_radians(deg)); }
+inline float dcos(float deg) { return cosf(to_radians(deg)); }
 
-static float point_distance(float x1, float y1, float x2, float y2) {
+inline float point_distance(float x1, float y1, float x2, float y2) {
 	float dx = x2 - x1;
 	float dy = y2 - y1;
 	return sqrtf(dx * dx + dy * dy);
 }
 
-static float point_direction(float x1, float y1, float x2, float y2) {
+inline float point_distance(vec2 p1, vec2 p2) {
+	return point_distance(p1.x, p1.y, p2.x, p2.y);
+}
+
+inline float point_direction(float x1, float y1, float x2, float y2) {
 	return to_degrees(atan2f(y1 - y2, x2 - x1));
 }
 
-static bool circle_vs_circle(float x1, float y1, float r1, float x2, float y2, float r2) {
+inline float point_direction(vec2 p1, vec2 p2) {
+	return point_direction(p1.x, p1.y, p2.x, p2.y);
+}
+
+inline bool circle_vs_circle(float x1, float y1, float r1, float x2, float y2, float r2) {
 	float dx = x2 - x1;
 	float dy = y2 - y1;
 	float r = r1 + r2;
 	return (dx * dx + dy * dy) < (r * r);
 }
 
-static bool circle_vs_rotated_rect(float circle_x, float circle_y, float circle_radius,
+inline bool circle_vs_rotated_rect(float circle_x, float circle_y, float circle_radius,
 								   float rect_center_x, float rect_center_y, float rect_w, float rect_h, float rect_dir) {
 	float dx = circle_x - rect_center_x;
 	float dy = circle_y - rect_center_y;
@@ -338,17 +346,70 @@ static bool circle_vs_rotated_rect(float circle_x, float circle_y, float circle_
 	return (dx * dx + dy * dy) < (circle_radius * circle_radius);
 }
 
-static float lengthdir_x(float len, float dir) { return  dcos(dir) * len; }
-static float lengthdir_y(float len, float dir) { return -dsin(dir) * len; }
+inline float lengthdir_x(float len, float dir) { return  dcos(dir) * len; }
+inline float lengthdir_y(float len, float dir) { return -dsin(dir) * len; }
 
-static float wrapf(float a, float b) {
+inline vec2 lengthdir_v2(float len, float dir) {
+	return {lengthdir_x(len, dir), lengthdir_y(len, dir)};
+}
+
+inline float wrapf(float a, float b) {
 	return fmodf((fmodf(a, b) + b), b);
 }
 
 template <typename T>
-static T wrap(T a, T b) {
+inline T wrap(T a, T b) {
 	return ((a % b) + b) % b;
 }
+
+inline float angle_wrap(float deg) {
+	return wrapf(deg, 360.0f);
+}
+
+inline float angle_difference(float dest, float src) {
+	float res = dest - src;
+	res = angle_wrap(res + 180.0f) - 180.0f;
+	return res;
+}
+
+inline float signf(float x) {
+	if (x > 0) return 1;
+	if (x == 0) return 0;
+	return -1;
+}
+
+inline int sign_int(float x) {
+	if (x > 0) return 1;
+	if (x == 0) return 0;
+	return -1;
+}
+
+inline float floor_to(float a, float b) {
+	return floorf(a / b) * b;
+}
+
+inline float round_to(float a, float b) {
+	return roundf(a / b) * b;
+}
+
+inline float ceil_to(float a, float b) {
+	return ceilf(a / b) * b;
+}
+
+// 
+// One-Liners
+// 
+template <typename T>
+inline void Clamp(T* a, T mn, T mx) { *a = clamp(*a, mn, mx); }
+
+template <typename T>
+inline void Lerp(T* a, T b, float f) { *a = lerp(*a, b, f); }
+
+template <typename T>
+inline void Lerp_delta(T* a, T b, float f, float delta) { *a = lerp_delta(*a, b, f, delta); }
+
+template <typename T>
+inline void Approach(T* start, T end, T shift) { *start = approach(*start, end, shift); }
 
 
 
@@ -364,7 +425,7 @@ static T wrap(T a, T b) {
 
 #define is_power_of_two(x) ((x) != 0 && ((x) & ((x) - 1)) == 0)
 
-static uintptr_t align_forward(uintptr_t ptr, size_t align) {
+inline uintptr_t align_forward(uintptr_t ptr, size_t align) {
 	Assert(is_power_of_two(align));
 	return (ptr + (align - 1)) & ~(align - 1);
 }
@@ -377,7 +438,7 @@ struct Arena {
 	size_t capacity;
 };
 
-static Arena arena_create(size_t capacity) {
+inline Arena malloc_arena(size_t capacity) {
 	Arena a = {};
 	a.data     = (u8*) malloc(capacity);
 	a.capacity = capacity;
@@ -387,12 +448,12 @@ static Arena arena_create(size_t capacity) {
 	return a;
 }
 
-static void arena_destroy(Arena* a) {
+inline void free_arena(Arena* a) {
 	free(a->data);
 	*a = {};
 }
 
-static u8* arena_push(Arena* a, size_t size, size_t alignment = Arena::DEFAULT_ALIGNMENT) {
+inline u8* arena_push(Arena* a, size_t size, size_t alignment = Arena::DEFAULT_ALIGNMENT) {
 	uintptr_t curr_ptr = (uintptr_t)a->data + (uintptr_t)a->count;
 	uintptr_t offset = align_forward(curr_ptr, alignment);
 	offset -= (uintptr_t)a->data;
@@ -405,7 +466,7 @@ static u8* arena_push(Arena* a, size_t size, size_t alignment = Arena::DEFAULT_A
 	return ptr;
 }
 
-static Arena arena_create_from_arena(Arena* arena, size_t capacity) {
+inline Arena arena_create_from_arena(Arena* arena, size_t capacity) {
 	Arena a = {};
 	a.data     = arena_push(arena, capacity);
 	a.capacity = capacity;
@@ -427,90 +488,158 @@ struct array {
 	T*     data;
 	size_t count;
 
-	T& operator[](size_t i) { Assert(i < count); return data[i]; }
+	array() = default;
 
-	T* begin() { return data; }
-	T* end()   { return data + count; }
+	array(T* data, size_t count) : data(data), count(count) {}
+
+	template <size_t N>
+	array(const T (&arr)[N]) : data((T*) &arr[0]), count(N) {}
+
+	T& operator[](size_t i) {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T operator[](size_t i) const {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() const { return data; }
+	T* end()   const { return data + count; }
+
+	bool operator==(const array& other) const {
+		if (count != other.count) {
+			return false;
+		}
+
+		for (size_t i = 0; i < count; i++) {
+			if (data[i] != other[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool operator!=(const array& other) const {
+		return !(*this == other);
+	}
 };
 
-
-// 
-// A dynamic array that doesn't grow when it runs out of capacity, but
-// replaces the last element.
-// 
-// @Todo: Come up with a cleanup strategy
-// 
 template <typename T>
-struct dynamic_array_cap {
-	T*     data;
-	size_t count;
-	size_t capacity;
-
-	T& operator[](size_t i) { Assert(i < count); return data[i]; }
-
-	T* begin() { return data; }
-	T* end()   { return data + count; }
-};
-
-template <typename T>
-static dynamic_array_cap<T> dynamic_array_cap_from_arena(Arena* a, size_t capacity) {
-	dynamic_array_cap<T> arr = {};
-	arr.data      = (T*) arena_push(a, capacity * sizeof(T));
-	arr.capacity = capacity;
-
+inline array<T> calloc_array(size_t count) {
+	array<T> arr = {};
+	arr.data  = (T*) calloc(count, sizeof(T));
+	arr.count = count;
 	return arr;
 }
 
 template <typename T>
-static T* array_add(dynamic_array_cap<T>* arr, const T& val) {
-	Assert(arr->count <= arr->capacity);
-
-	if (arr->count == arr->capacity) {
-		arr->count--;
+inline bool starts_with(array<T> arr, array<T> prefix) {
+	if (arr.count < prefix.count) {
+		return false;
 	}
 
-	arr->data[arr->count] = val;
+	arr.count = prefix.count;
+	return arr == prefix;
+}
+
+
+// Standard linear bump array
+template <typename T>
+struct bump_array {
+	T*     data;
+	size_t count;
+	size_t capacity;
+
+	T& operator[](size_t i) {
+		// Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T operator[](size_t i) const {
+		// Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() const { return data; }
+	T* end()   const { return data + count; }
+};
+
+template <typename T>
+inline bump_array<T> bump_array_from_arena(Arena* a, size_t capacity) {
+	bump_array<T> arr = {};
+	arr.data     = (T*) arena_push(a, capacity * sizeof(T));
+	arr.capacity = capacity;
+	return arr;
+}
+
+template <typename T>
+inline bump_array<T> malloc_bump_array(size_t capacity) {
+	bump_array<T> arr = {};
+	arr.data     = (T*) malloc(capacity * sizeof(T));
+	arr.capacity = capacity;
+	return arr;
+}
+
+template <typename T>
+inline T* array_add(bump_array<T>* arr, const T& val) {
+	Assert(arr->count < arr->capacity);
+
 	T* result = &arr->data[arr->count];
+	*result = val;
 	arr->count++;
 
 	return result;
 }
 
 template <typename T>
-static T* array_remove(dynamic_array_cap<T>* arr, T* it) {
+inline T* array_remove(bump_array<T>* arr, T* it) {
+	Assert(arr->count > 0);
+
 	Assert(it >= arr->begin());
 	Assert(it <  arr->end());
 
-	for (T* i = it; i < arr->end() - 1; i++) {
-		*i = *(i + 1);
-	}
+	memmove(it, it + 1, (size_t)arr->end() - (size_t)it - sizeof(T));
 	arr->count--;
 
 	return it;
 }
 
 template <typename T>
-static T* array_insert(dynamic_array_cap<T>* arr, size_t index, const T& val) {
-	Assert(arr->count <= arr->capacity);
+inline T* array_remove(bump_array<T>* arr, size_t index) {
+	// Assert(index >= 0);
+	Assert(index < arr->count);
 
-	//Assert(index >= 0);
-	Assert(index <= arr->count);
+	return array_remove(arr, arr->begin() + index);
+}
 
-	if (arr->count == arr->capacity) {
-		arr->count--;
-	}
+template <typename T>
+inline T* array_insert(bump_array<T>* arr, T* it, const T& val) {
+	Assert(arr->count < arr->capacity);
 
-	index = min(index, arr->capacity - 1);
+	Assert(it >= arr->begin());
+	Assert(it <= arr->end());
 
-	for (size_t i = arr->count; i-- > index;) {
-		arr->data[i + 1] = arr->data[i];
-	}
+	memmove(it + 1, it, (size_t)arr->end() - (size_t)it);
 
-	T* result = &(arr->data[index] = val);
-
+	*it = val;
 	arr->count++;
 
-	return result;
+	return it;
+}
+
+template <typename T>
+inline T* array_insert(bump_array<T>* arr, size_t index, const T& val) {
+	// Assert(index >= 0); // for when I switch to signed sizes
+	Assert(index <= arr->count);
+
+	return array_insert(arr, arr->begin() + index, val);
 }
 
 
@@ -533,12 +662,24 @@ struct string {
 	template <size_t N>
 	string(const char (&arr)[N]) : data((char*) &arr[0]), count(N - 1) {}
 
-	string(dynamic_array_cap<char> arr) : data(arr.data), count(arr.count) {}
+	string(bump_array<char> arr) : data(arr.data), count(arr.count) {}
 
-	char& operator[](size_t i)       { Assert(i < count); return data[i]; }
-	char  operator[](size_t i) const { Assert(i < count); return data[i]; }
+	char& operator[](size_t i) {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
 
-	bool operator==(const string& other) {
+	char operator[](size_t i) const {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	char* begin() const { return data; }
+	char* end()   const { return data + count; }
+
+	bool operator==(const string& other) const {
 		if (count != other.count) {
 			return false;
 		}
@@ -551,29 +692,35 @@ struct string {
 
 		return true;
 	}
+
+	bool operator!=(const string& other) const {
+		return !(*this == other);
+	}
 };
 
-static bool is_whitespace(char ch) {
+inline bool is_whitespace(char ch) {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
 }
 
-static bool is_numeric(char ch) {
+inline bool is_numeric(char ch) {
 	return ch >= '0' && ch <= '9';
 }
 
-static void advance(string* str, size_t i = 1) {
+inline string advance(string* str, size_t i = 1) {
 	i = min(i, str->count);
+	string result = {str->data, i};
 	str->count -= i;
 	str->data  += i;
+	return result;
 }
 
-static void eat_whitespace(string* str) {
+inline void eat_whitespace(string* str) {
 	while (str->count > 0 && is_whitespace(*str->data)) {
 		advance(str);
 	}
 }
 
-static string eat_non_whitespace(string* str) {
+inline string eat_non_whitespace(string* str) {
 	string result = {str->data, 0};
 
 	while (str->count > 0 && !is_whitespace(*str->data)) {
@@ -584,7 +731,7 @@ static string eat_non_whitespace(string* str) {
 	return result;
 }
 
-static string eat_numeric(string* str) {
+inline string eat_numeric(string* str) {
 	string result = {str->data, 0};
 
 	while (str->count > 0 && is_numeric(*str->data)) {
@@ -595,7 +742,7 @@ static string eat_numeric(string* str) {
 	return result;
 }
 
-static string eat_line(string* str) {
+inline string eat_line(string* str) {
 	string result = {str->data, 0};
 
 	while (str->count > 0 && *str->data != '\n') {
@@ -611,7 +758,7 @@ static string eat_line(string* str) {
 	return result;
 }
 
-static u32 string_to_u32(string str, bool* done = nullptr) {
+inline u32 string_to_u32(string str, bool* done = nullptr) {
 	if (str.count == 0) {
 		if (done) *done = false;
 		return 0;
@@ -633,7 +780,32 @@ static u32 string_to_u32(string str, bool* done = nullptr) {
 	return result;
 }
 
-static float string_to_f32(string str, bool* done = nullptr) {
+inline int string_to_int(string str, bool* out_done = nullptr) {
+	if (str.count == 0) {
+		if (out_done) *out_done = false;
+		return 0;
+	}
+
+	int negative = 1;
+
+	while (str.count > 0 && *str.data == '-') {
+		negative = -negative;
+		advance(&str);
+	}
+
+	bool done;
+	u32 result = string_to_u32(str, &done);
+
+	if (!done) {
+		if (out_done) *out_done = false;
+		return 0;
+	}
+
+	if (out_done) *out_done = true;
+	return (int)result * negative;
+}
+
+inline float string_to_f32(string str, bool* done = nullptr) {
 	if (str.count == 0) {
 		if (done) *done = false;
 		return 0;
@@ -682,8 +854,17 @@ static float string_to_f32(string str, bool* done = nullptr) {
 	return result * negative;
 }
 
+inline bool starts_with(string str, string prefix) {
+	if (str.count < prefix.count) {
+		return false;
+	}
+
+	str.count = prefix.count;
+	return str == prefix;
+}
+
 template <size_t N>
-static string Sprintf(char (&buf)[N], const char* fmt, ...) {
+inline string SDL_PRINTF_VARARG_FUNC(2) Sprintf(char (&buf)[N], SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
 
@@ -693,12 +874,14 @@ static string Sprintf(char (&buf)[N], const char* fmt, ...) {
 	va_end(va);
 
 	Assert(result > 0);
-	return {buf, (size_t)result};
+	size_t count = min((size_t)result, N - 1);
+
+	return {buf, count};
 }
 
 
 // You have to free() the C string
-static char* to_c_string(string str) {
+inline char* to_c_string(string str) {
 	char* c_str = (char*) malloc(str.count + 1);
 	Assert(c_str);
 	memcpy(c_str, str.data, str.count);
@@ -708,7 +891,7 @@ static char* to_c_string(string str) {
 
 
 // You have to free() string.data
-static string copy_string(string str) {
+inline string copy_string(string str) {
 	if (str.count == 0) return {};
 
 	string result;

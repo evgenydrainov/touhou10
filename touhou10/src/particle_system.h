@@ -34,10 +34,10 @@ struct Particle {
 };
 
 struct Particle_System {
-	dynamic_array_cap<Particle> particles;
+	bump_array<Particle> particles;
 
 	void init();
-	void destroy();
+	void deinit();
 
 	void update(float delta);
 	void draw(float delta);

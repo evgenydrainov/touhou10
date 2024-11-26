@@ -87,26 +87,26 @@ void boss_start_phase(Boss* b) {
 		a.data = &anim_boss_spellcard;
 		a.speed = 0.75f;
 		anim_boss_spellcard.sprite_tracks[0].texture_index = b->GetData()->portrait_texture; // @Hack
-		array_add(&w->animations, a);
+		array_add(&world.animations, a);
 	} else {
 		b->wait_timer = BOSS_PHASE_START_TIME_NONSPELL;
 	}
 }
 
 void boss_end_phase(Boss* b) {
-	For (b, w->bullets) {
+	For (b, world.bullets) {
 		drop_pickup(b->x, b->y, PICKUP_TYPE_SCORE);
 
 		object_cleanup(b);
 	}
-	w->bullets.count = 0;
+	world.bullets.count = 0;
 
-	For (p, w->pickups) {
-		p->homing_target = w->player.id;
+	For (p, world.pickups) {
+		p->homing_target = world.player.id;
 	}
 
-	w->delta_multiplier = 1;
-	w->boss_pcb_youmu_effect = 0;
+	world.delta_multiplier = 1;
+	world.boss_pcb_youmu_effect = 0;
 
 	coroutine_destroy(&b->co);
 
@@ -116,8 +116,8 @@ void boss_end_phase(Boss* b) {
 	if (phase->type == PHASE_SPELLCARD) {
 		// Drop some pickups
 		for (int i = 0; i < 5; i++) {
-			float x = b->x + random_rangef(&w->rng, -50.0f, 50.0f);
-			float y = b->y + random_rangef(&w->rng, -50.0f, 50.0f);
+			float x = b->x + random_rangef(&world.rng, -50.0f, 50.0f);
+			float y = b->y + random_rangef(&world.rng, -50.0f, 50.0f);
 			PickupType type = (i == 4) ? PICKUP_TYPE_POWER_BIG : PICKUP_TYPE_POWER;
 			drop_pickup(x, y, type);
 		}
@@ -137,8 +137,8 @@ void boss_end_phase(Boss* b) {
 
 		play_sound(snd_enemy_die);
 	} else {
-		For (p, w->pickups) {
-			p->homing_target = w->player.id;
+		For (p, world.pickups) {
+			p->homing_target = world.player.id;
 		}
 
 		if (data->type == BOSS_TYPE_BOSS) {
@@ -164,5 +164,5 @@ void boss_create_kira_particle(Object* b) {
 	p.color_from = {1, 1, 1, 1};
 	p.color_to   = {1, 1, 1, 0};
 
-	array_add(&w->part_sys.particles, p);
+	array_add(&world.part_sys.particles, p);
 }

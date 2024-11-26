@@ -16,7 +16,9 @@ struct Title_Screen {
 	Menu options_menu;
 
 	void init();
-	void destroy();
+	void deinit();
 	void update(float delta);
 	void draw(float delta);
 };
+
+extern Title_Screen title_screen;

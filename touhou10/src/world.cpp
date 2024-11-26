@@ -1,10 +1,12 @@
 #include "world.h"
 
+#include "window_creation.h"
+#include "renderer.h"
 #include "game.h"
 
 #include <glad/gl.h>
 
-World* w;
+World world;
 
 #define PAUSE_MENU_SIZE 2
 
@@ -13,33 +15,33 @@ void World::init() {
 
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
-	enemies    = dynamic_array_cap_from_arena<Enemy>        (&g->arena, MAX_ENEMIES);
-	bullets    = dynamic_array_cap_from_arena<Bullet>       (&g->arena, MAX_BULLETS);
-	p_bullets  = dynamic_array_cap_from_arena<PlayerBullet> (&g->arena, MAX_PLAYER_BULLETS);
-	pickups    = dynamic_array_cap_from_arena<Pickup>       (&g->arena, MAX_PICKUPS);
-	animations = dynamic_array_cap_from_arena<Animation>    (&g->arena, MAX_ANIMATIONS);
+	enemies    = malloc_bump_array<Enemy>        (MAX_ENEMIES);
+	bullets    = malloc_bump_array<Bullet>       (MAX_BULLETS);
+	p_bullets  = malloc_bump_array<PlayerBullet> (MAX_PLAYER_BULLETS);
+	pickups    = malloc_bump_array<Pickup>       (MAX_PICKUPS);
+	animations = malloc_bump_array<Animation>    (MAX_ANIMATIONS);
 
 	part_sys.init();
 
-	StageData* stage = GetStageData(g->stage_index);
+	StageData* stage = GetStageData(game.stage_index);
 
 	if (stage->script) {
 		coroutine_create(&co, stage->script);
 	}
 
-	temp_arena_for_boss = arena_create_from_arena(&g->arena, TEMP_STORAGE_FOR_BOSS);
+	temp_arena_for_boss = malloc_arena(TEMP_STORAGE_FOR_BOSS);
 
 	if (stage->init_background) {
 		stage->init_background();
 	}
 }
 
-void World::destroy() {
+void World::deinit() {
+	free(temp_arena_for_boss.data);
+
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 
 	coroutine_destroy(&co);
-
-	part_sys.destroy();
 
 	For (p, pickups) {
 		object_cleanup(p);
@@ -67,6 +69,12 @@ void World::destroy() {
 	boss.flags |= FLAG_INSTANCE_DEAD;
 
 	object_cleanup(&player);
+
+	free(animations.data);
+	free(pickups.data);
+	free(p_bullets.data);
+	free(bullets.data);
+	free(enemies.data);
 }
 
 static bool player_collides_with_bullet(Player* p, float player_radius, Bullet* b) {
@@ -162,10 +170,10 @@ void World::physics_update(float delta, float delta_not_modified) {
 						Particle p = {};
 						p.x            = player.x;
 						p.y            = player.y;
-						p.spd          = random_rangef(&g->rng_visual, 4, 6);
-						p.dir          = random_rangef(&g->rng_visual, 0, 360);
+						p.spd          = random_rangef(&game.rng_visual, 4, 6);
+						p.dir          = random_rangef(&game.rng_visual, 0, 360);
 						p.acc          = -0.25f;
-						p.lifespan     = random_rangef(&g->rng_visual, 10, 15);
+						p.lifespan     = random_rangef(&game.rng_visual, 10, 15);
 						p.sprite_index = spr_particle_graze;
 						p.color_from   = {1, 1, 1, 0.5f};
 						p.color_to     = p.color_from;
@@ -329,7 +337,7 @@ void drop_pickup(float x, float y, PickupType type) {
 	p.pickup_type = type;
 	p.frame_index = (float)type;
 
-	array_add(&w->pickups, p);
+	array_add(&world.pickups, p);
 }
 
 static void enemy_drop_pickups(int drops, float x, float y) {
@@ -341,15 +349,15 @@ static void enemy_drop_pickups(int drops, float x, float y) {
 		case 1: {
 			// A power or a point
 			PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
-			drop_pickup(x, y, random_choose(&w->rng, types));
+			drop_pickup(x, y, random_choose(&world.rng, types));
 			break;
 		}
 
 		case 2: {
 			// A power or a point at a 50% chance
-			if (random_chance(&w->rng, 0.5f)) {
+			if (random_chance(&world.rng, 0.5f)) {
 				PickupType types[] = {PICKUP_TYPE_POWER, PICKUP_TYPE_POINT};
-				drop_pickup(x, y, random_choose(&w->rng, types));
+				drop_pickup(x, y, random_choose(&world.rng, types));
 			}
 			break;
 		}
@@ -363,8 +371,8 @@ void World::update(float delta_not_modified) {
 	// Disable in debug to be able to set a breakpoint and
 	// hit continue to skip a frame.
 	// 
-#if !TH_DEBUG
-	if (!(SDL_GetWindowFlags(g->window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(g->window) & SDL_WINDOW_MINIMIZED)) {
+#if !_DEBUG
+	if (!(SDL_GetWindowFlags(game.window) & SDL_WINDOW_INPUT_FOCUS) || (SDL_GetWindowFlags(game.window) & SDL_WINDOW_MINIMIZED)) {
 		if (!paused) {
 			paused = true;
 			pause_menu = {};
@@ -373,7 +381,7 @@ void World::update(float delta_not_modified) {
 	}
 #endif
 
-	if (paused || g->skip_frame) {
+	if (paused || game.skip_frame) {
 		goto l_skip_update;
 	}
 
@@ -682,7 +690,7 @@ l_skip_update:
 				break;
 			}
 			case 1: {
-				g->next_state = Game::STATE_TITLE_SCREEN;
+				game.next_state = Game::STATE_TITLE_SCREEN;
 				break;
 			}
 		}
@@ -783,17 +791,15 @@ mat4 World::D3D::get_mvp() {
 void World::draw(float delta_not_modified) {
 	float delta = delta_not_modified * delta_multiplier;
 
-	glViewport(g->game_viewport.x, g->game_viewport.y, g->game_viewport.w, g->game_viewport.h);
-	r->proj = glm::ortho<float>(0, GAME_W, GAME_H, 0);
+	renderer.proj_mat = glm::ortho<float>(0, GAME_W, GAME_H, 0);
 
 	// Draw background
 	{
-
 		// @Temp???
 		auto draw = [&](int x, int y, int width, int height) {
 			Rect src = {x, y, width, height};
 			vec2 pos = {x, y};
-			r->draw_texture(GetTexture(tex_background), src, pos);
+			draw_texture(*GetTexture(tex_background), src, pos);
 		};
 
 		draw(0, 0, PLAY_AREA_X, GAME_H);
@@ -801,7 +807,7 @@ void World::draw(float delta_not_modified) {
 		draw(PLAY_AREA_X, 0, PLAY_AREA_W, PLAY_AREA_Y);
 		draw(PLAY_AREA_X, PLAY_AREA_Y + PLAY_AREA_H, PLAY_AREA_W, GAME_H - (PLAY_AREA_Y + PLAY_AREA_H));
 
-		r->break_batch();
+		break_batch();
 	}
 
 	// 
@@ -815,31 +821,31 @@ void World::draw(float delta_not_modified) {
 		string str;
 
 		str = Sprintf(buf, "HiScore %d", 0);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		draw_text(game.font_main, str, {x, y});
 		y += 16;
 
-		str = Sprintf(buf, "Score %d", g->stats.score);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Score %d", game.stats.score);
+		draw_text(game.font_main, str, {x, y});
 		y += 16 * 2;
 
-		str = Sprintf(buf, "Player %d", g->stats.lives);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Player %d", game.stats.lives);
+		draw_text(game.font_main, str, {x, y});
 		y += 16;
 
-		str = Sprintf(buf, "Bomb %d", g->stats.bombs);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Bomb %d", game.stats.bombs);
+		draw_text(game.font_main, str, {x, y});
 		y += 16 * 2;
 
-		str = Sprintf(buf, "Power %d", g->stats.power);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Power %d", game.stats.power);
+		draw_text(game.font_main, str, {x, y});
 		y += 16;
 
-		str = Sprintf(buf, "Graze %d", g->stats.graze);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Graze %d", game.stats.graze);
+		draw_text(game.font_main, str, {x, y});
 		y += 16;
 
-		str = Sprintf(buf, "Point %d", g->stats.points);
-		r->draw_text(GetSprite(spr_font_main), str, x, y);
+		str = Sprintf(buf, "Point %d", game.stats.points);
+		draw_text(game.font_main, str, {x, y});
 		y += 16;
 	}
 
@@ -854,20 +860,20 @@ void World::draw(float delta_not_modified) {
 			color.a = 0.25f;
 		}
 
-		r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
+		//r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
 	}
 
-	r->break_batch();
+	break_batch();
 
-	glViewport(g->play_area_viewport.x, g->play_area_viewport.y, g->play_area_viewport.w, g->play_area_viewport.h);
-	r->proj = glm::ortho<float>(0, PLAY_AREA_W, PLAY_AREA_H, 0);
+	glViewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+	renderer.proj_mat = glm::ortho<float>(0, PLAY_AREA_W, PLAY_AREA_H, 0);
 
-	glScissor(g->play_area_viewport.x, g->play_area_viewport.y, g->play_area_viewport.w, g->play_area_viewport.h);
+	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
 	glEnable(GL_SCISSOR_TEST);
 	defer { glDisable(GL_SCISSOR_TEST); };
 
 	if (boss_spellcard_background_alpha < 1) {
-		StageData* stage = GetStageData(g->stage_index);
+		StageData* stage = GetStageData(game.stage_index);
 		if (stage->draw_background) {
 			stage->draw_background(delta);
 		}
@@ -896,11 +902,11 @@ void World::draw(float delta_not_modified) {
 			y += 2 * sinf(SDL_GetTicks() / 200.0f);
 		}
 
-		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {x, y});
+		draw_sprite(b->GetSprite(), (int)b->frame_index, {x, y});
 	}
 
 	For (e, enemies) {
-		r->draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y}, {1, 1}, e->angle);
+		draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y}, {1, 1}, e->angle);
 	}
 
 	player_draw(&player, delta);
@@ -912,7 +918,7 @@ void World::draw(float delta_not_modified) {
 		if (b->type == PLAYER_BULLET_REIMU_CARD) {
 			angle = b->reimu_card.rotation;
 		}
-		r->draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, scale, angle, color);
+		draw_sprite(b->GetSprite(), (int)b->frame_index, {b->x, b->y}, scale, angle, color);
 	}
 
 	For (b, bullets) {
@@ -964,7 +970,7 @@ void World::draw(float delta_not_modified) {
 					vec2 scale = lerp(scale_from, scale_to, f);
 					vec4 color = lerp(color_from, color_to, f);
 
-					r->draw_sprite(GetSprite(spr_bullet_spawn_particle), frame_index, {b->x, b->y}, scale, 0, color);
+					draw_sprite(get_sprite(spr_bullet_spawn_particle), frame_index, {b->x, b->y}, scale, 0, color);
 				};
 
 				auto draw_bullet = [&]() {
@@ -979,7 +985,7 @@ void World::draw(float delta_not_modified) {
 						frame_index = 15;
 					}
 
-					r->draw_sprite(b->GetSprite(), frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
+					draw_sprite(b->GetSprite(), frame_index, {b->x, b->y}, {1.0f, 1.0f}, angle);
 				};
 
 				if (b->lifetime < BULLET_SPAWN_PARTICLE_LIFESPAN) {
@@ -994,20 +1000,20 @@ void World::draw(float delta_not_modified) {
 				float angle = b->dir + 90.0f;
 				float xscale = (b->lazer.thickness + 2.0f) / 16.0f;
 				float yscale = b->lazer.length / 16.0f;
-				r->draw_sprite(b->GetSprite(), (int)b->frame_index,
-							   {b->x, b->y}, {xscale, yscale}, angle);
+				draw_sprite(b->GetSprite(), (int)b->frame_index,
+							{b->x, b->y}, {xscale, yscale}, angle);
 				break;
 			}
 		}
 	}
 
 	For (p, pickups) {
-		r->draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
+		draw_sprite(p->GetSprite(), (int)p->frame_index, {p->x, p->y});
 
 		if (p->y < 0) {
 			vec4 color = {1, 1, 1, 0.5f};
 
-			r->draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8}, {1, 1}, 0, color);
+			draw_sprite(p->GetSprite(), (int)p->frame_index + PICKUP_TYPE_COUNT, {p->x, 8}, {1, 1}, 0, color);
 		}
 	}
 
@@ -1019,29 +1025,29 @@ void World::draw(float delta_not_modified) {
 
 
 	if (show_hitboxes) {
-		r->draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0.0f, 0.0f, 0.0f, 0.5f});
+		draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0.0f, 0.0f, 0.0f, 0.5f});
 
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			r->draw_circle({boss.x, boss.y}, boss.radius, {1, 1, 1, 0.5f});
+			draw_circle({boss.x, boss.y}, boss.radius, {1, 1, 1, 0.5f});
 		}
 
 		For (e, enemies) {
-			r->draw_circle({e->x, e->y}, e->radius, {1, 1, 1, 0.25f});
+			draw_circle({e->x, e->y}, e->radius, {1, 1, 1, 0.25f});
 		}
 
 		{
-			r->draw_circle({player.x, player.y}, player.radius);
-			r->draw_circle({player.x, player.y}, player.GetCharacter()->graze_radius, {1, 1, 1, 0.25f});
+			draw_circle({player.x, player.y}, player.radius, color_white);
+			draw_circle({player.x, player.y}, player.GetCharacter()->graze_radius, {1, 1, 1, 0.25f});
 		}
 
 		For (b, p_bullets) {
-			r->draw_circle({b->x, b->y}, b->radius, {1, 1, 1, 0.25f});
+			draw_circle({b->x, b->y}, b->radius, {1, 1, 1, 0.25f});
 		}
 
 		For (b, bullets) {
 			switch (b->bullet_type) {
 				case BULLET_TYPE_BULLET: {
-					r->draw_circle({b->x, b->y}, b->radius);
+					draw_circle({b->x, b->y}, b->radius, color_white);
 					break;
 				}
 
@@ -1049,14 +1055,14 @@ void World::draw(float delta_not_modified) {
 					float angle  = b->dir + 90.0f;
 					float xscale = b->lazer.thickness / 16.0f;
 					float yscale = b->lazer.length    / 16.0f;
-					r->draw_rectangle_ext({b->x, b->y}, {xscale, yscale}, {8.0f, 0.0f}, angle);
+					draw_rectangle({b->x, b->y, 16.0f, 16.0f}, {xscale, yscale}, {8.0f, 0.0f}, angle, color_white);
 					break;
 				}
 			}
 		}
 
 		For (p, pickups) {
-			r->draw_circle({p->x, p->y}, p->radius, {1, 1, 1, 0.25f});
+			draw_circle({p->x, p->y}, p->radius, {1, 1, 1, 0.25f});
 		}
 	}
 
@@ -1070,33 +1076,33 @@ void World::draw(float delta_not_modified) {
 
 		// Draw healthbar
 		{
-			int healthbar_x = 32 + 2;
-			int healthbar_y = 6;
-			int healthbar_w = PLAY_AREA_W - 64 - 4;
-			int healthbar_h = 2;
-			int reduced_w = (int) ((float)healthbar_w * (b->hp / phase->hp));
+			const int healthbar_x = 32 + 2;
+			const int healthbar_y = 6;
+			const int healthbar_w = PLAY_AREA_W - 64 - 4;
+			const int healthbar_h = 2;
+			const int reduced_w = (int) ((float)healthbar_w * (b->hp / phase->hp));
 
-			r->draw_rectangle({healthbar_x, healthbar_y + 1, reduced_w, healthbar_h}, color_black);
-			r->draw_rectangle({healthbar_x, healthbar_y, reduced_w, healthbar_h}, color_white);
+			draw_rectangle({healthbar_x, healthbar_y + 1, reduced_w, healthbar_h}, color_black);
+			draw_rectangle({healthbar_x, healthbar_y, reduced_w, healthbar_h}, color_white);
 		}
 
 		// Draw phase count
 		{
 			char buf[10];
 			string str = Sprintf(buf, "%d", data->phase_count - b->phase_index - 1);
-			r->draw_text(GetSprite(spr_font_main), str, 0, 0);
+			draw_text(game.font_main, str, {0, 0});
 		}
 
 		// Draw timer
 		{
 			char buf[10];
 			string str = Sprintf(buf, "%d", (int)b->timer / 60);
-			r->draw_text(GetSprite(spr_font_main), str, PLAY_AREA_W, 0, HALIGN_RIGHT);
+			draw_text(game.font_main, str, {PLAY_AREA_W, 0}, HALIGN_RIGHT);
 		}
 
 		// Draw phase name
 		{
-			r->draw_text_shadow(GetFont(fnt_cirno), phase->name, PLAY_AREA_W - 2, 16, HALIGN_RIGHT);
+			draw_text_shadow(*GetFont(fnt_cirno), phase->name, {PLAY_AREA_W - 2, 16}, HALIGN_RIGHT);
 		}
 	}
 
@@ -1105,7 +1111,7 @@ void World::draw(float delta_not_modified) {
 	// 
 	if (paused) {
 		// bg
-		r->draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0, 0, 0, 0.5f});
+		draw_rectangle({0, 0, PLAY_AREA_W, PLAY_AREA_H}, {0, 0, 0, 0.5f});
 
 		static_assert(PAUSE_MENU_SIZE == 2);
 		string labels[PAUSE_MENU_SIZE] = {
@@ -1124,8 +1130,7 @@ void World::draw(float delta_not_modified) {
 				  sep_x, sep_y, labels, MENU_DRAW_CENTERED);
 	}
 
-	r->break_batch();
-
+	break_batch();
 }
 
 instance_id World::get_instance_id(ObjType type) {
@@ -1134,7 +1139,7 @@ instance_id World::get_instance_id(ObjType type) {
 }
 
 template <typename T>
-static T* binary_search(dynamic_array_cap<T> arr, instance_id id) {
+static T* binary_search(bump_array<T> arr, instance_id id) {
 	ssize_t left = 0;
 	ssize_t right = (ssize_t)arr.count - 1;
 
@@ -1212,13 +1217,13 @@ void LaunchTowardsPoint(Object* o, float target_x, float target_y, float acc) {
 }
 
 void get_score(int score) {
-	g->stats.score += score;
+	game.stats.score += score;
 }
 
 void get_lives(int lives) {
 	while (lives--) {
-		if (g->stats.lives < 8) {
-			g->stats.lives++;
+		if (game.stats.lives < 8) {
+			game.stats.lives++;
 			play_sound(snd_extend);
 		} else {
 			get_bombs(1);
@@ -1228,17 +1233,17 @@ void get_lives(int lives) {
 
 void get_bombs(int bombs) {
 	while (bombs--) {
-		if (g->stats.bombs < 8) {
-			g->stats.bombs++;
+		if (game.stats.bombs < 8) {
+			game.stats.bombs++;
 		}
 	}
 }
 
 void get_power(int power) {
 	while (power--) {
-		if (g->stats.power < 128) {
-			g->stats.power++;
-			switch (g->stats.power) {
+		if (game.stats.power < 128) {
+			game.stats.power++;
+			switch (game.stats.power) {
 				case 8:
 				case 16:
 				case 32:
@@ -1253,19 +1258,19 @@ void get_power(int power) {
 }
 
 void get_graze(int graze) {
-	g->stats.graze += graze;
+	game.stats.graze += graze;
 	play_sound(snd_graze);
 }
 
 void get_points(int points) {
 	while (points--) {
-		g->stats.points++;
-		if (g->stats.points >= 800) {
-			if (g->stats.points % 200 == 0) {
+		game.stats.points++;
+		if (game.stats.points >= 800) {
+			if (game.stats.points % 200 == 0) {
 				get_lives(1);
 			}
 		} else {
-			switch (g->stats.points) {
+			switch (game.stats.points) {
 				case 50:
 				case 125:
 				case 200:
