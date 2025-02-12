@@ -88,7 +88,7 @@ static Bullet* ShootExtO(Object* o,
 		coroutine_create(&b.co, script);
 	}
 
-	play_sound(snd_enemy_shoot);
+	play_sound(get_sound(snd_enemy_shoot));
 
 	return array_add(&world.bullets, b);
 }
@@ -123,7 +123,7 @@ static Bullet* ShootLazerO(Object* o,
 	b.lazer.thickness = thickness;
 	b.lazer.time = target_length / spd;
 
-	play_sound(snd_lazer);
+	play_sound(get_sound(snd_lazer));
 
 	return array_add(&world.bullets, b);
 }
@@ -308,5 +308,5 @@ static float seconds(float sec) {
 
 static void Kira(Object* o) {
 	boss_create_kira_particle(o);
-	play_sound(snd_kira);
+	play_sound(get_sound(snd_kira));
 }

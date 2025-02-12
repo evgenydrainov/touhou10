@@ -19,7 +19,7 @@ void World::init() {
 	pickups    = malloc_bump_array<Pickup>       (MAX_PICKUPS);
 	animations = malloc_bump_array<Animation>    (MAX_ANIMATIONS);
 
-	part_sys.init();
+	init_particles();
 
 	StageData* stage = GetStageData(game.stage_index);
 
@@ -65,6 +65,8 @@ void World::deinit() {
 		object_cleanup(&boss);
 	}
 	boss.flags |= FLAG_INSTANCE_DEAD;
+
+	deinit_particles();
 
 	object_cleanup(&player);
 
@@ -166,8 +168,8 @@ void World::physics_update(float delta, float delta_not_modified) {
 
 					{
 						Particle p = {};
-						p.x            = player.x;
-						p.y            = player.y;
+						p.pos.x        = player.x;
+						p.pos.y        = player.y;
 						p.spd          = random_rangef(&game.rng_visual, 4, 6);
 						p.dir          = random_rangef(&game.rng_visual, 0, 360);
 						p.acc          = -0.25f;
@@ -176,7 +178,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 						p.color_from   = {1, 1, 1, 0.5f};
 						p.color_to     = p.color_from;
 
-						array_add(&part_sys.particles, p);
+						add_particle(p);
 					}
 
 					if (b->bullet_type == BULLET_TYPE_LAZER) {
@@ -192,11 +194,12 @@ void World::physics_update(float delta, float delta_not_modified) {
 					player.state = PLAYER_STATE_DYING;
 					player.timer = PLAYER_DEATH_TIME;
 
-					play_sound(snd_pichuun);
+					play_sound(get_sound(snd_pichuun));
 				}
 
 				object_cleanup(b);
 				Remove(b, bullets);
+				continue;
 			}
 		}
 	}
@@ -209,7 +212,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 					player.state = PLAYER_STATE_DYING;
 					player.timer = PLAYER_DEATH_TIME;
 
-					play_sound(snd_pichuun);
+					play_sound(get_sound(snd_pichuun));
 				}
 			}
 		}
@@ -223,7 +226,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 					player.state = PLAYER_STATE_DYING;
 					player.timer = PLAYER_DEATH_TIME;
 
-					play_sound(snd_pichuun);
+					play_sound(get_sound(snd_pichuun));
 				}
 			}
 		}
@@ -231,8 +234,8 @@ void World::physics_update(float delta, float delta_not_modified) {
 
 	auto create_player_bullet_afterimage = [&](PlayerBullet* b) {
 		Particle p = {};
-		p.x            = b->x;
-		p.y            = b->y;
+		p.pos.x        = b->x;
+		p.pos.y        = b->y;
 		p.sprite_index = (b->type == PLAYER_BULLET_REIMU_CARD) ? spr_reimu_shot_card_afterimage : spr_reimu_shot_orb_afterimage;
 		p.spd          = b->spd / 10.0f;
 		p.dir          = b->dir;
@@ -242,7 +245,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 		p.scale_to     = {2.5f, 2.5f};
 		p.lifespan     = 10;
 
-		array_add(&part_sys.particles, p);
+		add_particle(p);
 	};
 
 	// Boss vs player bullets
@@ -254,11 +257,12 @@ void World::physics_update(float delta, float delta_not_modified) {
 					boss.flags |= FLAG_BOSS_WAS_HIT_THIS_FRAME;
 				}
 
-				play_sound(snd_enemy_hurt);
+				play_sound(get_sound(snd_enemy_hurt));
 				create_player_bullet_afterimage(b);
 
 				object_cleanup(b);
 				Remove(b, p_bullets);
+				continue;
 			}
 		}
 	}
@@ -269,11 +273,12 @@ void World::physics_update(float delta, float delta_not_modified) {
 			if (circle_vs_circle(e->x, e->y, e->radius, b->x, b->y, b->radius)) {
 				e->hp -= b->dmg;
 
-				play_sound(snd_enemy_hurt);
+				play_sound(get_sound(snd_enemy_hurt));
 				create_player_bullet_afterimage(b);
 
 				object_cleanup(b);
 				Remove(b, p_bullets);
+				continue;
 			}
 		}
 	}
@@ -296,10 +301,11 @@ void World::physics_update(float delta, float delta_not_modified) {
 					case PICKUP_TYPE_FULL_POWER: get_power(MAX_POWER); break;
 				}
 
-				play_sound(snd_pickup);
+				play_sound(get_sound(snd_pickup));
 
 				object_cleanup(p);
 				Remove(p, pickups);
+				continue;
 			}
 		}
 	}
@@ -412,12 +418,12 @@ void World::update(float delta_not_modified) {
 					e->death_callback(e);
 				}
 
-				play_sound(snd_enemy_die);
+				play_sound(get_sound(snd_enemy_die));
 
 				{
 					Particle p = {};
-					p.x            = e->x;
-					p.y            = e->y;
+					p.pos.x        = e->x;
+					p.pos.y        = e->y;
 					p.sprite_index = spr_enemy_death_particle_blue;
 					p.scale_from   = {0.5f, 0.5f};
 					p.scale_to     = {1.5f, 1.5f};
@@ -425,7 +431,7 @@ void World::update(float delta_not_modified) {
 					p.color_to     = {1, 1, 1, 0};
 					p.lifespan     = 15;
 
-					array_add(&part_sys.particles, p);
+					add_particle(p);
 				}
 
 				object_cleanup(e);
@@ -593,6 +599,8 @@ void World::update(float delta_not_modified) {
 
 	// Call coroutines
 	{
+		coro_memory = 0;
+
 		auto handle_coroutine = [&](Coroutine* co, Object* self, float delta) {
 			co->timer += delta;
 			while (co->timer >= 1) {
@@ -605,7 +613,6 @@ void World::update(float delta_not_modified) {
 						co->handle->user_data = &user;
 
 						mco_resume(co->handle);
-						// coro_memory += co->handle->coro_size;
 					} else if (co->handle->state == MCO_DEAD) {
 						coroutine_destroy(co);
 					} else {
@@ -615,9 +622,11 @@ void World::update(float delta_not_modified) {
 
 				co->timer -= 1;
 			}
-		};
 
-		// coro_memory = 0;
+			if (co->handle) {
+				coro_memory += co->handle->coro_size;
+			}
+		};
 
 		handle_coroutine(&co, nullptr, delta);
 
@@ -638,10 +647,11 @@ void World::update(float delta_not_modified) {
 		a->time += a->speed * delta / 60.0f;
 		if (a->time >= a->data->length) {
 			Remove(a, animations);
+			continue;
 		}
 	}
 
-	part_sys.update(delta);
+	update_particles(delta);
 
 
 	{
@@ -674,7 +684,7 @@ l_skip_update:
 				pause_menu.cursor = 0;
 				pause_menu.state = MENU_ANIM_OUT;
 				pause_menu.animation = 1;
-				play_sound(snd_menu_cancel);
+				play_sound(get_sound(snd_menu_cancel));
 				return;
 			}
 		}
@@ -700,7 +710,7 @@ l_skip_update:
 		if (is_key_pressed(SDL_SCANCODE_ESCAPE)) {
 			paused = true;
 			pause_menu = {};
-			play_sound(snd_pause);
+			play_sound(get_sound(snd_pause));
 		}
 	}
 
@@ -1015,7 +1025,7 @@ void World::draw(float delta_not_modified) {
 		}
 	}
 
-	part_sys.draw(delta);
+	draw_particles(delta);
 
 	For (a, animations) {
 		a->draw(delta);
@@ -1222,7 +1232,7 @@ void get_lives(int lives) {
 	while (lives--) {
 		if (game.stats.lives < 8) {
 			game.stats.lives++;
-			play_sound(snd_extend);
+			play_sound(get_sound(snd_extend));
 		} else {
 			get_bombs(1);
 		}
@@ -1249,7 +1259,7 @@ void get_power(int power) {
 				case 64:
 				case 80:
 				case 96:
-				case 128: play_sound(snd_powerup); break;
+				case 128: play_sound(get_sound(snd_powerup)); break;
 			}
 		}
 	}
@@ -1257,7 +1267,7 @@ void get_power(int power) {
 
 void get_graze(int graze) {
 	game.stats.graze += graze;
-	play_sound(snd_graze);
+	play_sound(get_sound(snd_graze));
 }
 
 void get_points(int points) {

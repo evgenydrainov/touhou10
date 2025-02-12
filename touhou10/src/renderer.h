@@ -6,7 +6,7 @@
 /*
 * A basic 2D batch renderer.
 * 
-* Call break_batch() before making opengl calls or modifying renderer's matrices or renderer's current shader.
+* Call break_batch() before making raw OpenGL calls.
 */
 
 constexpr size_t BATCH_MAX_QUADS    = 10'000;
@@ -21,8 +21,6 @@ struct Vertex {
 	vec4 color;
 	vec2 uv;
 };
-
-void set_vertex_attribs();
 
 enum RenderMode {
 	MODE_NONE,
@@ -39,6 +37,7 @@ struct Renderer {
 	bump_array<Vertex> vertices;
 
 	u32 texture_shader;  // These shaders should be handled by an asset system maybe
+	u32 color_shader;
 	u32 circle_shader;
 	u32 sharp_bilinear_shader;
 
@@ -50,11 +49,11 @@ struct Renderer {
 	u32 stub_texture; // 1x1 white texture
 
 	u32 game_texture;      // Game is renderer to a framebuffer, and then the framebuffer is
-	u32 game_depth_texture;
 	u32 game_framebuffer;  // rendered to the screen.
-
 	Rect game_texture_rect;
-	float game_texture_scale;
+
+	int backbuffer_width;
+	int backbuffer_height;
 
 	mat4 proj_mat = {1};
 	mat4 view_mat = {1};
@@ -74,6 +73,8 @@ struct Renderer {
 
 extern Renderer renderer;
 
+void set_vertex_attribs();
+
 void init_renderer(); // assumes opengl is initialized
 void deinit_renderer();
 
@@ -82,11 +83,24 @@ void render_end_frame();
 
 void break_batch(); // makes the draw call
 
-void draw_texture(Texture t, Rect src = {},
+void set_shader(u32 shader);
+void reset_shader();
+
+void set_proj_mat (const mat4& proj_mat);
+void set_view_mat (const mat4& view_mat);
+void set_model_mat(const mat4& model_mat);
+
+void set_viewport(int x, int y, int width, int height);
+
+void render_clear_color(vec4 color);
+
+void draw_quad(const Texture& t, Vertex vertices[4]);
+
+void draw_texture(const Texture& t, Rect src = {},
 				  vec2 pos = {}, vec2 scale = {1, 1},
 				  vec2 origin = {}, float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
 
-void draw_texture_centered(Texture t,
+void draw_texture_centered(const Texture& t,
 						   vec2 pos = {}, vec2 scale = {1, 1},
 						   float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
 

@@ -287,7 +287,7 @@ void Stage_0_Draw_Background(float delta) {
 		glUniform1f(u_FogEnd, 60);
 		glUniform4fv(u_FogColor, 1, &fog_color[0]);
 
-		glBindTexture(GL_TEXTURE_2D, get_texture(tex_eosd_misty_lake).ID);
+		glBindTexture(GL_TEXTURE_2D, get_texture(tex_eosd_misty_lake).id);
 		glBindVertexArray(vao);
 
 		glDrawElements(GL_TRIANGLES, ArrayLength(indices), GL_UNSIGNED_INT, 0);

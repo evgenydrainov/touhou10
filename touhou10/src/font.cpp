@@ -3,16 +3,26 @@
 #include "package.h"
 #include "renderer.h"
 
-bool load_bmfont_file(Font* f, const char* fnt_filepath, const char* png_filepath) {
-	free_font(f);
+Font load_bmfont_file(const char* fnt_filepath, const char* png_filepath) {
+	Font f = {};
 
 	string text = get_file_str(fnt_filepath);
 	if (text.count == 0) {
 		log_error("Couldn't open font \"%s\"", fnt_filepath);
-		return false;
+		free_font(&f);
+		return {};
 	}
 
 	string line = eat_line(&text); // info
+
+	if (string_contains(line, '\r')) {
+		log_warn("File %s has CRLF line endings!", fnt_filepath);
+	}
+
+	// allow comments at top of file
+	while (line.count > 0 && line[0] == '#') {
+		line = eat_line(&text);
+	}
 
 	// 
 	// TODO: Parse 'face="MS Gothic"' somehow
@@ -30,7 +40,7 @@ bool load_bmfont_file(Font* f, const char* fnt_filepath, const char* png_filepat
 			int size = string_to_int(word, &done);
 			Assert(done);
 
-			f->size = size;
+			f.size = size;
 		}
 	}
 
@@ -48,15 +58,15 @@ bool load_bmfont_file(Font* f, const char* fnt_filepath, const char* png_filepat
 			int line_height = string_to_int(word, &done);
 			Assert(done);
 
-			f->line_height = line_height;
+			f.line_height = line_height;
 		}
 	}
 
 	line = eat_line(&text); // page
 	line = eat_line(&text); // chars
 
-	f->glyphs = calloc_array<Glyph>(95); // [32..126]
-	f->should_free_glyphs = true;
+	f.glyphs = calloc_array<Glyph>(95);
+	f.should_free_glyphs = true;
 
 	for (int i = 0; i < 95; i++) {
 		line = eat_line(&text);
@@ -98,47 +108,56 @@ bool load_bmfont_file(Font* f, const char* fnt_filepath, const char* png_filepat
 		glyph.yoffset  = eat_value_int("yoffset=");
 		glyph.xadvance = eat_value_int("xadvance=");
 
-		f->glyphs[i] = glyph;
+		f.glyphs[i] = glyph;
 	}
 
-	load_texture_from_file(&f->atlas, png_filepath);
-	f->should_free_atlas = true;
+	f.atlas = load_texture_from_file(png_filepath);
 
-	return true;
+	if (f.atlas.id == 0) {
+		log_error("Couldn't load font %s: couldn't load texture.", fnt_filepath);
+		free_font(&f);
+		return {};
+	}
+
+	f.should_free_atlas = true;
+
+	log_info("Loaded font %s", fnt_filepath);
+
+	return f;
 }
 
-bool load_font_from_texture(Font* f, const Texture& texture,
+Font load_font_from_texture(const char* filepath,
 							int size, int line_height, int char_width,
 							int xoffset, int yoffset) {
-	free_font(f);
+	Font f = {};
 
-	if (texture.width <= 0 || texture.height <= 0) {
+	f.atlas = load_texture_from_file(filepath);
+	f.should_free_atlas = true;
+
+	if (f.atlas.id == 0) {
 		log_error("Couldn't create font: invalid texture.");
-		return false;
+		free_font(&f);
+		return {};
 	}
 
-	if (xoffset == 0) {
-		log_error("Couldn't create font: xoffset must not be zero.");
-		return false;
-	}
+	if (xoffset == 0) xoffset = char_width;
+	if (yoffset == 0) yoffset = size;
 
-	if (texture.width % xoffset != 0) {
+	if (f.atlas.width % xoffset != 0) {
 		log_error("Couldn't create font: texture width must be divisible by xoffset.");
-		return false;
+		free_font(&f);
+		return {};
 	}
 
-	int stride = texture.width / xoffset;
+	int stride = f.atlas.width / xoffset;
 
-	f->atlas = texture;
-	f->should_free_atlas = false;
+	f.glyphs = calloc_array<Glyph>(95); // [32..126]
+	f.should_free_glyphs = true;
 
-	f->glyphs = calloc_array<Glyph>(95); // [32..126]
-	f->should_free_glyphs = true;
+	f.size = size;
+	f.line_height = line_height;
 
-	f->size = size;
-	f->line_height = line_height;
-
-	for (size_t i = 0; i < f->glyphs.count; i++) {
+	for (size_t i = 0; i < f.glyphs.count; i++) {
 		int tile_x = i % stride;
 		int tile_y = i / stride;
 
@@ -149,10 +168,12 @@ bool load_font_from_texture(Font* f, const Texture& texture,
 		glyph.height = size;
 		glyph.xadvance = char_width;
 
-		f->glyphs[i] = glyph;
+		f.glyphs[i] = glyph;
 	}
 
-	return true;
+	log_info("Loaded font (%d x %d) from texture (%d x %d).", char_width, size, f.atlas.width, f.atlas.height);
+
+	return f;
 }
 
 void free_font(Font* f) {
@@ -162,7 +183,7 @@ void free_font(Font* f) {
 	*f = {};
 }
 
-vec2 draw_text(Font font, string text, vec2 text_pos,
+vec2 draw_text(const Font& font, string text, vec2 text_pos,
 			   HAlign halign, VAlign valign, vec4 color) {
 	if (font.glyphs.count == 0) return text_pos;
 
@@ -226,14 +247,14 @@ vec2 draw_text(Font font, string text, vec2 text_pos,
 	return {ch_x, ch_y};
 }
 
-vec2 draw_text_shadow(Font font, string text, vec2 text_pos,
+vec2 draw_text_shadow(const Font& font, string text, vec2 text_pos,
 					  HAlign halign, VAlign valign, vec4 color) {
 	draw_text(font, text, {text_pos.x + 1, text_pos.y + 1}, halign, valign, color_black);
 	vec2 result = draw_text(font, text, text_pos, halign, valign, color);
 	return result;
 }
 
-vec2 measure_text(Font font, string text, bool only_one_line) {
+vec2 measure_text(const Font& font, string text, bool only_one_line) {
 	if (font.glyphs.count == 0) return {};
 
 	float w = 0;
@@ -261,19 +282,17 @@ vec2 measure_text(Font font, string text, bool only_one_line) {
 			Assert(font.glyphs.count == 95);
 			Glyph glyph = font.glyphs[ch - 32];
 
-			// If char isn't whitespace, draw it
-			if (ch != ' ') {
-				vec2 pos;
-				pos.x = ch_x + glyph.xoffset;
-				pos.y = ch_y + glyph.yoffset;
+			// don't skip whitespace
+			vec2 pos;
+			pos.x = ch_x; // don't add xoffset and yoffset
+			pos.y = ch_y;
 
-				pos = glm::floor(pos);
+			pos = glm::floor(pos);
 
-				// On practise, I always happen to prefer glyph.xadvance here,
-				// instead of the actual "correct" text size.
-				w = max(w, pos.x + glyph.xadvance /*glyph.width*/);
-				h = max(h, ch_y + font.size);
-			}
+			// On practise, I always happen to prefer glyph.xadvance here,
+			// instead of the actual "correct" text size.
+			w = max(w, pos.x + glyph.xadvance /*glyph.width*/);
+			h = max(h, ch_y + font.size);
 
 			ch_x += glyph.xadvance;
 		}

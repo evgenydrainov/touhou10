@@ -170,7 +170,7 @@ static void reimu_shot_type(Player* p, float delta) {
 				}
 			}
 
-			play_sound(snd_char_reimu_shoot);
+			play_sound(get_sound(snd_char_reimu_shoot));
 
 			p->reimu.fire_queue--;
 		}

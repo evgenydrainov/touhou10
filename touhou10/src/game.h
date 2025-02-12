@@ -11,18 +11,13 @@
 #define GAME_TEXTURE_SCALE 1
 #define RENDER_GAME_TO_TEXTURE 1
 #define DRAW_AT_FLOORED_POSITION 1
-#define FILTER_FOR_SPRITES GL_LINEAR
 
 #define PLAY_AREA_W 384
 #define PLAY_AREA_H 448
 #define PLAY_AREA_X 32
 #define PLAY_AREA_Y 16
 
-Mix_Chunk* load_sound(const char* fname);
-u32        load_3d_model_from_obj_file(const char* fname, int* out_num_vertices);
-
-void stop_sound(u32 sound_index);
-void play_sound(u32 sound_index);
+u32 load_3d_model_from_obj_file(const char* fname, int* out_num_vertices);
 
 struct Stats {
 	int score;
@@ -66,6 +61,8 @@ struct Game {
 
 extern Game game;
 
-#if defined(DEVELOPER)
+#ifdef DEVELOPER
+extern array<string> g_ConsoleCommands;
+
 bool console_callback(string str, void* userdata);
 #endif

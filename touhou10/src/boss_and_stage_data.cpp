@@ -17,7 +17,7 @@ void Stage_1_Draw_Background(float delta);
 
 static_assert(NUM_BOSSES == 3, "");
 
-BossData boss_data[NUM_BOSSES] = {
+static BossData boss_data[NUM_BOSSES] = {
 	{
 		/* .name                      = */ "Cirno",
 		/* .phases                    = */ boss_cirno_phases,
@@ -62,7 +62,7 @@ BossData* GetBossData(u32 boss_index) {
 
 static_assert(STAGE_COUNT == 2, "");
 
-StageData stage_data[STAGE_COUNT] = {
+static StageData stage_data[STAGE_COUNT] = {
 	{
 		/* .script          = */ Stage_0_Script,
 		/* .init_background = */ Stage_0_Init_Background,

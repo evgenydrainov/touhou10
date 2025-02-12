@@ -2,20 +2,8 @@
 
 #include "common.h"
 
-#define MAX_PARTICLES 1'000
-
-// 
-// Maybe a particle can hold a type_index to get some params?
-// Or have a separate array for particles of each type.
-// 
-// Or write a shader for each type so these params will become uniforms.
-// 
-// I don't know how to write a particle system.
-// 
-
 struct Particle {
-	float x;
-	float y;
+	vec2 pos;
 	float spd;
 	float dir;
 	float acc;
@@ -26,19 +14,21 @@ struct Particle {
 	u32 sprite_index;
 	float frame_index;
 
-	vec4 color_from = {1, 1, 1, 1};
-	vec4 color_to   = {1, 1, 1, 1};
+	vec4 color_from = color_white;
+	vec4 color_to   = color_white;
 
 	vec2 scale_from = {1, 1};
 	vec2 scale_to   = {1, 1};
 };
 
-struct Particle_System {
-	bump_array<Particle> particles;
+constexpr size_t MAX_PARTICLES = 10'000;
 
-	void init();
-	void deinit();
+extern bump_array<Particle> g_Particles;
 
-	void update(float delta);
-	void draw(float delta);
-};
+void init_particles();
+void deinit_particles();
+
+void update_particles(float delta);
+void draw_particles(float delta);
+
+Particle* add_particle(const Particle& p);

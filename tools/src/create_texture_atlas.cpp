@@ -57,57 +57,6 @@ struct Create_Sprite {
 
 static Create_Sprite create_sprites[] = {
 
-	// name                            texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
-	{"spr_white"                     , "white.png",         0,   0, 16, 16,  0,  0,  1,  1},
-	{"spr_reimu_idle"                , "characters.png",    0,   0, 32, 48, 16, 24,  8,  8, 0.20f,  0, 32, 48},
-	{"spr_reimu_left"                , "characters.png",    0,  48, 32, 48, 16, 24,  8,  8, 0.20f,  4, 32, 48},
-	{"spr_reimu_right"               , "characters.png",    0,  96, 32, 48, 16, 24,  8,  8, 0.20f,  4, 32, 48},
-	{"spr_font_main"                 , "fonts.png",        16,  48, 15, 15,  0,  0, 96, 16, 0.00f,  0, 16, 16},
-	{"spr_player_hitbox"             , "characters.png",  192, 144, 64, 64, 32, 32,  1,  1},
-	{"spr_enemy_label"               , "fonts.png",        16, 256, 48, 16, 24,  0,  1,  1},
-	{"spr_reimu_shot_card"           , "characters.png",    0, 144, 16, 16,  8,  8,  1,  1},
-	{"spr_reimu_shot_orb"            , "characters.png",   16, 144, 16, 16,  8,  8,  1,  1},
-	{"spr_reimu_shot_card_afterimage", "characters.png",   32, 144, 16, 16,  8,  8,  1,  1},
-	{"spr_reimu_shot_orb_afterimage" , "characters.png",   48, 144, 16, 16,  8,  8,  1,  1},
-
-	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
-	{"spr_reimu_orb"         , "characters.png",   64, 144, 16, 16,  8,  8,  3,  3},
-
-	{"spr_pickup"            , "projectiles.png",   0, 608, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_particle_graze"    , "graze.png",         0,   0,  8,  8,  4,  4,  4,  4, 0.25f},
-
-	{"spr_lazer"             , "projectiles.png",   0,   0, 16, 16,  8,  0, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_arrow"      , "projectiles.png",   0,  16, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_outline"    , "projectiles.png",   0,  32, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_filled"     , "projectiles.png",   0,  48, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_rice"       , "projectiles.png",   0,  64, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_kunai"      , "projectiles.png",   0,  80, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_shard"      , "projectiles.png",   0,  96, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_card"       , "projectiles.png",   0, 112, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-	{"spr_bullet_bullet"     , "projectiles.png",   0, 128, 16, 16,  8,  8, 16, 16, 0.00f,  0, 16, 16},
-
-	{"spr_bullet_small"      , "projectiles.png",   0, 240,  8,  8,  4,  4, 16,  8, 0.00f,  0,  8,  8},
-
-	// name                           texture                u    v    w   h   xo  yo  fc  row anim  loop xs  ys
-	{"spr_bullet_spawn_particle",     "projectiles.png",     0,   416, 32, 32, 16, 16,  8,  8},
-	{"spr_enemy_death_particle_blue", "projectiles_pcb.png", 192, 432, 64, 64, 32, 32,  1,  1},
-	{"spr_kira_particle",             "projectiles_pcb.png", 64,  464, 32, 32, 16, 16,  1,  1},
-
-	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
-	{"spr_boss_cirno_idle"   , "boss_cirno.png",  176, 160, 64, 64, 32, 32,  4,  4, 0.15f,  0, 64, 64},
-	{"spr_boss_cirno_right"  , "boss_cirno.png",  176, 224, 64, 64, 32, 32,  4,  4, 0.15f,  3, 64, 64},
-	{"spr_boss_cirno_left"   , "boss_cirno.png",  176, 288, 64, 64, 32, 32,  4,  4, 0.15f,  3, 64, 64},
-
-	{"spr_boss_daiyousei_idle","Enemies.png",     288, 496, 48, 48, 24, 24,  1,  1, 0.00f,  0, 48, 48},
-
-	{"spr_boss_youmu_idle",    "boss_youmu.png",  176, 160, 48, 64, 24, 32,  4,  4, 0.10f},
-	{"spr_boss_youmu_left",    "boss_youmu.png",  176, 224, 48, 64, 24, 32,  4,  4, 0.15f,  3},
-	{"spr_boss_youmu_right",   "boss_youmu.png",  176, 288, 48, 64, 24, 32,  4,  4, 0.15f,  3},
-
-	// name                    texture             u    v   w   h   xo  yo  fc  row anim  loop xs  ys
-	{"spr_fairy_0",            "Enemies.png",     288, 288, 32, 32, 16, 16, 8,   8, 0.10f},
-	{"spr_fairy_1",            "Enemies.png",     288, 320, 32, 32, 16, 16, 8,   8, 0.10f},
-	{"spr_enemy_0",            "Enemies.png",     416, 384, 32, 32, 16, 16, 1},
 
 };
 

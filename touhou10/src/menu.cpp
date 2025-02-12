@@ -12,20 +12,20 @@ int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
 		if (is_key_pressed(SDL_SCANCODE_UP)) {
 			if (menu->cursor > 0) {
 				menu->cursor--;
-				play_sound(snd_menu_navigate);
+				play_sound(get_sound(snd_menu_navigate));
 			}
 		}
 
 		if (is_key_pressed(SDL_SCANCODE_DOWN)) {
 			if (menu->cursor < num_items - 1) {
 				menu->cursor++;
-				play_sound(snd_menu_navigate);
+				play_sound(get_sound(snd_menu_navigate));
 			}
 		}
 
 		if (is_key_pressed(SDL_SCANCODE_X)) {
 			menu->cursor = num_items - 1;
-			play_sound(snd_menu_cancel);
+			play_sound(get_sound(snd_menu_cancel));
 		}
 
 		if (is_key_pressed(SDL_SCANCODE_Z)) {
@@ -34,7 +34,7 @@ int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
 			} else {
 				menu->state = MENU_ANIM_OUT;
 				menu->animation = 1;
-				play_sound(snd_menu_ok);
+				play_sound(get_sound(snd_menu_ok));
 			}
 		}
 	};

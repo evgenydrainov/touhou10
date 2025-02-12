@@ -26,16 +26,7 @@ void object_cleanup(Pickup* p) {}
 float object_animate(u32 sprite_index, float frame_index, float delta) {
 	const Sprite& s = get_sprite(sprite_index);
 
-	frame_index += s.anim_spd * delta;
-
-	if (frame_index >= (float)s.frame_count) {
-		float a = frame_index - (float)s.loop_frame;
-		float b = (float)(s.frame_count - s.loop_frame);
-		Assert(b != 0);
-		frame_index = (float)s.loop_frame + fmodf(a, b);
-	}
-
-	return frame_index;
+	return sprite_animate(s, frame_index, delta);
 }
 
 void coroutine_create(Coroutine* co, void (*func)(mco_coro*)) {

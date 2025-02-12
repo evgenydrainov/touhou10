@@ -5,9 +5,9 @@
 
 #include "character_data_reimu.h"
 
-static_assert(NUM_CHARACTERS == 1, "Fill the character array if you change the enum.");
+static_assert(NUM_CHARACTERS == 1);
 
-Character character_data[NUM_CHARACTERS] = {
+static Character character_data[NUM_CHARACTERS] = {
 	{
 		/* .name           = */ "Reimu Hakurei",
 		/* .move_spd       = */ 3.75f,
@@ -23,3 +23,7 @@ Character character_data[NUM_CHARACTERS] = {
 		/* .spr_right      = */ spr_reimu_right,
 	},
 };
+
+Character* GetCharacter(u32 character_index) {
+	return &character_data[character_index];
+}

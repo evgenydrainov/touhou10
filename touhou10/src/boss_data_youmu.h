@@ -138,7 +138,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 		world.boss_pcb_youmu_effect = 1;
 		world.delta_multiplier = 0.25f;
-		play_sound(snd_kira);
+		play_sound(get_sound(snd_kira));
 
 		wait(seconds(2.1f));
 
@@ -151,7 +151,7 @@ static void M_Youmu_Ghost_Sword(mco_coro* co) {
 
 		world.boss_pcb_youmu_effect = 1;
 		world.delta_multiplier = 0.25f;
-		play_sound(snd_kira);
+		play_sound(get_sound(snd_kira));
 
 		wait(seconds(2.1f));
 	}

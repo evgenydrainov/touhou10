@@ -224,7 +224,7 @@ void Stage_1_Draw_Background(float delta) {
 		glUniform4fv(u_FogColor, 1, &fog_color[0]);
 		glUniform3f(u_LightDirection, 0, -1, 0);
 
-		glBindTexture(GL_TEXTURE_2D, get_texture(tex_pcb_youmu_stairs).ID);
+		glBindTexture(GL_TEXTURE_2D, get_texture(tex_pcb_youmu_stairs).id);
 		defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 		glBindVertexArray(vao);

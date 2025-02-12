@@ -9,6 +9,8 @@
 #error You have to define _DEBUG or NDEBUG.
 #endif
 
+// #define PRETEND_MOBILE
+
 #include <SDL.h>
 #include <stb/stb_sprintf.h>
 #include <glm/glm.hpp>
@@ -57,11 +59,12 @@ struct Rectf {
 // Logging and assert
 // 
 
-#define log_info(fmt, ...)  _my_log(SDL_LOG_PRIORITY_INFO,  fmt, ##__VA_ARGS__)
-#define log_warn(fmt, ...)  _my_log(SDL_LOG_PRIORITY_WARN,  fmt, ##__VA_ARGS__)
-#define log_error(fmt, ...) _my_log(SDL_LOG_PRIORITY_ERROR, fmt, ##__VA_ARGS__)
+#define log_info(fmt, ...)  log_internal(SDL_LOG_PRIORITY_INFO,  fmt, ##__VA_ARGS__)
+#define log_warn(fmt, ...)  log_internal(SDL_LOG_PRIORITY_WARN,  fmt, ##__VA_ARGS__)
+#define log_error(fmt, ...) log_internal(SDL_LOG_PRIORITY_ERROR, fmt, ##__VA_ARGS__)
 
-inline void SDL_PRINTF_VARARG_FUNC(2) _my_log(SDL_LogPriority priority, SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
+inline void SDL_PRINTF_VARARG_FUNC(2) log_internal(SDL_LogPriority priority, SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
+#if 1
 	static char buf[512];
 
 	// SDL_snprintf doesn't support %g.
@@ -71,6 +74,63 @@ inline void SDL_PRINTF_VARARG_FUNC(2) _my_log(SDL_LogPriority priority, SDL_PRIN
 	va_end(va);
 
 	SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, priority, "%s", buf);
+#else
+	static char buf[STB_SPRINTF_MIN];
+
+	switch (priority) {
+		case SDL_LOG_PRIORITY_VERBOSE: {
+			static const char buf[] = "VERBOSE: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+
+		case SDL_LOG_PRIORITY_DEBUG: {
+			static const char buf[] = "DEBUG: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+
+		case SDL_LOG_PRIORITY_INFO: {
+			static const char buf[] = "INFO: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+
+		case SDL_LOG_PRIORITY_WARN: {
+			static const char buf[] = "WARN: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+
+		case SDL_LOG_PRIORITY_ERROR: {
+			static const char buf[] = "ERROR: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+
+		case SDL_LOG_PRIORITY_CRITICAL: {
+			static const char buf[] = "CRITICAL: ";
+			fwrite(buf, 1, sizeof buf, stdout);
+			break;
+		}
+	}
+
+	va_list va;
+	va_start(va, fmt);
+
+	stb_vsprintfcb([](const char *buf, void *user, int len) -> char* {
+		char* orig_buf = (char*) user;
+
+		fwrite(buf, 1, len, stdout);
+
+		return orig_buf;
+	}, buf, buf, fmt, va);
+
+	va_end(va);
+
+	char newl = '\n';
+	fwrite(&newl, 1, 1, stdout);
+#endif
 }
 
 //
@@ -87,9 +147,13 @@ inline void SDL_PRINTF_VARARG_FUNC(2) _my_log(SDL_LogPriority priority, SDL_PRIN
 extern SDL_Window* get_window_handle(); // defined in window_creation.h
 
 inline void try_to_exit_fullscreen_properly() {
-	// @Todo: Probably needed only for Windows
 	if (SDL_Window* window = get_window_handle()) {
 		SDL_SetWindowFullscreen(window, 0);
+
+		// NOTE: if you leave fullscreen right before triggering the debugger or showing a message box,
+		// then you have to respond to the OS events here, otherwise you won't actually leave fullscreen and get a stuck window.
+		// At least, that was the case before I updated my GPU driver I think.
+
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev)) {}
 	}
@@ -171,6 +235,18 @@ public:
 		return names[val]; \
 	}
 
+#define GENERATE_ENUM_WITH_VALUES(name, value) name = value,
+#define GENERATE_ENUM_CASE(name, value) case name: return #name;
+
+#define DEFINE_NAMED_ENUM_WITH_VALUES(Type, List) \
+	enum Type { List(GENERATE_ENUM_WITH_VALUES) }; \
+	inline const char* Get##Type##Name(Type val) { \
+		switch (val) { \
+			List(GENERATE_ENUM_CASE) \
+		} \
+		return "unknown"; \
+	}
+
 // 
 // Human-readable printing for filesizes.
 // 
@@ -222,7 +298,7 @@ inline constexpr vec4 get_color(u32 rgba) {
 			((rgba >>  0) & 0xFF) / 255.0f};
 }
 
-inline constexpr vec4 get_color(u8 r, u8 g, u8 b, u8 a) {
+inline constexpr vec4 get_color(u8 r, u8 g, u8 b, u8 a = 0xFF) {
 	return {r / 255.0f,
 			g / 255.0f,
 			b / 255.0f,
@@ -258,6 +334,10 @@ constexpr vec4 color_cornflower_blue = get_color(0x6495edff);
 // Cirno's Perfect Math Library
 // 
 
+#ifndef PI
+#define PI 3.14159265359f
+#endif
+
 template <typename T>
 inline T min(T a, T b) {
 	return (a < b) ? a : b;
@@ -270,6 +350,8 @@ inline T max(T a, T b) {
 
 template <typename T>
 inline T clamp(T a, T mn, T mx) {
+	// Prioritize lower bound for situations like
+	//   clamp(index, 0, size - 1) when size is 0.
 	return max(min(a, mx), mn);
 }
 
@@ -282,6 +364,15 @@ template <typename T>
 inline T lerp_delta(T a, T b, float f, float delta) {
 	f = 1.0f - f;
 	return lerp(a, b, 1.0f - powf(f, delta));
+}
+
+template <typename T>
+inline T lerp3(T a, T b, T c, float f) {
+	if (f >= 0.5f) {
+		return lerp(b, c, (f - 0.5f) * 2.0f);
+	} else {
+		return lerp(a, b, f * 2.0f);
+	}
 }
 
 inline vec2 normalize0(vec2 v) {
@@ -298,8 +389,13 @@ inline T approach(T start, T end, T shift) {
 	return start + clamp(end - start, -shift, shift);
 }
 
-inline float to_degrees(float rad) { return glm::degrees(rad); }
-inline float to_radians(float deg) { return glm::radians(deg); }
+inline float to_degrees(float rad) {
+	return rad * (180.0f / PI);
+}
+
+inline float to_radians(float deg) {
+	return deg * (PI / 180.0f);
+}
 
 inline float dsin(float deg) { return sinf(to_radians(deg)); }
 inline float dcos(float deg) { return cosf(to_radians(deg)); }
@@ -329,6 +425,35 @@ inline bool circle_vs_circle(float x1, float y1, float r1, float x2, float y2, f
 	return (dx * dx + dy * dy) < (r * r);
 }
 
+inline bool rect_vs_rect(Rectf r1, Rectf r2) {
+	return (r1.x + r1.w > r2.x
+			&& r1.x <= r2.x + r2.w
+			&& r1.y + r1.h > r2.y
+			&& r1.y <= r2.y + r2.h);
+}
+
+inline bool point_in_rect(vec2 p, Rectf r) {
+	return (p.x >= r.x
+			&& p.x < r.x + r.w
+			&& p.y >= r.y
+			&& p.y < r.y + r.h);
+}
+
+inline bool point_in_triangle(vec2 pt, vec2 v1, vec2 v2, vec2 v3) {
+	auto sign = [](vec2 p1, vec2 p2, vec2 p3) {
+		return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+	};
+
+	float d1 = sign(pt, v1, v2);
+	float d2 = sign(pt, v2, v3);
+	float d3 = sign(pt, v3, v1);
+
+	bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+	bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+	return !(has_neg && has_pos);
+}
+
 inline bool circle_vs_rotated_rect(float circle_x, float circle_y, float circle_radius,
 								   float rect_center_x, float rect_center_y, float rect_w, float rect_h, float rect_dir) {
 	float dx = circle_x - rect_center_x;
@@ -354,12 +479,20 @@ inline vec2 lengthdir_v2(float len, float dir) {
 }
 
 inline float wrapf(float a, float b) {
-	return fmodf((fmodf(a, b) + b), b);
+	a = fmodf(a, b);
+	if (a < 0) {
+		a += b;
+	}
+	return a;
 }
 
 template <typename T>
 inline T wrap(T a, T b) {
-	return ((a % b) + b) % b;
+	a = a % b;
+	if (a < 0) {
+		a += b;
+	}
+	return a;
 }
 
 inline float angle_wrap(float deg) {
@@ -384,16 +517,24 @@ inline int sign_int(float x) {
 	return -1;
 }
 
-inline float floor_to(float a, float b) {
+inline float floorf_to(float a, float b) {
 	return floorf(a / b) * b;
 }
 
-inline float round_to(float a, float b) {
+inline float roundf_to(float a, float b) {
 	return roundf(a / b) * b;
 }
 
-inline float ceil_to(float a, float b) {
+inline float ceilf_to(float a, float b) {
 	return ceilf(a / b) * b;
+}
+
+inline mat4 get_ortho(float left, float right, float bottom, float top) {
+	return glm::ortho<float>(left, right, bottom, top);
+}
+
+inline mat4 get_translation(vec3 v) {
+	return glm::translate<float>(mat4{1}, v);
 }
 
 // 
@@ -480,72 +621,6 @@ inline Arena arena_create_from_arena(Arena* arena, size_t capacity) {
 //                SECTION: Array Type
 // ----------------------------------------------------
 
-
-
-// "Array view"
-template <typename T>
-struct array {
-	T*     data;
-	size_t count;
-
-	array() = default;
-
-	array(T* data, size_t count) : data(data), count(count) {}
-
-	template <size_t N>
-	array(const T (&arr)[N]) : data((T*) &arr[0]), count(N) {}
-
-	T& operator[](size_t i) {
-		Assert(i >= 0);
-		Assert(i < count);
-		return data[i];
-	}
-
-	T operator[](size_t i) const {
-		Assert(i >= 0);
-		Assert(i < count);
-		return data[i];
-	}
-
-	T* begin() const { return data; }
-	T* end()   const { return data + count; }
-
-	bool operator==(const array& other) const {
-		if (count != other.count) {
-			return false;
-		}
-
-		for (size_t i = 0; i < count; i++) {
-			if (data[i] != other[i]) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool operator!=(const array& other) const {
-		return !(*this == other);
-	}
-};
-
-template <typename T>
-inline array<T> calloc_array(size_t count) {
-	array<T> arr = {};
-	arr.data  = (T*) calloc(count, sizeof(T));
-	arr.count = count;
-	return arr;
-}
-
-template <typename T>
-inline bool starts_with(array<T> arr, array<T> prefix) {
-	if (arr.count < prefix.count) {
-		return false;
-	}
-
-	arr.count = prefix.count;
-	return arr == prefix;
-}
 
 
 // Standard linear bump array
@@ -641,6 +716,76 @@ inline T* array_insert(bump_array<T>* arr, size_t index, const T& val) {
 
 	return array_insert(arr, arr->begin() + index, val);
 }
+
+
+
+// "Array view"
+template <typename T>
+struct array {
+	T*     data;
+	size_t count;
+
+	array() = default;
+
+	array(T* data, size_t count) : data(data), count(count) {}
+
+	template <size_t N>
+	array(const T (&arr)[N]) : data((T*) &arr[0]), count(N) {}
+
+	array(bump_array<T> arr) : data(arr.data), count(arr.count) {}
+
+	T& operator[](size_t i) {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T operator[](size_t i) const {
+		Assert(i >= 0);
+		Assert(i < count);
+		return data[i];
+	}
+
+	T* begin() const { return data; }
+	T* end()   const { return data + count; }
+
+	bool operator==(const array& other) const {
+		if (count != other.count) {
+			return false;
+		}
+
+		for (size_t i = 0; i < count; i++) {
+			if (data[i] != other[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool operator!=(const array& other) const {
+		return !(*this == other);
+	}
+};
+
+template <typename T>
+inline array<T> calloc_array(size_t count) {
+	array<T> arr = {};
+	arr.data  = (T*) calloc(count, sizeof(T));
+	arr.count = count;
+	return arr;
+}
+
+template <typename T>
+inline bool starts_with(array<T> arr, array<T> prefix) {
+	if (arr.count < prefix.count) {
+		return false;
+	}
+
+	arr.count = prefix.count;
+	return arr == prefix;
+}
+
 
 
 // -----------------------------------------------
@@ -863,6 +1008,13 @@ inline bool starts_with(string str, string prefix) {
 	return str == prefix;
 }
 
+inline bool string_contains(string str, char ch) {
+	For (it, str) {
+		if (*it == ch) return true;
+	}
+	return false;
+}
+
 template <size_t N>
 inline string SDL_PRINTF_VARARG_FUNC(2) Sprintf(char (&buf)[N], SDL_PRINTF_FORMAT_STRING const char* fmt, ...) {
 	va_list va;
@@ -900,6 +1052,25 @@ inline string copy_string(string str) {
 
 	Assert(result.data);
 	memcpy(result.data, str.data, str.count);
+
+	return result;
+}
+
+
+// You have to free() string.data
+inline string copy_c_string(const char* str) {
+	if (!str) return {};
+
+	size_t len = strlen(str);
+
+	if (len == 0) return {};
+
+	string result;
+	result.data  = (char*) malloc(len);
+	result.count = len;
+
+	Assert(result.data);
+	memcpy(result.data, str, len);
 
 	return result;
 }

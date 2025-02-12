@@ -1,23 +1,23 @@
 #pragma once
 
 #include "common.h"
-#include "sprite_indices.h"
-#include "animation.h"
-#include "texture.h"
-#include "sprite.h"
-#include "font.h"
 
-#include <minicoro/minicoro.h>
-#include <SDL_mixer.h>
+#include "texture.h"
+#include "font.h"
+#include "sprite.h"
+#include "sound_mixer.h"
+#include "animation.h"
 
 struct Player;
-
-// 
-// Textures
-// 
+struct mco_coro;
 
 enum {
-	tex_atlas_0,
+	tex_characters,
+	tex_projectiles,
+	tex_ui,
+	tex_bosses,
+	tex_enemies,
+
 	tex_eosd_misty_lake,
 	tex_cirno_spellcard_background,
 	tex_background,
@@ -28,27 +28,87 @@ enum {
 	tex_pcb_youmu_stairs,
 	tex_pcb_youmu_bg,
 	tex_pcb_youmu_bg_flowers,
-	tex_font_cirno,
-	tex_font_main,
 
 	NUM_TEXTURES,
 };
 
-extern Texture texture_data[NUM_TEXTURES];
+enum {
+	spr_reimu_idle,
+	spr_reimu_left,
+	spr_reimu_right,
+	spr_reimu_shot_card,
+	spr_reimu_shot_orb,
+	spr_reimu_shot_card_afterimage,
+	spr_reimu_shot_orb_afterimage,
+	spr_reimu_orb,
+	spr_player_hitbox,
 
-const Texture& get_texture(u32 texture_index);
+	spr_lazer,
+	spr_bullet_arrow,
+	spr_bullet_outline,
+	spr_bullet_filled,
+	spr_bullet_rice,
+	spr_bullet_kunai,
+	spr_bullet_shard,
+	spr_bullet_card,
+	spr_bullet_bullet,
+	spr_bullet_small,
+	spr_bullet_spawn_particle,
+	spr_enemy_death_particle_blue,
+	spr_kira_particle,
+	spr_pickup,
+	spr_particle_graze,
 
-// 
-// Sprites
-// 
+	spr_enemy_label,
 
-extern Sprite sprite_data[NUM_SPRITES];
+	spr_boss_cirno_idle,
+	spr_boss_cirno_right,
+	spr_boss_cirno_left,
+	spr_boss_youmu_idle,
+	spr_boss_youmu_left,
+	spr_boss_youmu_right,
 
-const Sprite& get_sprite(u32 sprite_index);
+	spr_boss_daiyousei_idle,
+	spr_fairy_0,
+	spr_fairy_1,
+	spr_enemy_0,
 
-// 
-// Characters
-// 
+	NUM_SPRITES,
+};
+
+enum {
+	fnt_consolas_bold,
+	fnt_cirno,
+	fnt_main,
+
+	NUM_FONTS,
+};
+
+enum {
+	snd_boss_die,
+	snd_char_reimu_shoot,
+	snd_enemy_die,
+	snd_enemy_hurt,
+	snd_enemy_shoot,
+	snd_extend,
+	snd_graze,
+	snd_lazer,
+	snd_menu_cancel,
+	snd_menu_navigate,
+	snd_menu_ok,
+	snd_pause,
+	snd_pichuun,
+	snd_pickup,
+	snd_powerup,
+	snd_spellcard,
+	snd_kira,
+
+	NUM_SOUNDS,
+};
+
+enum {
+	shd__,
+};
 
 struct Character {
 	const char* name;
@@ -70,14 +130,6 @@ enum {
 
 	NUM_CHARACTERS,
 };
-
-extern Character character_data[NUM_CHARACTERS];
-
-Character* GetCharacter(u32 character_index);
-
-// 
-// Boss data
-// 
 
 enum PhaseType {
 	PHASE_NONSPELL,
@@ -118,14 +170,6 @@ struct BossData {
 
 DEFINE_NAMED_ENUM(BossIndex, BOSS_INDEX_ENUM)
 
-extern BossData boss_data[NUM_BOSSES];
-
-BossData* GetBossData(u32 boss_index);
-
-// 
-// Stage data
-// 
-
 struct StageData {
 	void (*script)(mco_coro*);
 	void (*init_background)();
@@ -134,58 +178,16 @@ struct StageData {
 
 #define STAGE_COUNT 2
 
-extern StageData stage_data[STAGE_COUNT];
-
-StageData* GetStageData(u32 stage_index);
-
-
-// 
-// Sounds
-// 
-
-enum {
-	snd_boss_die,
-	snd_char_reimu_shoot,
-	snd_enemy_die,
-	snd_enemy_hurt,
-	snd_enemy_shoot,
-	snd_extend,
-	snd_graze,
-	snd_lazer,
-	snd_menu_cancel,
-	snd_menu_navigate,
-	snd_menu_ok,
-	snd_pause,
-	snd_pichuun,
-	snd_pickup,
-	snd_powerup,
-	snd_spellcard,
-	snd_kira,
-
-	NUM_SOUNDS,
-};
-
-extern Mix_Chunk* sound_data[NUM_SOUNDS];
-
-Mix_Chunk* GetSound(u32 sound_index);
-
-// 
-// Animations
-// 
-
 extern AnimData anim_boss_spellcard;
 
-// 
-// Fonts
-// 
+void load_global_assets();
 
-enum {
-	fnt_cirno,
-	fnt_main,
+void free_all_assets();
 
-	NUM_FONTS,
-};
-
-extern Font font_data[NUM_FONTS];
-
-const Font& get_font(u32 font_index);
+const Texture& get_texture(u32 texture_index);
+const Sprite&  get_sprite(u32 sprite_index);
+const Font&    get_font(u32 font_index);
+Mix_Chunk*     get_sound(u32 sound_index);
+Character*     GetCharacter(u32 character_index);
+BossData*      GetBossData(u32 boss_index);
+StageData*     GetStageData(u32 stage_index);

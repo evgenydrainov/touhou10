@@ -45,11 +45,6 @@ struct World {
 	Player player;
 	Boss   boss;
 
-	// 
-	// @Leak
-	// When array runs out of capacity and replaces the
-	// last object, it doesn't get cleaned up.
-	// 
 	bump_array<Enemy>        enemies;
 	bump_array<Bullet>       bullets;
 	bump_array<PlayerBullet> p_bullets;
@@ -62,7 +57,6 @@ struct World {
 	Menu pause_menu;
 
 	bump_array<Animation> animations;
-	Particle_System part_sys;
 	float delta_multiplier = 1;
 
 	float boss_spellcard_background_alpha;

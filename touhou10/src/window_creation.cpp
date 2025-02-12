@@ -1,5 +1,11 @@
 #include "window_creation.h"
 
+// @Cleanup?
+#include "renderer.h"
+#include "console.h"
+
+#include <SDL_system.h>
+
 Window window;
 
 
@@ -65,14 +71,24 @@ void init_window_and_opengl(const char* title,
 							bool prefer_vsync, bool prefer_borderless_fullscreen) {
 	// SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
-	SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "system");
+	window.perf_counter_when_started = SDL_GetPerformanceCounter();
+	window.perf_frequency = SDL_GetPerformanceFrequency();
+	window.perf_frequency_double = (double)window.perf_frequency;
+
+	// SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "permonitorv2");
+	SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
+
+	SDL_SetHint("SDL_IOS_ORIENTATIONS", "LandscapeLeft");
+
+	//SDL_SetHint("SDL_ANDROID_TRAP_BACK_BUTTON", "1");
 
 	if (SDL_Init(SDL_INIT_VIDEO
-				 | SDL_INIT_AUDIO) != 0) {
+				 | SDL_INIT_GAMECONTROLLER) != 0) {
 		panic_and_abort("Couldn't initialize SDL: %s", SDL_GetError());
 	}
 
 	log_info("Platform: %s", SDL_GetPlatform());
+	log_info("sizeof(void*): %d", (int) sizeof(void*));
 
 	{
 		SDL_version ver;
@@ -95,23 +111,30 @@ void init_window_and_opengl(const char* title,
 		log_info("Current video backend: %s", SDL_GetCurrentVideoDriver());
 	}
 
+	u32 window_flags = (SDL_WINDOW_OPENGL
+						| SDL_WINDOW_RESIZABLE
+						| SDL_WINDOW_ALLOW_HIGHDPI /*for Mac*/);
+
+#ifdef __ANDROID__
+	window_flags |= SDL_WINDOW_FULLSCREEN;
+
+	log_info("Android API level: %d.", SDL_GetAndroidSDKVersion());
+
 	{
-		log_info("Available audio backends:");
+		SDL_DisplayMode mode;
+		SDL_GetDesktopDisplayMode(0, &mode);
 
-		int num_drivers = SDL_GetNumAudioDrivers();
-		for (int i = 0; i < num_drivers; i++) {
-			log_info("%s", SDL_GetAudioDriver(i));
-		}
+		log_info("mode.w %d", mode.w);
+		log_info("mode.h %d", mode.h);
 
-		log_info("Current audio backend: %s", SDL_GetCurrentAudioDriver());
+		width = height / (float)mode.h * (float)mode.w;
 	}
+#endif
 
 	window.handle = SDL_CreateWindow(title,
 									 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 									 width * init_window_scale, height * init_window_scale,
-									 SDL_WINDOW_OPENGL
-									 | SDL_WINDOW_RESIZABLE
-									 | SDL_WINDOW_ALLOW_HIGHDPI /*for Mac*/);
+									 window_flags);
 	window.game_width  = width;
 	window.game_height = height;
 
@@ -129,9 +152,19 @@ void init_window_and_opengl(const char* title,
 
 	SDL_SetWindowMinimumSize(window.handle, width, height);
 
+#if defined(__ANDROID__)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#elif defined(__EMSCRIPTEN__)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
 
 #ifdef _DEBUG
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
@@ -141,14 +174,20 @@ void init_window_and_opengl(const char* title,
 	SDL_GL_MakeCurrent(window.handle, window.gl_context);
 
 	{
-		int version = gladLoadGL([](const char* name) {
+#if defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+		auto load = gladLoadGLES2;
+#else
+		auto load = gladLoadGL;
+#endif
+
+		int version = load([](const char* name) {
 			return (GLADapiproc) SDL_GL_GetProcAddress(name);
 		});
 
 		log_info("Loaded GL %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
 		if (GLAD_VERSION_MAJOR(version) < 3) {
-			panic_and_abort("Couldn't load OpenGL.");
+			panic_and_abort("Couldn't load OpenGL. Got version %d.%d", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 		}
 	}
 
@@ -176,17 +215,43 @@ void init_window_and_opengl(const char* title,
 	{
 		window.vsync = prefer_vsync;
 
-		char* env_use_vsync = SDL_getenv("USE_VSYNC"); // @Leak
-		if (env_use_vsync) {
-			window.vsync = (SDL_atoi(env_use_vsync) != 0);
+		char* USE_VSYNC = SDL_getenv("USE_VSYNC"); // @Leak
+		if (USE_VSYNC) {
+			window.vsync = (SDL_atoi(USE_VSYNC) != 0);
 		}
 
 		window.prefer_borderless_fullscreen = prefer_borderless_fullscreen;
 
-		char* env_use_borderless_fullscreen = SDL_getenv("USE_BORDERLESS_FULLSCREEN"); // @Leak
-		if (env_use_borderless_fullscreen) {
-			window.prefer_borderless_fullscreen = (SDL_atoi(env_use_borderless_fullscreen) != 0);
+		char* USE_BORDERLESS_FULLSCREEN = SDL_getenv("USE_BORDERLESS_FULLSCREEN"); // @Leak
+		if (USE_BORDERLESS_FULLSCREEN) {
+			window.prefer_borderless_fullscreen = (SDL_atoi(USE_BORDERLESS_FULLSCREEN) != 0);
 		}
+
+		char* LD_LIBRARY_PATH = SDL_getenv("LD_LIBRARY_PATH"); // @Leak
+		log_info("LD_LIBRARY_PATH: %s", LD_LIBRARY_PATH ? LD_LIBRARY_PATH : "not set");
+	}
+
+	// {
+	// 	int w;
+	// 	int h;
+	// 	SDL_GetWindowSize(window.handle, &w, &h);
+
+	// 	int wp;
+	// 	int hp;
+	// 	SDL_GetWindowSizeInPixels(window.handle, &wp, &hp);
+
+	// 	log_info("Detected DPI scale from SDL_GetWindowSizeInPixels: %f %f", wp/(float)w, hp/(float)h);
+	// }
+
+	{
+		int display = SDL_GetWindowDisplayIndex(window.handle);
+
+		float ddpi;
+		float hdpi;
+		float vdpi;
+		SDL_GetDisplayDPI(display, &ddpi, &hdpi, &vdpi);
+
+		log_info("Detected DPI scale from SDL_GetDisplayDPI: %f %f %f", ddpi/96.0f, hdpi/96.0f, vdpi/96.0f);
 	}
 
 	SDL_GL_SetSwapInterval(window.vsync ? 1 : 0);
@@ -235,6 +300,85 @@ void handle_event(const SDL_Event& ev) {
 					}
 				}
 			}
+
+			switch (scancode) {
+				// fullscreen on alt+enter
+				case SDL_SCANCODE_RETURN: {
+					if (!ev.key.repeat) {
+						if (ev.key.keysym.mod & KMOD_ALT) {
+							set_fullscreen(!is_fullscreen());
+						}
+					}
+					break;
+				}
+
+				// fullscreen on F4
+				case SDL_SCANCODE_F4: {
+					if (!ev.key.repeat) {
+						// ignore alt+f4
+						if (!(ev.key.keysym.mod & KMOD_ALT)) {
+							set_fullscreen(!is_fullscreen());
+						}
+					}
+					break;
+				}
+
+				// enable frame advance mode/goto next frame
+				case SDL_SCANCODE_F5: {
+					window.frame_advance_mode = true;
+					window.should_skip_frame = false;
+					break;
+				}
+
+				// disable frame advance mode
+				case SDL_SCANCODE_F6: {
+					window.frame_advance_mode = false;
+					break;
+				}
+
+#ifdef __ANDROID__
+				/*case SDL_SCANCODE_AC_BACK: {
+					SDL_StartTextInput();
+					break;
+				}*/
+#endif
+			}
+			break;
+		}
+
+		case SDL_CONTROLLERDEVICEADDED: {
+			if (!window.controller) {
+				window.controller = SDL_GameControllerOpen(ev.cdevice.which);
+
+				log_info("Opened controller %s.", SDL_GameControllerName(window.controller));
+			}
+			break;
+		}
+
+		case SDL_CONTROLLERDEVICEREMOVED: {
+			if (window.controller) {
+				SDL_Joystick* joystick = SDL_GameControllerGetJoystick(window.controller);
+				if (SDL_JoystickInstanceID(joystick) == ev.cdevice.which) {
+					log_info("Closing controller %s...", SDL_GameControllerName(window.controller));
+
+					SDL_GameControllerClose(window.controller);
+					window.controller = nullptr;
+				}
+			}
+			break;
+		}
+
+		case SDL_CONTROLLERBUTTONDOWN: {
+			if (window.controller) {
+				SDL_Joystick* joystick = SDL_GameControllerGetJoystick(window.controller);
+				if (SDL_JoystickInstanceID(joystick) == ev.cbutton.which) {
+					SDL_GameControllerButton button = (SDL_GameControllerButton) ev.cbutton.button;
+
+					if (button >= 0 && button < window.NUM_CONTROLLER_BUTTONS) {
+						window.controller_button_pressed[button / 32] |= 1 << (button % 32);
+					}
+				}
+			}
 			break;
 		}
 	}
@@ -268,8 +412,9 @@ void begin_frame() {
 
 	window.fps = (float)(1.0 / (time - prev_time));
 
-	memset(window.key_pressed, 0, sizeof(window.key_pressed));
-	memset(window.key_repeat,  0, sizeof(window.key_repeat));
+	memset(window.key_pressed,               0, sizeof(window.key_pressed));
+	memset(window.key_repeat,                0, sizeof(window.key_repeat));
+	memset(window.controller_button_pressed, 0, sizeof(window.controller_button_pressed));
 
 	window.avg_fps_sum += window.fps;
 	window.avg_fps_num_samples += 1;
@@ -282,6 +427,21 @@ void begin_frame() {
 
 		window.avg_fps_last_time_updated = time;
 	}
+
+	// handle mouse
+	{
+		u32 prev = window.mouse_state;
+		window.mouse_state = SDL_GetMouseState(&window.mouse_x, &window.mouse_y);
+
+		window.mouse_state_press   = window.mouse_state & (~prev);
+		window.mouse_state_release = (~window.mouse_state) & prev;
+
+		auto rect = renderer.game_texture_rect;
+		window.mouse_x_world = (window.mouse_x - rect.x) / (float)rect.w * (float)window.game_width;
+		window.mouse_y_world = (window.mouse_y - rect.y) / (float)rect.h * (float)window.game_height;
+	}
+
+	window.should_skip_frame = window.frame_advance_mode;
 }
 
 void swap_buffers() {
@@ -303,12 +463,20 @@ void swap_buffers() {
 }
 
 
+static bool is_input_disabled() {
+#ifdef DEVELOPER
+	return console.is_open || console.was_open_last_frame;
+#else
+	return false;
+#endif
+}
+
 bool is_key_pressed(SDL_Scancode key, bool repeat) {
 	if (!(key >= 0 && key < window.NUM_KEYS)) {
 		return false;
 	}
 
-	if (window.disable_input) {
+	if (is_input_disabled()) {
 		return false;
 	}
 
@@ -324,12 +492,70 @@ bool is_key_held(SDL_Scancode key) {
 		return false;
 	}
 
-	if (window.disable_input) {
+	if (is_input_disabled()) {
 		return false;
 	}
 
 	const u8* state = SDL_GetKeyboardState(nullptr);
 	return (state[key] != 0);
+}
+
+bool is_controller_button_held(SDL_GameControllerButton button) {
+	if (is_input_disabled()) {
+		return false;
+	}
+
+	if (window.controller) {
+		return SDL_GameControllerGetButton(window.controller, button);
+	}
+	return false;
+}
+
+bool is_controller_button_pressed(SDL_GameControllerButton button) {
+	if (!(button >= 0 && button < window.NUM_CONTROLLER_BUTTONS)) {
+		return false;
+	}
+
+	if (is_input_disabled()) {
+		return false;
+	}
+
+	return (window.controller_button_pressed[button / 32] & (1 << (button % 32))) != 0;
+}
+
+float controller_get_axis(SDL_GameControllerAxis axis) {
+	if (is_input_disabled()) {
+		return 0;
+	}
+
+	if (window.controller) {
+		return SDL_GameControllerGetAxis(window.controller, axis) / 32768.0f;
+	}
+	return 0;
+}
+
+bool is_mouse_button_held(u32 button) {
+	if (is_input_disabled()) {
+		return false;
+	}
+
+	return (window.mouse_state & SDL_BUTTON(button)) != 0;
+}
+
+bool is_mouse_button_pressed(u32 button) {
+	if (is_input_disabled()) {
+		return false;
+	}
+
+	return (window.mouse_state_press & SDL_BUTTON(button)) != 0;
+}
+
+bool is_mouse_button_released(u32 button) {
+	if (is_input_disabled()) {
+		return false;
+	}
+
+	return (window.mouse_state_release & SDL_BUTTON(button)) != 0;
 }
 
 SDL_Window* get_window_handle() {
@@ -338,13 +564,16 @@ SDL_Window* get_window_handle() {
 
 void set_fullscreen(bool fullscreen) {
 	if (fullscreen) {
+		SDL_DisplayMode mode;
+		int display = SDL_GetWindowDisplayIndex(window.handle);
+		SDL_GetDesktopDisplayMode(display, &mode);
+		SDL_SetWindowDisplayMode(window.handle, &mode);
+
+		// NOTE: on an old AMD driver, when you enabled fullscreen, the refresh rate of your monitor would change.
+
 		if (window.prefer_borderless_fullscreen) {
 			SDL_SetWindowFullscreen(window.handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 		} else {
-			SDL_DisplayMode mode;
-			int display = SDL_GetWindowDisplayIndex(window.handle);
-			SDL_GetDesktopDisplayMode(display, &mode);
-			SDL_SetWindowDisplayMode(window.handle, &mode);
 			SDL_SetWindowFullscreen(window.handle, SDL_WINDOW_FULLSCREEN);
 		}
 	} else {
@@ -358,5 +587,6 @@ bool is_fullscreen() {
 }
 
 double get_time() {
-	return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();
+	u64 diff = SDL_GetPerformanceCounter() - window.perf_counter_when_started;
+	return (double)diff / window.perf_frequency_double;
 }

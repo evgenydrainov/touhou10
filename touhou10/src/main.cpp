@@ -1,10 +1,12 @@
 #include "common.h"
 #include "window_creation.h"
-#include "game.h"
 #include "renderer.h"
 #include "package.h"
+#include "assets.h"
+#include "sound_mixer.h"
+#include "game.h"
 
-#if defined(DEVELOPER)
+#ifdef DEVELOPER
 #include "console.h"
 #endif
 
@@ -13,8 +15,14 @@ int main(int /*argc*/, char* /*argv*/[]) {
 	init_window_and_opengl("touhou10", 640, 480, 2, false, false);
 	defer { deinit_window_and_opengl(); };
 
+	init_mixer();
+	defer { deinit_mixer(); };
+
 	init_package();
 	defer { deinit_package(); };
+
+	load_global_assets();
+	defer { free_all_assets(); };
 
 	init_renderer();
 	defer { deinit_renderer(); };
@@ -22,8 +30,8 @@ int main(int /*argc*/, char* /*argv*/[]) {
 	game.init();
 	defer { game.deinit(); };
 
-#if defined(DEVELOPER)
-	console.init(console_callback, nullptr, get_font(fnt_main));
+#ifdef DEVELOPER
+	console.init(console_callback, nullptr, get_font(fnt_consolas_bold), g_ConsoleCommands);
 	defer { console.deinit(); };
 #endif
 
@@ -34,7 +42,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 		while (SDL_PollEvent(&ev)) {
 			handle_event(ev);
 
-#if defined(DEVELOPER)
+#ifdef DEVELOPER
 			console.handle_event(ev);
 #endif
 		}
@@ -42,7 +50,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 		// update
 		game.update(window.delta);
 
-#if defined(DEVELOPER)
+#ifdef DEVELOPER
 		console.update(window.delta);
 #endif
 
@@ -56,7 +64,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 
 		game.late_draw(window.delta);
 
-#if defined(DEVELOPER)
+#ifdef DEVELOPER
 		console.draw(window.delta);
 #endif
 

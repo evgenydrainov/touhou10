@@ -88,7 +88,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>DEVELOPER;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -115,7 +115,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -146,7 +146,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>DEVELOPER;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -173,7 +173,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -203,9 +203,6 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="env.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\animation.cpp" />
     <ClCompile Include="src\anim_data_boss_spellcard_anim.cpp" />
     <ClCompile Include="src\assets.cpp" />
@@ -214,7 +211,6 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile Include="src\character_data.cpp" />
     <ClCompile Include="src\console.cpp" />
     <ClCompile Include="src\font.cpp" />
-    <ClCompile Include="src\font_data.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\menu.cpp" />
@@ -224,8 +220,8 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\renderer.cpp" />
     <ClCompile Include="src\single_header.cpp" />
+    <ClCompile Include="src\sound_mixer.cpp" />
     <ClCompile Include="src\sprite.cpp" />
-    <ClCompile Include="src\sprite_data.cpp" />
     <ClCompile Include="src\stage_0_data.cpp" />
     <ClCompile Include="src\stage_1_data.cpp" />
     <ClCompile Include="src\stdafx.cpp">
@@ -240,6 +236,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\animation.h" />
     <ClInclude Include="src\assets.h" />
     <ClInclude Include="src\boss_data_cirno.h" />
@@ -256,8 +253,8 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClInclude Include="src\particle_system.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scripting.h" />
+    <ClInclude Include="src\sound_mixer.h" />
     <ClInclude Include="src\sprite.h" />
-    <ClInclude Include="src\sprite_indices.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\texture.h" />
     <ClInclude Include="src\title_screen.h" />
@@ -265,6 +262,12 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     <ClInclude Include="src\window_creation.h" />
     <ClInclude Include="src\world.h" />
     <ClInclude Include="src\xoshiro128plus.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="touhou10.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

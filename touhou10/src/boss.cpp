@@ -81,7 +81,7 @@ void boss_start_phase(Boss* b) {
 	if (phase->type == PHASE_SPELLCARD) {
 		b->wait_timer = BOSS_PHASE_START_TIME_SPELL;
 
-		play_sound(snd_spellcard);
+		play_sound(get_sound(snd_spellcard));
 
 		Animation a = {};
 		a.data = &anim_boss_spellcard;
@@ -135,17 +135,17 @@ void boss_end_phase(Boss* b) {
 			boss_start_phase(b);
 		}
 
-		play_sound(snd_enemy_die);
+		play_sound(get_sound(snd_enemy_die));
 	} else {
 		For (p, world.pickups) {
 			p->homing_target = world.player.id;
 		}
 
 		if (data->type == BOSS_TYPE_BOSS) {
-			play_sound(snd_boss_die);
+			play_sound(get_sound(snd_boss_die));
 			//ScreenShake(6.0f, 120.0f);
 		} else {
-			play_sound(snd_enemy_die);
+			play_sound(get_sound(snd_enemy_die));
 		}
 
 		object_cleanup(b);
@@ -155,8 +155,8 @@ void boss_end_phase(Boss* b) {
 
 void boss_create_kira_particle(Object* b) {
 	Particle p = {};
-	p.x = b->x;
-	p.y = b->y;
+	p.pos.x = b->x;
+	p.pos.y = b->y;
 	p.sprite_index = spr_kira_particle;
 	p.lifespan = 30;
 	p.scale_from = {2, 2};
@@ -164,5 +164,5 @@ void boss_create_kira_particle(Object* b) {
 	p.color_from = {1, 1, 1, 1};
 	p.color_to   = {1, 1, 1, 0};
 
-	array_add(&world.part_sys.particles, p);
+	add_particle(p);
 }
