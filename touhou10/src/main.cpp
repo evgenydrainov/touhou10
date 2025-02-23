@@ -55,7 +55,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
 #endif
 
 		// render
-		vec4 clear_color = color_black;
+		vec4 clear_color = {};
 		render_begin_frame(clear_color);
 
 		game.draw(window.delta);

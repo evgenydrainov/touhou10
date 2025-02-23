@@ -34,29 +34,14 @@ void Game::deinit() {
 void Game::update(float delta) {
 	double time = get_time();
 
-	skip_frame = frame_advance;
-
 	if (is_key_pressed(SDL_SCANCODE_F1)) {
 		show_debug_info ^= true;
-	}
-
-	if (is_key_pressed(SDL_SCANCODE_F4)) {
-		set_fullscreen(!is_fullscreen());
-	}
-
-	if (is_key_pressed(SDL_SCANCODE_F5, true)) {
-		frame_advance = true;
-		skip_frame = false;
-	}
-
-	if (is_key_pressed(SDL_SCANCODE_F6)) {
-		frame_advance = false;
 	}
 
 	if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
 	if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
 
-	if (!skip_frame || state == STATE_PLAYING) {
+	if (!window.should_skip_frame || state == STATE_PLAYING) {
 		switch (state) {
 			case STATE_TITLE_SCREEN: title_screen.update(delta); break;
 			case STATE_PLAYING:      world.update(delta);        break;
@@ -221,7 +206,7 @@ void Game::late_draw(float delta) {
 		}
 	}
 
-	if (frame_advance) {
+	if (window.frame_advance_mode) {
 		string str = "F5 - Next Frame\nF6 - Disable Frame Advance Mode\n";
 		pos = draw_text(get_font(fnt_consolas_bold), str, pos);
 	}

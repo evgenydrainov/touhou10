@@ -288,8 +288,10 @@ void render_begin_frame(vec4 clear_color) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, renderer.game_framebuffer);
 
-	glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	if (clear_color.a > 0) {
+		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
 
 	glViewport(0, 0, window.game_width, window.game_height);
 }

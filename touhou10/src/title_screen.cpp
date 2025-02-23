@@ -63,7 +63,9 @@ void Title_Screen::update(float delta) {
 }
 
 void Title_Screen::draw(float delta) {
-	renderer.proj_mat = glm::ortho<float>(0, GAME_W, GAME_H, 0);
+	set_proj_mat(get_ortho(0, GAME_W, GAME_H, 0));
+
+	render_clear_color(color_black);
 
 	switch (state) {
 		case IN_MAIN_MENU: {

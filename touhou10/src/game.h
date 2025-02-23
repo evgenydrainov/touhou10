@@ -48,8 +48,6 @@ struct Game {
 	xoshiro128plus rng_visual{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 
 	bool show_debug_info;
-	bool frame_advance;
-	bool skip_frame;
 
 	void init();
 	void deinit();

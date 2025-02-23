@@ -21,15 +21,15 @@ void load_global_assets() {
 		textures[tex_enemies]      = load_texture_from_file("textures/enemies.png",     FILTER_FOR_SPRITES);
 
 		textures[tex_eosd_misty_lake]              = load_texture_from_file("textures/eosd_misty_lake.png", GL_LINEAR, GL_MIRRORED_REPEAT);
-		textures[tex_cirno_spellcard_background]   = load_texture_from_file("textures/cirno_spellcard_background.png");
+		textures[tex_cirno_spellcard_background]   = load_texture_from_file("textures/cirno_spellcard_background.png", GL_LINEAR);
 		textures[tex_background]                   = load_texture_from_file("textures/background.png", GL_NEAREST, GL_REPEAT);
 		textures[tex_white]                        = load_texture_from_file("textures/white.png");
 		textures[tex_boss_cirno_portrait]          = load_texture_from_file("textures/boss_cirno_portrait.png");
 		textures[tex_boss_youmu_portrait]          = load_texture_from_file("textures/boss_youmu_portrait.png");
 		textures[tex_spellcard_attack_anim_label]  = load_texture_from_file("textures/spellcard_attack_anim_label.png");
-		textures[tex_pcb_youmu_stairs]             = load_texture_from_file("textures/pcb_youmu_stairs.png");
-		textures[tex_pcb_youmu_bg]                 = load_texture_from_file("textures/pcb_youmu_bg.png");
-		textures[tex_pcb_youmu_bg_flowers]         = load_texture_from_file("textures/pcb_youmu_bg_flowers.png");
+		textures[tex_pcb_youmu_stairs]             = load_texture_from_file("textures/pcb_youmu_stairs.png", GL_LINEAR);
+		textures[tex_pcb_youmu_bg]                 = load_texture_from_file("textures/pcb_youmu_bg.png", GL_LINEAR);
+		textures[tex_pcb_youmu_bg_flowers]         = load_texture_from_file("textures/pcb_youmu_bg_flowers.png", GL_LINEAR);
 	}
 
 	{

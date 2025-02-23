@@ -385,7 +385,7 @@ void World::update(float delta_not_modified) {
 	}
 #endif
 
-	if (paused || game.skip_frame) {
+	if (paused || window.should_skip_frame) {
 		goto l_skip_update;
 	}
 
