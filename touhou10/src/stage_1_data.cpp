@@ -40,7 +40,7 @@ static void draw_world_origin_axis(float delta) {
 	int u_MVP = glGetUniformLocation(program, "u_MVP");
 	glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
 
-	glBindTexture(GL_TEXTURE_2D, renderer.stub_texture);
+	glBindTexture(GL_TEXTURE_2D, renderer.texture_for_shapes.id);
 	defer { glBindTexture(GL_TEXTURE_2D, 0); };
 
 	glBindVertexArray(vao);
@@ -54,14 +54,8 @@ static void draw_world_origin_axis(float delta) {
 }
 
 
-static const char vert_src[] = R"(
-#version 330 core
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-layout(location = 0) in vec3 in_Position;
+static const char vert_src[] =
+R"(layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
 layout(location = 2) in vec4 in_Color;
 layout(location = 3) in vec2 in_TexCoord;
@@ -112,14 +106,8 @@ void main() {
 }
 )";
 
-static const char frag_src[] = R"(
-#version 330 core
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-layout(location = 0) out vec4 FragColor;
+static const char frag_src[] =
+R"(layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec2 v_TexCoord;

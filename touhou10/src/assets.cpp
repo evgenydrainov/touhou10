@@ -134,7 +134,7 @@ const Texture& get_texture(u32 texture_index) {
 	Assert(texture_index < NUM_TEXTURES);
 
 	if (textures[texture_index].id == 0) {
-		log_error("Trying to access texture %u that hasn't been loaded.", texture_index);
+		log_warn("Trying to access texture %u that hasn't been loaded.", texture_index);
 	}
 
 	return textures[texture_index];
@@ -144,7 +144,7 @@ const Sprite& get_sprite(u32 sprite_index) {
 	Assert(sprite_index < NUM_SPRITES);
 
 	if (sprites[sprite_index].frames.count == 0) {
-		log_error("Trying to access sprite %u that hasn't been loaded.", sprite_index);
+		log_warn("Trying to access sprite %u that hasn't been loaded.", sprite_index);
 	}
 
 	return sprites[sprite_index];
@@ -154,7 +154,7 @@ const Font& get_font(u32 font_index) {
 	Assert(font_index < NUM_FONTS);
 
 	if (fonts[font_index].glyphs.count == 0) {
-		log_error("Trying to access font %u that hasn't been loaded.", font_index);
+		log_warn("Trying to access font %u that hasn't been loaded.", font_index);
 	}
 
 	return fonts[font_index];
@@ -164,7 +164,7 @@ Mix_Chunk* get_sound(u32 sound_index) {
 	Assert(sound_index < NUM_SOUNDS);
 
 	if (!sounds[sound_index]) {
-		log_error("Trying to access sound %u that hasn't been loaded.", sound_index);
+		log_warn("Trying to access sound %u that hasn't been loaded.", sound_index);
 	}
 
 	return sounds[sound_index];

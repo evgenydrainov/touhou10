@@ -121,14 +121,8 @@ static const u32 indices[] = {
 	2, 3, 0,
 };
 
-static const char vert_src[] = R"(
-#version 330 core
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-layout(location = 0) in vec3 in_Position;
+static const char vert_src[] =
+R"(layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
 layout(location = 2) in vec4 in_Color;
 layout(location = 3) in vec2 in_TexCoord;
@@ -152,14 +146,8 @@ void main() {
 }
 )";
 
-static const char frag_src[] = R"(
-#version 330 core
-
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-layout(location = 0) out vec4 FragColor;
+static const char frag_src[] =
+R"(layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec3 v_WorldPos;

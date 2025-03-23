@@ -8,11 +8,7 @@ Renderer renderer = {};
 
 
 static char texture_vert_shader_src[] =
-R"(#version 300 es
-
-precision highp float;
-
-layout(location = 0) in vec3 in_Position;
+R"(layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
 layout(location = 2) in vec4 in_Color;
 layout(location = 3) in vec2 in_TexCoord;
@@ -33,11 +29,7 @@ void main() {
 
 
 static char texture_frag_shader_src[] =
-R"(#version 300 es
-
-precision highp float;
-
-layout(location = 0) out vec4 FragColor;
+R"(layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec2 v_TexCoord;
@@ -54,11 +46,7 @@ void main() {
 
 
 static char color_frag_shader_src[] =
-R"(#version 300 es
-
-precision highp float;
-
-layout(location = 0) out vec4 FragColor;
+R"(layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec2 v_TexCoord;
@@ -71,11 +59,7 @@ void main() {
 
 
 static char circle_frag_shader_src[] =
-R"(#version 300 es
-
-precision highp float;
-
-layout(location = 0) out vec4 FragColor;
+R"(layout(location = 0) out vec4 FragColor;
 
 in vec4 v_Color;
 in vec2 v_TexCoord;
@@ -96,11 +80,7 @@ void main() {
 
 
 static char sharp_bilinear_frag_shader_src[] =
-R"(#version 300 es
-
-precision highp float;
-
-/*
+R"(/*
 	Author: rsn8887 (based on TheMaister)
 	License: Public domain
 
@@ -142,6 +122,129 @@ void main() {
 )";
 
 
+static char hq4x_frag_shader_src[] =
+R"(layout(location = 0) out vec4 FragColor;
+
+in vec4 v_Color;
+in vec2 v_TexCoord;
+
+uniform sampler2D u_Texture;
+
+uniform vec2 u_TexelSize;
+
+void main()
+{
+	vec2 dg1 = u_TexelSize * 0.5;
+	vec2 dg2 = vec2(-dg1.x, dg1.y);
+	vec2 sd1 = dg1 * 0.5;
+	vec2 sd2 = dg2 * 0.5;
+	
+	vec4 c  = texture2D(u_Texture, v_TexCoord);
+	vec4 i1 = texture2D(u_Texture, v_TexCoord - sd1);
+	vec4 i2 = texture2D(u_Texture, v_TexCoord - sd2);
+	vec4 i3 = texture2D(u_Texture, v_TexCoord + sd1);
+	vec4 i4 = texture2D(u_Texture, v_TexCoord + sd2);
+	vec4 o1 = texture2D(u_Texture, v_TexCoord - dg1);
+	vec4 o3 = texture2D(u_Texture, v_TexCoord + dg1);
+	vec4 o2 = texture2D(u_Texture, v_TexCoord - dg2);
+	vec4 o4 = texture2D(u_Texture, v_TexCoord + dg2);
+	
+	float ko1 = dot(abs(o1 - c), vec4(1.0));
+	float ko2 = dot(abs(o2 - c), vec4(1.0));
+	float ko3 = dot(abs(o3 - c), vec4(1.0));
+	float ko4 = dot(abs(o4 - c), vec4(1.0));
+	
+	float k1 = min(dot(abs(i1 - i3), vec4(1.0)), max(ko1, ko3));
+	float k2 = min(dot(abs(i2 - i4), vec4(1.0)), max(ko2, ko4));
+	
+	float w1 = k2; if (ko3 < ko1) w1 *= ko3 / ko1;
+	float w2 = k1; if (ko4 < ko2) w2 *= ko4 / ko2;
+	float w3 = k2; if (ko1 < ko3) w3 *= ko1 / ko3;
+	float w4 = k1; if (ko2 < ko4) w4 *= ko2 / ko4;
+	
+	FragColor = (w1 * o1 + w2 * o2 + w3 * o3 + w4 * o4 + 0.001 * c) / (w1 + w2 + w3 + w4 + 0.001) * v_Color;
+}
+)";
+
+
+
+Texture load_texture(u8* pixel_data, int width, int height,
+					 int filter, int wrap,
+					 bool alpha_channel) {
+	Texture t = {};
+	t.width = width;
+	t.height = height;
+
+	glGenTextures(1, &t.id);
+	glBindTexture(GL_TEXTURE_2D, t.id);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+
+	int internal_format = alpha_channel ? GL_RGBA8 : GL_RGB8;
+	u32 format          = alpha_channel ? GL_RGBA  : GL_RGB;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, pixel_data);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return t;
+}
+
+Texture load_depth_texture(int width, int height) {
+	Texture t = {};
+	t.width = width;
+	t.height = height;
+
+	glGenTextures(1, &t.id);
+	glBindTexture(GL_TEXTURE_2D, t.id);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	return t;
+}
+
+void free_texture(Texture* t) {
+	if (t->id != 0) glDeleteTextures(1, &t->id);
+	*t = {};
+}
+
+Framebuffer load_framebuffer(int width, int height,
+							 int filter, int wrap,
+							 bool alpha_channel, bool depth) {
+	Framebuffer f = {};
+	f.texture = load_texture(nullptr, width, height, filter, wrap, alpha_channel);
+	if (depth) {
+		f.depth = load_depth_texture(width, height);
+	}
+
+	glGenFramebuffers(1, &f.id);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, f.id);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, f.texture.id, 0);
+	if (depth) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, f.depth.id, 0);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return f;
+}
+
+void free_framebuffer(Framebuffer* f) {
+	free_texture(&f->texture);
+	free_texture(&f->depth);
+
+	if (f->id != 0) glDeleteFramebuffers(1, &f->id);
+	*f = {};
+}
 
 void set_vertex_attribs() {
 	// Position
@@ -201,17 +304,15 @@ void init_renderer() {
 		set_vertex_attribs();
 
 		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // this one has to be after glBindVertexArray(0), unlike glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 		renderer.vertices = malloc_bump_array<Vertex>(BATCH_MAX_VERTICES);
 
-		// stub texture
-		glGenTextures(1, &renderer.stub_texture);
-		glBindTexture(GL_TEXTURE_2D, renderer.stub_texture);
+		u8 pixel_data[] = {255, 255, 255, 255};
+		renderer.texture_for_shapes = load_texture(pixel_data, 1, 1);
 
-		u32 pixel_data[1] = {0xffffffff};
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_data);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
+		renderer.framebuffer = load_framebuffer(window.game_width, window.game_height, GL_LINEAR);
 	}
 
 	// 
@@ -233,44 +334,29 @@ void init_renderer() {
 		u32 sharp_bilinear_frag_shader = compile_shader(GL_FRAGMENT_SHADER, sharp_bilinear_frag_shader_src, "sharp_bilinear_frag");
 		defer { glDeleteShader(sharp_bilinear_frag_shader); };
 
+		u32 hq4x_frag_shader = compile_shader(GL_FRAGMENT_SHADER, hq4x_frag_shader_src, "hq4x_frag");
+		defer { glDeleteShader(hq4x_frag_shader); };
+
 		renderer.texture_shader        = link_program(texture_vert_shader, texture_frag_shader,        "texture_shader");
 		renderer.color_shader          = link_program(texture_vert_shader, color_frag_shader,          "color_shader");
 		renderer.circle_shader         = link_program(texture_vert_shader, circle_frag_shader,         "circle_shader");
 		renderer.sharp_bilinear_shader = link_program(texture_vert_shader, sharp_bilinear_frag_shader, "sharp_bilinear_shader");
+		renderer.hq4x_shader           = link_program(texture_vert_shader, hq4x_frag_shader,           "hq4x_shader");
 
 		renderer.current_shader = renderer.texture_shader;
 		glUseProgram(renderer.current_shader);
-	}
-
-	{
-		glGenTextures(1, &renderer.game_texture); // @Leak
-
-		glBindTexture(GL_TEXTURE_2D, renderer.game_texture);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_LINEAR for sharp bilinear shader
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, window.game_width, window.game_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
-	{
-		glGenFramebuffers(1, &renderer.game_framebuffer); // @Leak
-
-		glBindFramebuffer(GL_FRAMEBUFFER, renderer.game_framebuffer);
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderer.game_texture, 0);
-		// glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, game_depth_texture, 0);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 }
 
 void deinit_renderer() {
 	free(renderer.vertices.data);
+
+	glDeleteBuffers(1, &renderer.batch_vbo);
+	glDeleteBuffers(1, &renderer.batch_ebo);
+	glDeleteVertexArrays(1, &renderer.batch_vao);
+
+	free_texture(&renderer.texture_for_shapes);
+	free_framebuffer(&renderer.framebuffer);
 }
 
 void render_begin_frame(vec4 clear_color) {
@@ -286,18 +372,22 @@ void render_begin_frame(vec4 clear_color) {
 	renderer.curr_max_batch       = 0;
 	renderer.curr_total_triangles = 0;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, renderer.game_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer.framebuffer.id);
 
 	if (clear_color.a > 0) {
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	glViewport(0, 0, window.game_width, window.game_height);
 }
 
 void render_end_frame() {
-	Assert(renderer.vertices.count == 0);
+	if (renderer.vertices.count != 0) {
+		log_warn("Renderer was not flushed!");
+		break_batch();
+		Assert(false);
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -311,7 +401,7 @@ void render_end_frame() {
 	renderer.model_mat = {1};
 
 	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	{
 		u32 program = renderer.sharp_bilinear_shader;
@@ -341,11 +431,12 @@ void render_end_frame() {
 			glUniform2f(u_Scale, int_scale, int_scale);
 		}
 
-		Texture t;
-		t.id = renderer.game_texture;
-		t.width  = window.game_width;
-		t.height = window.game_height;
-		draw_texture(t, {}, {(float)renderer.game_texture_rect.x, (float)renderer.game_texture_rect.y}, {scale, scale}, {}, 0, color_white, {false, true});
+		/*{
+			int u_TexelSize = glGetUniformLocation(program, "u_TexelSize");
+			glUniform2f(u_TexelSize, 1.0f / (float)window.game_width, 1.0f / (float)window.game_height);
+		}*/
+
+		draw_texture(renderer.framebuffer.texture, {}, {(float)renderer.game_texture_rect.x, (float)renderer.game_texture_rect.y}, {scale, scale}, {}, 0, color_white, {false, true});
 
 		break_batch();
 
@@ -661,6 +752,65 @@ void draw_texture(const Texture& t, Rect src,
 	}
 }
 
+void draw_texture_simple(const Texture& t, Rect src,
+						 vec2 pos, vec2 origin, vec4 color, glm::bvec2 flip) {
+	if (t.id == 0) {
+		log_error("Trying to draw invalid texture.");
+		return;
+	}
+
+	if (src.w == 0 && src.h == 0) {
+		src.w = t.width;
+		src.h = t.height;
+	}
+
+	if (t.id != renderer.current_texture
+		|| renderer.current_mode != MODE_QUADS
+		|| renderer.vertices.count + VERTICES_PER_QUAD > BATCH_MAX_VERTICES)
+	{
+		break_batch();
+
+		renderer.current_texture = t.id;
+		renderer.current_mode = MODE_QUADS;
+	}
+
+	{
+		float x1 = pos.x - origin.x;
+		float y1 = pos.y - origin.y;
+		float x2 = pos.x + src.w - origin.x;
+		float y2 = pos.y + src.h - origin.y;
+
+		float u1 =  src.x          / (float)t.width;
+		float v1 =  src.y          / (float)t.height;
+		float u2 = (src.x + src.w) / (float)t.width;
+		float v2 = (src.y + src.h) / (float)t.height;
+
+		if (flip.x) {
+			float temp = u1;
+			u1 = u2;
+			u2 = temp;
+		}
+
+		if (flip.y) {
+			float temp = v1;
+			v1 = v2;
+			v2 = temp;
+		}
+
+		Vertex vertices[] = {
+			{{x1, y1, 0.0f}, {}, color, {u1, v1}}, // LT
+			{{x2, y1, 0.0f}, {}, color, {u2, v1}}, // RT
+			{{x2, y2, 0.0f}, {}, color, {u2, v2}}, // RB
+			{{x1, y2, 0.0f}, {}, color, {u1, v2}}, // LB
+		};
+
+		array_add(&renderer.vertices, vertices[0]);
+		array_add(&renderer.vertices, vertices[1]);
+		array_add(&renderer.vertices, vertices[2]);
+		array_add(&renderer.vertices, vertices[3]);
+	}
+}
+
 void draw_texture_centered(const Texture& t,
 						   vec2 pos, vec2 scale,
 						   float angle, vec4 color, glm::bvec2 flip) {
@@ -669,15 +819,13 @@ void draw_texture_centered(const Texture& t,
 }
 
 void draw_rectangle(Rectf rect, vec4 color) {
-	Texture t = {renderer.stub_texture, 1, 1};
 	vec2 pos = {rect.x, rect.y};
 	vec2 scale = {rect.w, rect.h};
-	draw_texture(t, {}, pos, scale, {}, 0, color);
+	draw_texture(renderer.texture_for_shapes, {}, pos, scale, {}, 0, color);
 }
 
 void draw_rectangle(Rectf rect, vec2 scale,
 					vec2 origin, float angle, vec4 color) {
-	Texture t = {renderer.stub_texture, 1, 1};
 	vec2 pos = {rect.x, rect.y};
 
 	origin.x /= rect.w;
@@ -686,7 +834,7 @@ void draw_rectangle(Rectf rect, vec2 scale,
 	rect.w *= scale.x;
 	rect.h *= scale.y;
 
-	draw_texture(t, {}, pos, {rect.w, rect.h}, origin, angle, color);
+	draw_texture(renderer.texture_for_shapes, {}, pos, {rect.w, rect.h}, origin, angle, color);
 }
 
 void draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color) {
@@ -760,14 +908,13 @@ void draw_line(vec2 p1, vec2 p2, vec4 color) {
 
 	{
 		/* stolen from SDL2 */
-		/* still not pixel perfect */
 
 		/* bump a little in the direction we are moving in. */
 		float deltax = p2.x - p1.x;
 		float deltay = p2.y - p1.y;
 		float angle = atan2f(deltay, deltax);
-		p2.x += cosf(angle) * 0.25f;
-		p2.y += sinf(angle) * 0.25f;
+		p2.x += cosf(angle) * 0.50f;
+		p2.y += sinf(angle) * 0.50f;
 	}
 
 	Vertex vertices[] = {
@@ -777,6 +924,49 @@ void draw_line(vec2 p1, vec2 p2, vec4 color) {
 
 	array_add(&renderer.vertices, vertices[0]);
 	array_add(&renderer.vertices, vertices[1]);
+}
+
+void draw_line_exact(vec2 p1, vec2 p2, vec4 color) {
+	if (renderer.current_mode != MODE_LINES
+		|| renderer.vertices.count + 2 > BATCH_MAX_VERTICES)
+	{
+		break_batch();
+
+		renderer.current_mode = MODE_LINES;
+	}
+
+	Vertex vertices[] = {
+		{{p1.x, p1.y, 0.0f}, {}, color, {}},
+		{{p2.x, p2.y, 0.0f}, {}, color, {}},
+	};
+
+	array_add(&renderer.vertices, vertices[0]);
+	array_add(&renderer.vertices, vertices[1]);
+}
+
+void draw_line_thick(vec2 p1, vec2 p2, float thickness, vec4 color) {
+	float dir = point_direction(p1, p2);
+
+	/*vec2 lt = p1 + lengthdir_v2(thickness * 0.5f, dir - 90);
+	vec2 rt = p1 + lengthdir_v2(thickness * 0.5f, dir + 90);
+	vec2 lb = p2 + lengthdir_v2(thickness * 0.5f, dir - 90);
+	vec2 rb = p2 + lengthdir_v2(thickness * 0.5f, dir + 90);*/
+
+	const float sqrt2_over_2 = 0.70710678118654752440084436210485f;
+
+	vec2 lt = p1 + lengthdir_v2(thickness * sqrt2_over_2, dir - 135);
+	vec2 rt = p1 + lengthdir_v2(thickness * sqrt2_over_2, dir + 135);
+	vec2 lb = p2 + lengthdir_v2(thickness * sqrt2_over_2, dir - 45);
+	vec2 rb = p2 + lengthdir_v2(thickness * sqrt2_over_2, dir + 45);
+
+	Vertex vertices[] = {
+		{{lt.x, lt.y, 0.0f}, {}, color, {}}, // LT
+		{{rt.x, rt.y, 0.0f}, {}, color, {}}, // RT
+		{{rb.x, rb.y, 0.0f}, {}, color, {}}, // RB
+		{{lb.x, lb.y, 0.0f}, {}, color, {}}, // LB
+	};
+
+	draw_quad(renderer.texture_for_shapes, vertices);
 }
 
 void draw_point(vec2 point, vec4 color) {
@@ -805,4 +995,36 @@ void draw_rectangle_outline(Rectf rect, vec4 color) {
 
 	draw_line(pos, pos + vec2{0, rect.h}, color);
 	draw_line(pos + vec2{rect.w, 0}, pos + vec2{rect.w, rect.h}, color);
+}
+
+void draw_rectangle_outline_exact(Rectf rect, vec4 color) {
+	vec2 pos = {rect.x, rect.y};
+
+	draw_line_exact(pos, pos + vec2{rect.w, 0}, color);
+	draw_line_exact(pos + vec2{0, rect.h}, pos + vec2{rect.w, rect.h}, color);
+
+	draw_line_exact(pos, pos + vec2{0, rect.h}, color);
+	draw_line_exact(pos + vec2{rect.w, 0}, pos + vec2{rect.w, rect.h}, color);
+}
+
+void draw_rectangle_outline_thick(Rectf rect, float thickness, vec4 color) {
+	vec2 pos = {rect.x, rect.y};
+
+	draw_line_thick(pos, pos + vec2{rect.w, 0}, thickness, color);
+	draw_line_thick(pos + vec2{0, rect.h}, pos + vec2{rect.w, rect.h}, thickness, color);
+
+	draw_line_thick(pos, pos + vec2{0, rect.h}, thickness, color);
+	draw_line_thick(pos + vec2{rect.w, 0}, pos + vec2{rect.w, rect.h}, thickness, color);
+}
+
+void draw_arrow_thick(vec2 p1, float length, float direction, float arrow_head_length, float thickness, vec4 color) {
+	vec2 p2 = p1 + lengthdir_v2(length, direction);
+
+	draw_line_thick(p1, p2 - lengthdir_v2(0.5f, direction), thickness, color);
+
+	vec2 p3 = p2 + lengthdir_v2(arrow_head_length, direction + 135);
+	draw_line_thick(p2, p3, thickness, color);
+
+	vec2 p4 = p2 + lengthdir_v2(arrow_head_length, direction - 135);
+	draw_line_thick(p2, p4, thickness, color);
 }

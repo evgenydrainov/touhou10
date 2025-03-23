@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "texture.h"
 
 /*
 * A basic 2D batch renderer.
@@ -31,6 +30,33 @@ enum RenderMode {
 	MODE_CIRCLES,
 };
 
+struct Texture {
+	u32 id;
+	int width;
+	int height;
+};
+
+Texture load_texture(u8* pixel_data, int width, int height,
+					 int filter = GL_NEAREST, int wrap = GL_CLAMP_TO_EDGE,
+					 bool alpha_channel = true);
+
+Texture load_depth_texture(int width, int height);
+
+void free_texture(Texture* t);
+
+struct Framebuffer {
+	u32 id;
+	Texture texture;
+	Texture depth;
+};
+
+// NOTE: alpha channel is off by default
+Framebuffer load_framebuffer(int width, int height,
+							 int filter = GL_NEAREST, int wrap = GL_CLAMP_TO_EDGE,
+							 bool alpha_channel = false, bool depth = true);
+
+void free_framebuffer(Framebuffer* f);
+
 struct Renderer {
 	u32 current_texture;
 	RenderMode current_mode;
@@ -40,16 +66,16 @@ struct Renderer {
 	u32 color_shader;
 	u32 circle_shader;
 	u32 sharp_bilinear_shader;
+	u32 hq4x_shader;
 
 	u32 current_shader;
 
 	u32 batch_vao;
 	u32 batch_vbo;
 	u32 batch_ebo;
-	u32 stub_texture; // 1x1 white texture
+	Texture texture_for_shapes; // 1x1 white texture
 
-	u32 game_texture;      // Game is renderer to a framebuffer, and then the framebuffer is
-	u32 game_framebuffer;  // rendered to the screen.
+	Framebuffer framebuffer;  // Game is renderer to a framebuffer, and then the framebuffer is rendered to the screen.
 	Rect game_texture_rect;
 
 	int backbuffer_width;
@@ -100,12 +126,15 @@ void draw_texture(const Texture& t, Rect src = {},
 				  vec2 pos = {}, vec2 scale = {1, 1},
 				  vec2 origin = {}, float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
 
+// This version of the function is here because matrix multiplications are too slow in Debug build.
+void draw_texture_simple(const Texture& t, Rect src = {},
+						 vec2 pos = {}, vec2 origin = {}, vec4 color = color_white, glm::bvec2 flip = {});
+
 void draw_texture_centered(const Texture& t,
 						   vec2 pos = {}, vec2 scale = {1, 1},
 						   float angle = 0, vec4 color = color_white, glm::bvec2 flip = {});
 
 void draw_rectangle(Rectf rect, vec4 color);
-
 void draw_rectangle(Rectf rect, vec2 scale,
 					vec2 origin, float angle, vec4 color);
 
@@ -114,7 +143,13 @@ void draw_triangle(vec2 p1, vec2 p2, vec2 p3, vec4 color);
 void draw_circle(vec2 pos, float radius, vec4 color, int precision = 12);
 
 void draw_line(vec2 p1, vec2 p2, vec4 color);
+void draw_line_exact(vec2 p1, vec2 p2, vec4 color);
+void draw_line_thick(vec2 p1, vec2 p2, float thickness, vec4 color);
 
 void draw_point(vec2 point, vec4 color);
 
 void draw_rectangle_outline(Rectf rect, vec4 color);
+void draw_rectangle_outline_exact(Rectf rect, vec4 color);
+void draw_rectangle_outline_thick(Rectf rect, float thickness, vec4 color);
+
+void draw_arrow_thick(vec2 p1, float length, float direction, float arrow_head_length, float thickness, vec4 color);

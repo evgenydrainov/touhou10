@@ -17,9 +17,11 @@
 #define GLAD_GLES2_IMPLEMENTATION
 #include <glad/gl.h>
 #undef GLAD_GL_IMPLEMENTATION
+#undef GLAD_GLES2_IMPLEMENTATION
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
+#define STBI_NO_STDIO
 #include <stb/stb_image.h>
 #undef STB_IMAGE_IMPLEMENTATION
 
