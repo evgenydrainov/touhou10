@@ -232,6 +232,7 @@ copy /Y "$(SolutionDir)external\SDL2_image\lib\$(PlatformTarget)\SDL2_image.dll"
     </ClCompile>
     <ClCompile Include="src\texture.cpp" />
     <ClCompile Include="src\title_screen.cpp" />
+    <ClCompile Include="src\util.cpp" />
     <ClCompile Include="src\window_creation.cpp" />
     <ClCompile Include="src\world.cpp" />
   </ItemGroup>

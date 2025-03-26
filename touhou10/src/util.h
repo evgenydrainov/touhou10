@@ -86,3 +86,5 @@ inline u32 create_vertex_array_obj(const Vertex* vertices, size_t num_vertices,
 	if (out_ebo) *out_ebo = ebo;
 	return vao;
 }
+
+Shader load_shader_from_file(const char* vert_fname, const char* frag_fname);

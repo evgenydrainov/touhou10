@@ -30,12 +30,12 @@ static void draw_world_origin_axis(float delta) {
 		vao = create_vertex_array_obj(vertices, ArrayLength(vertices));
 	}
 
-	u32 program = renderer.texture_shader;
+	u32 program = renderer.texture_shader.id;
 
 	glUseProgram(program);
 	defer { glUseProgram(0); };
 
-	mat4 MVP = world.d3d.get_mvp();
+	mat4 MVP = world.cam3d_get_mvp();
 
 	int u_MVP = glGetUniformLocation(program, "u_MVP");
 	glUniformMatrix4fv(u_MVP, 1, GL_FALSE, &MVP[0][0]);
@@ -152,9 +152,9 @@ static int num_vertices;
 static u32 program;
 
 void Stage_1_Init_Background() {
-	world.d3d.cam_pos = {0, 10.0f, 10.0f};
-	world.d3d.pitch   = -10;
-	world.d3d.yaw     = -90;
+	world.cam3d.pos = {0, 10.0f, 10.0f};
+	world.cam3d.pitch   = -10;
+	world.cam3d.yaw     = -90;
 
 	if (!vao) {
 		// @Leak
@@ -193,8 +193,8 @@ void Stage_1_Draw_Background(float delta) {
 		float z =  wrapf(SDL_GetTicks() / 1000.0f, 8.0f);
 
 		mat4 model = glm::translate(mat4{1}, vec3{0, y, z});
-		mat4 view  = world.d3d.get_view_mat();
-		mat4 proj  = world.d3d.get_proj_mat();
+		mat4 view  = world.cam3d_get_view_mat();
+		mat4 proj  = world.cam3d_get_proj_mat();
 
 		int u_Model          = glGetUniformLocation(program, "u_Model");
 		int u_View           = glGetUniformLocation(program, "u_View");

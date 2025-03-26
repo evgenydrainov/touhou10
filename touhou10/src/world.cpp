@@ -739,60 +739,63 @@ l_skip_update:
 		SDL_GetRelativeMouseState(&mouse_x, &mouse_y);
 
 		if (SDL_GetRelativeMouseMode()) {
-			d3d.pitch -= mouse_y / 5.0f;
-			d3d.yaw   += mouse_x / 5.0f;
+			cam3d.pitch -= mouse_y / 5.0f;
+			cam3d.yaw   += mouse_x / 5.0f;
 
-			float spd = 0.5f;
+			float spd = 1.0f / 60.0f;
 
 			if (is_key_held(SDL_SCANCODE_LSHIFT)) {
 				spd /= 4;
 			}
 
 			if (is_key_held(SDL_SCANCODE_W)) {
-				d3d.cam_pos += (spd * delta) * d3d.get_camera_forward();
+				cam3d.pos += (spd * delta) * cam3d_get_camera_forward();
 			}
 
 			if (is_key_held(SDL_SCANCODE_S)) {
-				d3d.cam_pos -= (spd * delta) * d3d.get_camera_forward();
+				cam3d.pos -= (spd * delta) * cam3d_get_camera_forward();
 			}
 
 			if (is_key_held(SDL_SCANCODE_A)) {
-				d3d.cam_pos.z += (spd * delta) * dsin(d3d.yaw - 90);
-				d3d.cam_pos.x += (spd * delta) * dcos(d3d.yaw - 90);
+				cam3d.pos.z += (spd * delta) * dsin(cam3d.yaw - 90);
+				cam3d.pos.x += (spd * delta) * dcos(cam3d.yaw - 90);
 			}
 
 			if (is_key_held(SDL_SCANCODE_D)) {
-				d3d.cam_pos.z += (spd * delta) * dsin(d3d.yaw + 90);
-				d3d.cam_pos.x += (spd * delta) * dcos(d3d.yaw + 90);
+				cam3d.pos.z += (spd * delta) * dsin(cam3d.yaw + 90);
+				cam3d.pos.x += (spd * delta) * dcos(cam3d.yaw + 90);
 			}
 		}
 
-		d3d.pitch = clamp(d3d.pitch, -89.0f, 89.0f);
-		d3d.yaw   = wrapf(d3d.yaw, 360.0f);
+		cam3d.pitch = clamp(cam3d.pitch, -89.0f, 89.0f);
+		cam3d.yaw   = wrapf(cam3d.yaw, 360.0f);
 	}
-
 }
 
-vec3 World::D3D::get_camera_forward() {
+vec3 World::cam3d_get_camera_forward() {
 	vec3 forward;
-	forward.x = dcos(yaw) * dcos(pitch);
-	forward.y = dsin(pitch);
-	forward.z = dsin(yaw) * dcos(pitch);
+	forward.x = dcos(cam3d.yaw) * dcos(cam3d.pitch);
+	forward.y = dsin(cam3d.pitch);
+	forward.z = dsin(cam3d.yaw) * dcos(cam3d.pitch);
 	return forward;
 }
 
-mat4 World::D3D::get_view_mat() {
-	mat4 view = glm::lookAt(cam_pos, cam_pos + get_camera_forward(), get_up_vector());
+vec3 World::cam3d_get_up_vector() {
+	return {0, 1, 0};
+}
+
+mat4 World::cam3d_get_view_mat() {
+	mat4 view = glm::lookAt(cam3d.pos, cam3d.pos + cam3d_get_camera_forward(), cam3d_get_up_vector());
 	return view;
 }
 
-mat4 World::D3D::get_proj_mat() {
-	mat4 proj = glm::perspectiveFov(glm::radians(60.0f), (float)PLAY_AREA_W, (float)PLAY_AREA_H, 0.1f, 10'000.0f);
+mat4 World::cam3d_get_proj_mat() {
+	mat4 proj = glm::perspective(glm::radians(60.0f), (float)PLAY_AREA_W / (float)PLAY_AREA_H, 0.01f, 10'000.0f);
 	return proj;
 }
 
-mat4 World::D3D::get_mvp() {
-	mat4 MVP = (get_proj_mat() * get_view_mat());
+mat4 World::cam3d_get_mvp() {
+	mat4 MVP = (cam3d_get_proj_mat() * cam3d_get_view_mat());
 	return MVP;
 }
 

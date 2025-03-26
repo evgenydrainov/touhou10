@@ -66,19 +66,11 @@ struct World {
 	bool show_hitboxes;
 	size_t coro_memory;
 
-	struct D3D {
-		vec3 cam_pos;
+	struct Cam3D {
+		vec3 pos;
 		float pitch;
 		float yaw;
-
-		vec3 get_camera_forward();
-		vec3 get_up_vector() { return {0, 1, 0}; }
-
-		mat4 get_view_mat();
-		mat4 get_proj_mat();
-
-		mat4 get_mvp();
-	} d3d;
+	} cam3d;
 
 	void init();
 	void deinit();
@@ -94,6 +86,14 @@ struct World {
 	Boss*   find_boss(instance_id id);
 
 	Object* find_object(instance_id id);
+
+	vec3 cam3d_get_camera_forward();
+	vec3 cam3d_get_up_vector();
+
+	mat4 cam3d_get_view_mat();
+	mat4 cam3d_get_proj_mat();
+
+	mat4 cam3d_get_mvp();
 };
 
 extern World world;

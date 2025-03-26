@@ -7,12 +7,13 @@ static Texture    textures[NUM_TEXTURES];
 static Sprite     sprites[NUM_SPRITES];
 static Font       fonts[NUM_TEXTURES];
 static Mix_Chunk* sounds[NUM_SOUNDS];
+static Shader     shaders[NUM_SHADERS];
 
 #define FILTER_FOR_SPRITES GL_LINEAR
 
 void load_global_assets() {
 	{
-		static_assert(NUM_TEXTURES == 15, "");
+		static_assert(NUM_TEXTURES == 18, "");
 
 		textures[tex_characters]   = load_texture_from_file("textures/characters.png",  FILTER_FOR_SPRITES);
 		textures[tex_projectiles]  = load_texture_from_file("textures/projectiles.png", FILTER_FOR_SPRITES);
@@ -20,7 +21,10 @@ void load_global_assets() {
 		textures[tex_bosses]       = load_texture_from_file("textures/bosses.png",      FILTER_FOR_SPRITES);
 		textures[tex_enemies]      = load_texture_from_file("textures/enemies.png",     FILTER_FOR_SPRITES);
 
-		textures[tex_eosd_misty_lake]              = load_texture_from_file("textures/eosd_misty_lake.png", GL_LINEAR, GL_MIRRORED_REPEAT);
+		textures[tex_gfw_misty_lake]               = load_texture_from_file("textures/gfw_misty_lake.png",  GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake2]              = load_texture_from_file("textures/gfw_misty_lake2.png", GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake3]              = load_texture_from_file("textures/gfw_misty_lake3.png", GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake4]              = load_texture_from_file("textures/gfw_misty_lake4.png", GL_LINEAR, GL_REPEAT);
 		textures[tex_cirno_spellcard_background]   = load_texture_from_file("textures/cirno_spellcard_background.png", GL_LINEAR);
 		textures[tex_background]                   = load_texture_from_file("textures/background.png", GL_NEAREST, GL_REPEAT);
 		textures[tex_white]                        = load_texture_from_file("textures/white.png");
@@ -124,6 +128,10 @@ void load_global_assets() {
 			Mix_VolumeChunk(sounds[snd_enemy_shoot], (int)(MIX_MAX_VOLUME * 0.50f));
 		}
 	}
+
+	{
+		shaders[shd_stage0_bg] = load_shader_from_file("shaders/stage0_bg.vert", "shaders/stage0_bg.frag");
+	}
 }
 
 void free_all_assets() {
@@ -168,4 +176,14 @@ Mix_Chunk* get_sound(u32 sound_index) {
 	}
 
 	return sounds[sound_index];
+}
+
+const Shader& get_shader(u32 shader_index) {
+	Assert(shader_index < NUM_SHADERS);
+
+	if (shaders[shader_index].id == 0) {
+		log_warn("Trying to access shader %u that hasn't been loaded.", shader_index);
+	}
+
+	return shaders[shader_index];
 }

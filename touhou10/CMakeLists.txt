@@ -97,7 +97,8 @@ set(SOURCES
 	src/texture.cpp
 	src/title_screen.cpp
 	src/window_creation.cpp
-	src/world.cpp)
+	src/world.cpp
+	src/util.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

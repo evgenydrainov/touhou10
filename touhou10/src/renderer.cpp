@@ -337,13 +337,13 @@ void init_renderer() {
 		u32 hq4x_frag_shader = compile_shader(GL_FRAGMENT_SHADER, hq4x_frag_shader_src, "hq4x_frag");
 		defer { glDeleteShader(hq4x_frag_shader); };
 
-		renderer.texture_shader        = link_program(texture_vert_shader, texture_frag_shader,        "texture_shader");
-		renderer.color_shader          = link_program(texture_vert_shader, color_frag_shader,          "color_shader");
-		renderer.circle_shader         = link_program(texture_vert_shader, circle_frag_shader,         "circle_shader");
-		renderer.sharp_bilinear_shader = link_program(texture_vert_shader, sharp_bilinear_frag_shader, "sharp_bilinear_shader");
-		renderer.hq4x_shader           = link_program(texture_vert_shader, hq4x_frag_shader,           "hq4x_shader");
+		renderer.texture_shader.id        = link_program(texture_vert_shader, texture_frag_shader,        "texture_shader");
+		renderer.color_shader.id          = link_program(texture_vert_shader, color_frag_shader,          "color_shader");
+		renderer.circle_shader.id         = link_program(texture_vert_shader, circle_frag_shader,         "circle_shader");
+		renderer.sharp_bilinear_shader.id = link_program(texture_vert_shader, sharp_bilinear_frag_shader, "sharp_bilinear_shader");
+		renderer.hq4x_shader.id           = link_program(texture_vert_shader, hq4x_frag_shader,           "hq4x_shader");
 
-		renderer.current_shader = renderer.texture_shader;
+		renderer.current_shader = renderer.texture_shader.id;
 		glUseProgram(renderer.current_shader);
 	}
 }
@@ -404,7 +404,7 @@ void render_end_frame() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	{
-		u32 program = renderer.sharp_bilinear_shader;
+		u32 program = renderer.sharp_bilinear_shader.id;
 		set_shader(program);
 
 		float xscale = backbuffer_width  / (float)window.game_width;
@@ -515,7 +515,7 @@ void break_batch() {
 		}
 
 		case MODE_TRIANGLES: {
-			u32 program = renderer.color_shader;
+			u32 program = renderer.color_shader.id;
 
 			glUseProgram(program);
 			defer { glUseProgram(0); };
@@ -536,7 +536,7 @@ void break_batch() {
 		}
 
 		case MODE_LINES: {
-			u32 program = renderer.color_shader;
+			u32 program = renderer.color_shader.id;
 
 			glUseProgram(program);
 			defer { glUseProgram(0); };
@@ -556,7 +556,7 @@ void break_batch() {
 		}
 
 		case MODE_POINTS: {
-			u32 program = renderer.color_shader;
+			u32 program = renderer.color_shader.id;
 
 			glUseProgram(program);
 			defer { glUseProgram(0); };
@@ -574,7 +574,7 @@ void break_batch() {
 		}
 
 		case MODE_CIRCLES: {
-			u32 program = renderer.circle_shader;
+			u32 program = renderer.circle_shader.id;
 
 			glUseProgram(program);
 			defer { glUseProgram(0); };
@@ -619,7 +619,7 @@ void set_shader(u32 shader) {
 }
 
 void reset_shader() {
-	u32 shader = renderer.texture_shader;
+	u32 shader = renderer.texture_shader.id;
 
 	if (renderer.current_shader != shader) {
 		break_batch();

@@ -18,7 +18,10 @@ enum {
 	tex_bosses,
 	tex_enemies,
 
-	tex_eosd_misty_lake,
+	tex_gfw_misty_lake,
+	tex_gfw_misty_lake2,
+	tex_gfw_misty_lake3,
+	tex_gfw_misty_lake4,
 	tex_cirno_spellcard_background,
 	tex_background,
 	tex_white,
@@ -107,7 +110,9 @@ enum {
 };
 
 enum {
-	shd__,
+	shd_stage0_bg,
+
+	NUM_SHADERS,
 };
 
 struct Character {
@@ -188,6 +193,8 @@ const Texture& get_texture(u32 texture_index);
 const Sprite&  get_sprite(u32 sprite_index);
 const Font&    get_font(u32 font_index);
 Mix_Chunk*     get_sound(u32 sound_index);
+const Shader&  get_shader(u32 shader_index);
+
 Character*     GetCharacter(u32 character_index);
 BossData*      GetBossData(u32 boss_index);
 StageData*     GetStageData(u32 stage_index);

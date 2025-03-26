@@ -57,18 +57,21 @@ Framebuffer load_framebuffer(int width, int height,
 
 void free_framebuffer(Framebuffer* f);
 
+struct Shader {
+	u32 id;
+};
+
 struct Renderer {
 	u32 current_texture;
 	RenderMode current_mode;
+	u32 current_shader;
 	bump_array<Vertex> vertices;
 
-	u32 texture_shader;  // These shaders should be handled by an asset system maybe
-	u32 color_shader;
-	u32 circle_shader;
-	u32 sharp_bilinear_shader;
-	u32 hq4x_shader;
-
-	u32 current_shader;
+	Shader texture_shader;  // These shaders should be handled by an asset system maybe
+	Shader color_shader;
+	Shader circle_shader;
+	Shader sharp_bilinear_shader;
+	Shader hq4x_shader;
 
 	u32 batch_vao;
 	u32 batch_vbo;
