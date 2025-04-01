@@ -37,8 +37,8 @@ struct Texture {
 };
 
 Texture load_texture(u8* pixel_data, int width, int height,
-					 int filter = GL_NEAREST, int wrap = GL_CLAMP_TO_EDGE,
-					 bool alpha_channel = true);
+					 int filter, int wrap,
+					 int internal_format);
 
 Texture load_depth_texture(int width, int height);
 
@@ -50,10 +50,9 @@ struct Framebuffer {
 	Texture depth;
 };
 
-// NOTE: alpha channel is off by default
 Framebuffer load_framebuffer(int width, int height,
-							 int filter = GL_NEAREST, int wrap = GL_CLAMP_TO_EDGE,
-							 bool alpha_channel = false, bool depth = true);
+							 int filter, int wrap,
+							 int internal_format, bool depth_texture);
 
 void free_framebuffer(Framebuffer* f);
 
@@ -68,7 +67,6 @@ struct Renderer {
 	bump_array<Vertex> vertices;
 
 	Shader texture_shader;  // These shaders should be handled by an asset system maybe
-	Shader color_shader;
 	Shader circle_shader;
 	Shader sharp_bilinear_shader;
 	Shader hq4x_shader;

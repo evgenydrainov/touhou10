@@ -58,7 +58,7 @@ Texture load_texture_from_memory(array<u8> buffer,
 
 	defer { free(pixel_data); };
 
-	return load_texture(pixel_data, width, height, filter, wrap);
+	return load_texture(pixel_data, width, height, filter, wrap, GL_RGBA8);
 }
 
 Texture load_texture_from_file(const char* fname,
@@ -85,7 +85,7 @@ Texture create_texture_stub() {
 		0,   0,   0, 255,    255, 0, 255, 255,
 	};
 
-	return load_texture(pixel_data, width, height, GL_NEAREST, GL_REPEAT);
+	return load_texture(pixel_data, width, height, GL_NEAREST, GL_REPEAT, GL_RGBA8);
 }
 
 SDL_Surface* load_surface_from_file(const char* fname) {
