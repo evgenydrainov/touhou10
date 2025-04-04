@@ -190,12 +190,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 
 		if (player_collides_with_bullet(&player, player.radius, b)) {
 			if (player.state == PLAYER_STATE_NORMAL) {
-				if (player.iframes <= 0) {
-					player.state = PLAYER_STATE_DYING;
-					player.timer = PLAYER_DEATH_TIME;
-
-					play_sound(get_sound(snd_pichuun));
-				}
+				player_get_hit(&player);
 
 				object_cleanup(b);
 				Remove(b, bullets);
@@ -208,12 +203,7 @@ void World::physics_update(float delta, float delta_not_modified) {
 	For (e, enemies) {
 		if (circle_vs_circle(player.x, player.y, player.radius, e->x, e->y, e->radius)) {
 			if (player.state == PLAYER_STATE_NORMAL) {
-				if (player.iframes <= 0) {
-					player.state = PLAYER_STATE_DYING;
-					player.timer = PLAYER_DEATH_TIME;
-
-					play_sound(get_sound(snd_pichuun));
-				}
+				player_get_hit(&player);
 			}
 		}
 	}
@@ -222,17 +212,12 @@ void World::physics_update(float delta, float delta_not_modified) {
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
 		if (circle_vs_circle(player.x, player.y, player.radius, boss.x, boss.y, boss.radius)) {
 			if (player.state == PLAYER_STATE_NORMAL) {
-				if (player.iframes <= 0) {
-					player.state = PLAYER_STATE_DYING;
-					player.timer = PLAYER_DEATH_TIME;
-
-					play_sound(get_sound(snd_pichuun));
-				}
+				player_get_hit(&player);
 			}
 		}
 	}
 
-	auto create_player_bullet_afterimage = [&](PlayerBullet* b) {
+	auto create_player_bullet_afterimage = [](PlayerBullet* b) {
 		Particle p = {};
 		p.pos.x        = b->x;
 		p.pos.y        = b->y;
@@ -380,7 +365,7 @@ void World::update(float delta_not_modified) {
 		if (!paused) {
 			paused = true;
 			pause_menu = {};
-			play_sound(snd_pause);
+			play_sound(get_sound(snd_pause));
 		}
 	}
 #endif
@@ -674,6 +659,21 @@ void World::update(float delta_not_modified) {
 		}
 	}
 
+	{
+		StageData* stage = GetStageData(game.stage_index);
+		if (stage->update_background) {
+			stage->update_background(delta);
+		}
+	}
+
+	// handle player death effect
+	if (death_effect.show) {
+		death_effect.t += 0.015f * delta;
+		if (death_effect.t >= 1) {
+			death_effect.show = false;
+		}
+	}
+
 l_skip_update:
 
 	delta = delta_not_modified;
@@ -802,11 +802,11 @@ mat4 World::cam3d_get_mvp() {
 void World::draw(float delta_not_modified) {
 	float delta = delta_not_modified * delta_multiplier;
 
-	renderer.proj_mat = glm::ortho<float>(0, GAME_W, GAME_H, 0);
+	set_proj_mat(get_ortho(0, GAME_W, GAME_H, 0));
+	defer { set_proj_mat(get_identity()); };
 
 	// Draw background
 	{
-		// @Temp???
 		auto draw = [&](int x, int y, int width, int height) {
 			Rect src = {x, y, width, height};
 			vec2 pos = {x, y};
@@ -817,8 +817,6 @@ void World::draw(float delta_not_modified) {
 		draw(PLAY_AREA_X + PLAY_AREA_W, 0, GAME_W - (PLAY_AREA_X + PLAY_AREA_W), GAME_H);
 		draw(PLAY_AREA_X, 0, PLAY_AREA_W, PLAY_AREA_Y);
 		draw(PLAY_AREA_X, PLAY_AREA_Y + PLAY_AREA_H, PLAY_AREA_W, GAME_H - (PLAY_AREA_Y + PLAY_AREA_H));
-
-		break_batch();
 	}
 
 	// 
@@ -868,20 +866,19 @@ void World::draw(float delta_not_modified) {
 		vec4 color = {1, 1, 1, 0.75f};
 
 		if (boss.flags & FLAG_BOSS_WAS_HIT_THIS_FRAME) {
-			color.a = 0.25f;
+			color.a = 0.50f;
 		}
 
-		//r->draw_sprite(GetSprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
+		draw_sprite(get_sprite(spr_enemy_label), 0, {x, y}, {1, 1}, 0, color);
 	}
 
+	set_viewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+
 	break_batch();
-
-	glViewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
-	renderer.proj_mat = glm::ortho<float>(0, PLAY_AREA_W, PLAY_AREA_H, 0);
-
-	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
 	glEnable(GL_SCISSOR_TEST);
-	defer { glDisable(GL_SCISSOR_TEST); };
+	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
+
+	defer { break_batch(); glDisable(GL_SCISSOR_TEST); };
 
 	if (boss_spellcard_background_alpha < 1) {
 		StageData* stage = GetStageData(game.stage_index);
@@ -889,6 +886,8 @@ void World::draw(float delta_not_modified) {
 			stage->draw_background(delta);
 		}
 	}
+
+	set_proj_mat(get_ortho(0, PLAY_AREA_W, PLAY_AREA_H, 0));
 
 	if (boss_spellcard_background_alpha > 0) {
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
@@ -1029,6 +1028,18 @@ void World::draw(float delta_not_modified) {
 	}
 
 	draw_particles(delta);
+
+	// draw player death effect
+	if (death_effect.show) {
+		break_batch(); glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+		defer { break_batch(); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); };
+
+		float radius = lerp(0.0f, 600.0f, death_effect.t);
+		draw_circle({death_effect.x - 40, death_effect.y}, radius, color_white);
+		draw_circle({death_effect.x + 40, death_effect.y}, radius, color_white);
+		draw_circle({death_effect.x, death_effect.y - 40}, radius, color_white);
+		draw_circle({death_effect.x, death_effect.y + 40}, radius, color_white);
+	}
 
 	For (a, animations) {
 		a->draw(delta);

@@ -72,6 +72,13 @@ struct World {
 		float yaw;
 	} cam3d;
 
+	struct DeathEffect {
+		bool show;
+		float t;
+		float x;
+		float y;
+	} death_effect;
+
 	void init();
 	void deinit();
 

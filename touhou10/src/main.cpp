@@ -12,7 +12,7 @@
 
 
 int main(int /*argc*/, char* /*argv*/[]) {
-	init_window_and_opengl("touhou10", 640, 480, 2, false, false);
+	init_window_and_opengl("touhou10", GAME_W, GAME_H, 2, false, false);
 	defer { deinit_window_and_opengl(); };
 
 	init_mixer();

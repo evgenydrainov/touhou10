@@ -10,6 +10,7 @@
 void Stage_0_Script(mco_coro* co);
 void Stage_0_Init_Background();
 void Stage_0_Draw_Background(float delta);
+void Stage_0_Update_Background(float delta);
 
 void Stage_1_Script(mco_coro* co);
 void Stage_1_Init_Background();
@@ -64,9 +65,10 @@ static_assert(STAGE_COUNT == 2, "");
 
 static StageData stage_data[STAGE_COUNT] = {
 	{
-		/* .script          = */ Stage_0_Script,
-		/* .init_background = */ Stage_0_Init_Background,
-		/* .draw_background = */ Stage_0_Draw_Background,
+		/* .script            = */ Stage_0_Script,
+		/* .init_background   = */ Stage_0_Init_Background,
+		/* .draw_background   = */ Stage_0_Draw_Background,
+		/* .update_background = */ Stage_0_Update_Background,
 	},
 	{
 		/* .script          = */ Stage_1_Script,

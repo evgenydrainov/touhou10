@@ -21,17 +21,35 @@ void load_global_assets() {
 		textures[tex_bosses]       = load_texture_from_file("textures/bosses.png",      FILTER_FOR_SPRITES);
 		textures[tex_enemies]      = load_texture_from_file("textures/enemies.png",     FILTER_FOR_SPRITES);
 
-		textures[tex_gfw_misty_lake]               = load_texture_from_file("textures/gfw_misty_lake.png",  GL_LINEAR, GL_REPEAT);
-		textures[tex_gfw_misty_lake2]              = load_texture_from_file("textures/gfw_misty_lake2.png", GL_LINEAR, GL_REPEAT);
-		textures[tex_gfw_misty_lake3]              = load_texture_from_file("textures/gfw_misty_lake3.png", GL_LINEAR, GL_REPEAT);
-		textures[tex_gfw_misty_lake4]              = load_texture_from_file("textures/gfw_misty_lake4.png", GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake]   = load_texture_from_file("textures/gfw_misty_lake.png",   GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake2]  = load_texture_from_file("textures/gfw_misty_lake2.png",  GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake3]  = load_texture_from_file("textures/gfw_misty_lake3.png",  GL_LINEAR, GL_REPEAT);
+		textures[tex_gfw_misty_lake4]  = load_texture_from_file("textures/gfw_misty_lake4.png",  GL_LINEAR, GL_REPEAT);
+		textures[tex_pcb_youmu_stairs] = load_texture_from_file("textures/pcb_youmu_stairs.png", GL_LINEAR);
+
+		auto gen_mipmap = [](u32 texture_index) {
+			u32 id = get_texture(texture_index).id;
+			if (id != 0) {
+				glBindTexture(GL_TEXTURE_2D, id);
+				glGenerateMipmap(GL_TEXTURE_2D);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glBindTexture(GL_TEXTURE_2D, 0);
+			}
+		};
+
+		gen_mipmap(tex_gfw_misty_lake);
+		gen_mipmap(tex_gfw_misty_lake2);
+		gen_mipmap(tex_gfw_misty_lake3);
+		gen_mipmap(tex_gfw_misty_lake4);
+		gen_mipmap(tex_pcb_youmu_stairs);
+
 		textures[tex_cirno_spellcard_background]   = load_texture_from_file("textures/cirno_spellcard_background.png", GL_LINEAR);
 		textures[tex_background]                   = load_texture_from_file("textures/background.png", GL_NEAREST, GL_REPEAT);
 		textures[tex_white]                        = load_texture_from_file("textures/white.png");
 		textures[tex_boss_cirno_portrait]          = load_texture_from_file("textures/boss_cirno_portrait.png");
 		textures[tex_boss_youmu_portrait]          = load_texture_from_file("textures/boss_youmu_portrait.png");
 		textures[tex_spellcard_attack_anim_label]  = load_texture_from_file("textures/spellcard_attack_anim_label.png");
-		textures[tex_pcb_youmu_stairs]             = load_texture_from_file("textures/pcb_youmu_stairs.png", GL_LINEAR);
 		textures[tex_pcb_youmu_bg]                 = load_texture_from_file("textures/pcb_youmu_bg.png", GL_LINEAR);
 		textures[tex_pcb_youmu_bg_flowers]         = load_texture_from_file("textures/pcb_youmu_bg_flowers.png", GL_LINEAR);
 	}
@@ -62,12 +80,12 @@ void load_global_assets() {
 		sprites[spr_bullet_shard]              = create_sprite(t,   0,  96, 16, 16,  8,  8, 16);
 		sprites[spr_bullet_card]               = create_sprite(t,   0, 112, 16, 16,  8,  8, 16);
 		sprites[spr_bullet_bullet]             = create_sprite(t,   0, 128, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_small]              = create_sprite(t,   0, 240,  8,  8,  4,  4, 16,  8);
-		sprites[spr_bullet_spawn_particle]     = create_sprite(t,   0, 416, 32, 32, 16, 16,  8);
-		sprites[spr_enemy_death_particle_blue] = create_sprite(t, 192, 448, 64, 64, 32, 32);
-		sprites[spr_kira_particle]             = create_sprite(t,  64, 464, 32, 32, 16, 16);
-		sprites[spr_pickup]                    = create_sprite(t,   0, 608, 16, 16,  8,  8, 16);
-		sprites[spr_particle_graze]            = create_sprite(t,   0, 624,  8,  8,  4,  4,  4,  4, 0.25f);
+		sprites[spr_bullet_small]              = create_sprite(t,  64, 176,  8,  8,  4,  4, 16,  8);
+		sprites[spr_bullet_spawn_particle]     = create_sprite(t,   0, 144, 32, 32, 16, 16,  8);
+		sprites[spr_enemy_death_particle_blue] = create_sprite(t,   0, 176, 64, 64, 32, 32);
+		sprites[spr_kira_particle]             = create_sprite(t,  64, 192, 32, 32, 16, 16);
+		sprites[spr_pickup]                    = create_sprite(t, 128, 176, 16, 16,  8,  8, 16,  8);
+		sprites[spr_particle_graze]            = create_sprite(t,  64, 224,  8,  8,  4,  4,  4,  4, 0.25f);
 	}
 
 	{
@@ -131,11 +149,29 @@ void load_global_assets() {
 
 	{
 		shaders[shd_stage0_bg] = load_shader_from_file("shaders/stage0_bg.vert", "shaders/stage0_bg.frag");
+		shaders[shd_basic_3d]  = load_shader_from_file("shaders/basic_3d.vert",  "shaders/basic_3d.frag");
 	}
 }
 
 void free_all_assets() {
+	for (int i = 0; i < NUM_TEXTURES; i++) {
+		free_texture(&textures[i]);
+	}
 	
+	for (int i = 0; i < NUM_FONTS; i++) {
+		free_font(&fonts[i]);
+	}
+
+	for (int i = 0; i < NUM_SOUNDS; i++) {
+		if (sounds[i]) {
+			Mix_FreeChunk(sounds[i]);
+			sounds[i] = nullptr;
+		}
+	}
+
+	for (int i = 0; i < NUM_SHADERS; i++) {
+		free_shader(&shaders[i]);
+	}
 }
 
 const Texture& get_texture(u32 texture_index) {

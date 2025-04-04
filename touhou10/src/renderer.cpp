@@ -241,6 +241,11 @@ void free_framebuffer(Framebuffer* f) {
 	*f = {};
 }
 
+void free_shader(Shader* s) {
+	if (s->id != 0) glDeleteProgram(s->id);
+	*s = {};
+}
+
 void set_vertex_attribs() {
 	// Position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
@@ -454,6 +459,16 @@ static void setup_uniforms(u32 program) {
 		mat4 model_view = renderer.view_mat * renderer.model_mat;
 
 		glUniformMatrix4fv(u_ModelView, 1, GL_FALSE, &model_view[0][0]);
+	}
+
+	int u_Model = glGetUniformLocation(program, "u_Model");
+	if (u_Model != -1) {
+		glUniformMatrix4fv(u_Model, 1, GL_FALSE, &renderer.model_mat[0][0]);
+	}
+
+	int u_View = glGetUniformLocation(program, "u_View");
+	if (u_View != -1) {
+		glUniformMatrix4fv(u_Model, 1, GL_FALSE, &renderer.view_mat[0][0]);
 	}
 
 	int u_Proj = glGetUniformLocation(program, "u_Proj");

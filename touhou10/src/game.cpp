@@ -78,7 +78,7 @@ void Game::draw(float delta) {
 			break;
 		}
 		case STATE_PLAYING: {
-			world.draw(delta); // Projection matrix will change after this call
+			world.draw(delta);
 			break;
 		}
 	}
@@ -419,9 +419,7 @@ bool console_callback(string str, void* userdata) {
 		}
 
 		if (command == "kill_player") {
-			world.player.state = PLAYER_STATE_DYING;
-			world.player.timer = PLAYER_DEATH_TIME;
-			play_sound(get_sound(snd_pichuun));
+			player_get_hit(&world.player);
 			return true;
 		}
 	}

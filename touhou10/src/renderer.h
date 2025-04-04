@@ -60,6 +60,8 @@ struct Shader {
 	u32 id;
 };
 
+void free_shader(Shader* s);
+
 struct Renderer {
 	u32 current_texture;
 	RenderMode current_mode;

@@ -44,6 +44,7 @@ inline u32 link_program(u32 vertex_shader, u32 fragment_shader, const char* debu
 	glAttachShader(program, fragment_shader);
 
 	glLinkProgram(program);
+	// TODO: glValidateProgram(program);
 
 	int success;
 	glGetProgramiv(program, GL_LINK_STATUS, &success);

@@ -72,8 +72,9 @@ void player_update(Player* p, float delta) {
 		if (is_key_pressed(SDL_SCANCODE_X)) {
 			if (p->bomb_timer <= 0) {
 				if (game.stats.bombs > 0) {
-					Assert(character->bomb);
-					character->bomb(p);
+					if (character->bomb) {
+						character->bomb(p);
+					}
 
 					game.stats.bombs--;
 					p->bomb_timer = PLAYER_BOMB_TIME;
@@ -118,8 +119,9 @@ void player_update(Player* p, float delta) {
 				p->vsp = dir.y * spd;
 			}
 
-			Assert(character->shot_type);
-			character->shot_type(p, delta);
+			if (character->shot_type) {
+				character->shot_type(p, delta);
+			}
 
 			try_use_bomb();
 
@@ -195,6 +197,26 @@ void player_update(Player* p, float delta) {
 	p->hitbox_alpha = approach(p->hitbox_alpha,
 							   (p->focused) ? 1.0f : 0.0f,
 							   0.1f * delta);
+}
+
+bool player_get_hit(Player* p) {
+	if (p->state == PLAYER_STATE_NORMAL) {
+		if (p->iframes <= 0) {
+			p->state = PLAYER_STATE_DYING;
+			p->timer = PLAYER_DEATH_TIME;
+
+			play_sound(get_sound(snd_pichuun));
+
+			world.death_effect = {};
+			world.death_effect.show = true;
+			world.death_effect.x = p->x;
+			world.death_effect.y = p->y;
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void player_draw(Player* p, float delta) {

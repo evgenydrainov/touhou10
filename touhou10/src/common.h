@@ -156,7 +156,11 @@ inline void SDL_PRINTF_VARARG_FUNC(2) log_internal(SDL_LogPriority priority, SDL
 // For now, asserts will be enabled in release build.
 //
 #ifdef NDEBUG
-	#define Assert(expr) while (!(expr)) panic_and_abort("Assertion Failed: " #expr)
+	#ifdef ENABLE_ASSERTS_IN_RELEASE
+		#define Assert(expr) while (!(expr)) panic_and_abort("Assertion Failed: " #expr)
+	#else
+		#define Assert(expr)
+	#endif
 #else
 	#define Assert(expr) while (!(expr)) { try_to_exit_fullscreen_properly(); SDL_TriggerBreakpoint(); }
 #endif
@@ -555,7 +559,11 @@ inline mat4 get_ortho(float left, float right, float bottom, float top) {
 }
 
 inline mat4 get_translation(vec3 v) {
-	return glm::translate<float>(mat4{1}, v);
+	return glm::translate<float>(mat4{1.0f}, v);
+}
+
+inline mat4 get_identity() {
+	return mat4{1.0f};
 }
 
 // 

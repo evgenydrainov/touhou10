@@ -92,6 +92,7 @@ struct Player : Object {
 
 void player_init(Player* p);
 void player_update(Player* p, float delta);
+bool player_get_hit(Player* p);
 void player_draw(Player* p, float delta);
 
 struct Coroutine {

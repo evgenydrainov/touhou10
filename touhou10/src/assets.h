@@ -111,6 +111,7 @@ enum {
 
 enum {
 	shd_stage0_bg,
+	shd_basic_3d,
 
 	NUM_SHADERS,
 };
@@ -179,6 +180,7 @@ struct StageData {
 	void (*script)(mco_coro*);
 	void (*init_background)();
 	void (*draw_background)(float delta);
+	void (*update_background)(float delta);
 };
 
 #define STAGE_COUNT 2

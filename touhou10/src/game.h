@@ -8,10 +8,6 @@
 #define GAME_W 640
 #define GAME_H 480
 
-#define GAME_TEXTURE_SCALE 1
-#define RENDER_GAME_TO_TEXTURE 1
-#define DRAW_AT_FLOORED_POSITION 1
-
 #define PLAY_AREA_W 384
 #define PLAY_AREA_H 448
 #define PLAY_AREA_X 32

@@ -1,6 +1,5 @@
 #include "window_creation.h"
 
-// @Cleanup?
 #include "renderer.h"
 #include "console.h"
 
@@ -77,10 +76,8 @@ void init_window_and_opengl(const char* title,
 
 	// SDL_SetHint("SDL_WINDOWS_DPI_AWARENESS", "permonitorv2");
 	SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
-
 	SDL_SetHint("SDL_IOS_ORIENTATIONS", "LandscapeLeft");
-
-	//SDL_SetHint("SDL_ANDROID_TRAP_BACK_BUTTON", "1");
+	// SDL_SetHint("SDL_ANDROID_TRAP_BACK_BUTTON", "1");
 
 	if (SDL_Init(SDL_INIT_VIDEO
 				 | SDL_INIT_GAMECONTROLLER) != 0) {
@@ -131,6 +128,30 @@ void init_window_and_opengl(const char* title,
 	}
 #endif
 
+
+	//
+	// Set GL attributes.
+	//
+#if defined(__ANDROID__)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#elif defined(__EMSCRIPTEN__)
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
+
+#ifdef _DEBUG
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+
+
 	window.handle = SDL_CreateWindow(title,
 									 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 									 width * init_window_scale, height * init_window_scale,
@@ -149,26 +170,7 @@ void init_window_and_opengl(const char* title,
 	SDL_RaiseWindow(window.handle);
 #endif
 
-
 	SDL_SetWindowMinimumSize(window.handle, width, height);
-
-#if defined(__ANDROID__)
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#elif defined(__EMSCRIPTEN__)
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#else
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#endif
-
-#ifdef _DEBUG
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
 
 	window.gl_context = SDL_GL_CreateContext(window.handle);
 	SDL_GL_MakeCurrent(window.handle, window.gl_context);
@@ -257,11 +259,9 @@ void init_window_and_opengl(const char* title,
 	SDL_GL_SetSwapInterval(window.vsync ? 1 : 0);
 
 	glDisable(GL_CULL_FACE);
-
+	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glDisable(GL_DEPTH_TEST);
 }
 
 void deinit_window_and_opengl() {
@@ -292,6 +292,11 @@ void handle_event(const SDL_Event& ev) {
 					ignore = true;
 				}
 
+				// ignore alt+enter
+				if (scancode == SDL_SCANCODE_RETURN && (ev.key.keysym.mod & KMOD_ALT)) {
+					ignore = true;
+				}
+
 				if (!ignore) {
 					if (ev.key.repeat) {
 						window.key_repeat[scancode / 32] |= 1 << (scancode % 32);
@@ -312,13 +317,10 @@ void handle_event(const SDL_Event& ev) {
 					break;
 				}
 
-				// fullscreen on F4
-				case SDL_SCANCODE_F4: {
+				// fullscreen on F11
+				case SDL_SCANCODE_F11: {
 					if (!ev.key.repeat) {
-						// ignore alt+f4
-						if (!(ev.key.keysym.mod & KMOD_ALT)) {
-							set_fullscreen(!is_fullscreen());
-						}
+						set_fullscreen(!is_fullscreen());
 					}
 					break;
 				}
