@@ -14,6 +14,9 @@
 #define MAX_ENEMIES 1'000
 #define MAX_PICKUPS 1'000
 
+#define PLAY_AREA_W 384
+#define PLAY_AREA_H 448
+
 #define PLAYER_STARTING_X ((float)PLAY_AREA_W / 2.0f)
 #define PLAYER_STARTING_Y 384.0f
 

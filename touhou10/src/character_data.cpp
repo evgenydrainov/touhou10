@@ -1,7 +1,8 @@
 #include "assets.h"
 
-#include "window_creation.h"
 #include "game.h"
+#include "world.h"
+#include "input.h"
 
 #include "character_data_reimu.h"
 

@@ -99,6 +99,7 @@ set(SOURCES
 	src/window_creation.cpp
 	src/world.cpp
 	src/util.cpp)
+	src/input.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

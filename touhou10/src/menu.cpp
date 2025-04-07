@@ -1,34 +1,32 @@
 #include "menu.h"
 
-#include "window_creation.h"
-#include "renderer.h"
-#include "font.h"
-#include "game.h"
+#include "input.h"
+#include "assets.h"
 
 int menu_update(Menu* menu, int num_items, float delta, u32 flags) {
 	int result = -1;
 
 	auto navigate_and_select = [&]() {
-		if (is_key_pressed(SDL_SCANCODE_UP)) {
+		if (is_input_pressed(INPUT_UI_UP)) {
 			if (menu->cursor > 0) {
 				menu->cursor--;
 				play_sound(get_sound(snd_menu_navigate));
 			}
 		}
 
-		if (is_key_pressed(SDL_SCANCODE_DOWN)) {
+		if (is_input_pressed(INPUT_UI_DOWN)) {
 			if (menu->cursor < num_items - 1) {
 				menu->cursor++;
 				play_sound(get_sound(snd_menu_navigate));
 			}
 		}
 
-		if (is_key_pressed(SDL_SCANCODE_X)) {
+		if (is_input_pressed(INPUT_UI_CANCEL)) {
 			menu->cursor = num_items - 1;
 			play_sound(get_sound(snd_menu_cancel));
 		}
 
-		if (is_key_pressed(SDL_SCANCODE_Z)) {
+		if (is_input_pressed(INPUT_UI_CONFIRM)) {
 			if (flags & MENU_NO_FADEOUT) {
 				result = menu->cursor;
 			} else {

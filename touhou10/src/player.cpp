@@ -1,7 +1,8 @@
 #include "objects.h"
 
-#include "window_creation.h"
 #include "game.h"
+#include "world.h"
+#include "input.h"
 
 #define POINT_OF_COLLECTION 96.0f
 
@@ -69,7 +70,7 @@ void player_update(Player* p, float delta) {
 	p->focused = false;
 
 	auto try_use_bomb = [&]() {
-		if (is_key_pressed(SDL_SCANCODE_X)) {
+		if (is_input_pressed(INPUT_BOMB)) {
 			if (p->bomb_timer <= 0) {
 				if (game.stats.bombs > 0) {
 					if (character->bomb) {
@@ -95,20 +96,20 @@ void player_update(Player* p, float delta) {
 		case PLAYER_STATE_NORMAL: {
 			vec2 dir = {};
 
-			if (is_key_held(SDL_SCANCODE_UP)) {
+			if (is_input_held(INPUT_MOVE_UP)) {
 				dir.y -= 1.0f;
 			}
-			if (is_key_held(SDL_SCANCODE_DOWN)) {
+			if (is_input_held(INPUT_MOVE_DOWN)) {
 				dir.y += 1.0f;
 			}
-			if (is_key_held(SDL_SCANCODE_LEFT)) {
+			if (is_input_held(INPUT_MOVE_LEFT)) {
 				dir.x -= 1.0f;
 			}
-			if (is_key_held(SDL_SCANCODE_RIGHT)) {
+			if (is_input_held(INPUT_MOVE_RIGHT)) {
 				dir.x += 1.0f;
 			}
 
-			p->focused = is_key_held(SDL_SCANCODE_LSHIFT);
+			p->focused = is_input_held(INPUT_FOCUS);
 
 			dir = normalize0(dir);
 

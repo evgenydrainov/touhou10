@@ -31,6 +31,8 @@ enum {
 	tex_pcb_youmu_stairs,
 	tex_pcb_youmu_bg,
 	tex_pcb_youmu_bg_flowers,
+	tex_title_screen_bg,
+	tex_heat_haze_leopard,
 
 	NUM_TEXTURES,
 };
@@ -61,6 +63,7 @@ enum {
 	spr_kira_particle,
 	spr_pickup,
 	spr_particle_graze,
+	spr_boss_pentagram,
 
 	spr_enemy_label,
 
@@ -83,6 +86,7 @@ enum {
 	fnt_consolas_bold,
 	fnt_cirno,
 	fnt_main,
+	fnt_indigo_hunter,
 
 	NUM_FONTS,
 };
@@ -112,6 +116,7 @@ enum {
 enum {
 	shd_stage0_bg,
 	shd_basic_3d,
+	shd_heat_haze,
 
 	NUM_SHADERS,
 };
@@ -188,8 +193,8 @@ struct StageData {
 extern AnimData anim_boss_spellcard;
 
 void load_global_assets();
-
 void free_all_assets();
+void reload_shaders();
 
 const Texture& get_texture(u32 texture_index);
 const Sprite&  get_sprite(u32 sprite_index);

@@ -1,9 +1,10 @@
 #include "game.h"
 
 #include "window_creation.h"
-#include "renderer.h"
 #include "package.h"
 #include "console.h"
+#include "title_screen.h"
+#include "world.h"
 #include "util.h"
 
 #include <qoi/qoi.h>
@@ -14,32 +15,39 @@
 Game game;
 
 void Game::init() {
+	stage_bg_fbo = load_framebuffer(PLAY_AREA_W, PLAY_AREA_H, GL_NEAREST, GL_CLAMP_TO_EDGE, GL_RGB, true);
+
 	state = STATE_TITLE_SCREEN;
 	title_screen.init();
 
-	music = Mix_LoadMUS("music/dbu_the_foolish_girl.mp3");
-	Mix_PlayMusic(music, -1);
+	play_music("music/dbu_the_foolish_girl.mp3");
 }
 
 void Game::deinit() {
-	if (music) Mix_FreeMusic(music);
-	music = nullptr;
-
 	switch (state) {
 		case STATE_TITLE_SCREEN: title_screen.deinit(); break;
 		case STATE_PLAYING:      world.deinit();        break;
 	}
+
+	free_framebuffer(&stage_bg_fbo);
 }
 
 void Game::update(float delta) {
 	double time = get_time();
 
+#ifdef DEVELOPER
 	if (is_key_pressed(SDL_SCANCODE_F1)) {
 		show_debug_info ^= true;
 	}
 
-	if (is_key_held(SDL_SCANCODE_F)) delta *= 2.0f;
-	if (is_key_held(SDL_SCANCODE_S)) delta *= 0.5f;
+	if (is_key_held(SDL_SCANCODE_F)) {
+		delta *= 2.0f;
+	}
+
+	if (is_key_held(SDL_SCANCODE_S)) {
+		delta *= 0.5f;
+	}
+#endif
 
 	if (!window.should_skip_frame || state == STATE_PLAYING) {
 		switch (state) {
@@ -77,14 +85,12 @@ void Game::draw(float delta) {
 			title_screen.draw(delta);
 			break;
 		}
+
 		case STATE_PLAYING: {
 			world.draw(delta);
 			break;
 		}
 	}
-
-	glViewport(0, 0, GAME_W, GAME_H);
-	renderer.proj_mat = glm::ortho<float>(0, GAME_W, GAME_H, 0);
 
 	// draw fps
 	{
@@ -92,8 +98,6 @@ void Game::draw(float delta) {
 		string str = Sprintf(buf, "%.0ffps", roundf(window.avg_fps));
 		draw_text(get_font(fnt_main), str, {35 * 16, 29 * 16});
 	}
-
-	break_batch();
 }
 
 
@@ -210,134 +214,10 @@ void Game::late_draw(float delta) {
 		string str = "F5 - Next Frame\nF6 - Disable Frame Advance Mode\n";
 		pos = draw_text(get_font(fnt_consolas_bold), str, pos);
 	}
-
-	break_batch();
 }
 
 
-u32 load_3d_model_from_obj_file(const char* fname, int* out_num_vertices) {
-	const size_t NUM_POSITIONS = 10'000;
-	const size_t NUM_UVS       = 10'000;
-	const size_t NUM_NORMALS   = 10'000;
-	const size_t NUM_VERTICES  = 10'000;
 
-	auto positions = malloc_bump_array<vec3>(NUM_POSITIONS);
-	defer { free(positions.data); };
-
-	auto uvs = malloc_bump_array<vec2>(NUM_UVS);
-	defer { free(uvs.data); };
-
-	auto normals = malloc_bump_array<vec3>(NUM_NORMALS);
-	defer { free(normals.data); };
-
-	auto vertices = malloc_bump_array<Vertex>(NUM_VERTICES);
-	defer { free(vertices.data); };
-
-	size_t filesize;
-	u8* filedata = get_file(fname, &filesize);
-
-	if (!filedata) {
-		*out_num_vertices = 0;
-		//return create_vertex_array_obj(nullptr, 0); // Stub
-	}
-
-	string text = {(char*)filedata, filesize};
-
-	while (text.count > 0) {
-		string line = eat_line(&text);
-
-		if (line.count == 0) {
-			continue;
-		}
-
-		if (line[0] == '#') {
-			continue;
-		}
-
-		eat_whitespace(&line);
-		string s = eat_non_whitespace(&line);
-
-		if (s == "v") {
-			eat_whitespace(&line);
-			string x = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string y = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string z = eat_non_whitespace(&line);
-
-			vec3 pos;
-			pos.x = string_to_f32(x);
-			pos.y = string_to_f32(y);
-			pos.z = string_to_f32(z);
-
-			array_add(&positions, pos);
-		} else if (s == "vn") {
-			eat_whitespace(&line);
-			string x = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string y = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string z = eat_non_whitespace(&line);
-
-			vec3 normal;
-			normal.x = string_to_f32(x);
-			normal.y = string_to_f32(y);
-			normal.z = string_to_f32(z);
-
-			array_add(&normals, normal);
-		} else if (s == "vt") {
-			eat_whitespace(&line);
-			string u = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string v = eat_non_whitespace(&line);
-
-			vec2 uv;
-			uv.x = string_to_f32(u);
-			uv.y = string_to_f32(v);
-
-			array_add(&uvs, uv);
-		} else if (s == "f") {
-			eat_whitespace(&line);
-			string vert1 = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string vert2 = eat_non_whitespace(&line);
-
-			eat_whitespace(&line);
-			string vert3 = eat_non_whitespace(&line);
-
-			auto add_vert = [&](string vert) {
-				string pos = eat_numeric(&vert);
-				advance(&vert); // Skip '/'
-
-				string uv = eat_numeric(&vert);
-				advance(&vert); // Skip '/'
-
-				string normal = eat_numeric(&vert);
-
-				Vertex v;
-				v.pos    = positions[string_to_u32(pos)    - 1];
-				v.normal = normals  [string_to_u32(normal) - 1];
-				v.uv     = uvs      [string_to_u32(uv)     - 1];
-				v.color  = color_white;
-
-				array_add(&vertices, v);
-			};
-
-			add_vert(vert1);
-			add_vert(vert2);
-			add_vert(vert3);
-		}
-	}
-
-	*out_num_vertices = (int) vertices.count;
-	return create_vertex_array_obj(vertices.data, vertices.count);
-};
 
 #ifdef DEVELOPER
 static string s_ConsoleCommandsBuf[] = {
@@ -348,6 +228,7 @@ static string s_ConsoleCommandsBuf[] = {
 	"full_power",
 	"life",
 	"kill_player",
+	"reload_shaders",
 };
 
 array<string> g_ConsoleCommands = s_ConsoleCommandsBuf;
@@ -396,6 +277,11 @@ bool console_callback(string str, void* userdata) {
 
 	if (command == "title") {
 		game.next_state = Game::STATE_TITLE_SCREEN;
+		return true;
+	}
+
+	if (command == "reload_shaders") {
+		reload_shaders();
 		return true;
 	}
 

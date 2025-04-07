@@ -38,7 +38,7 @@ struct Texture {
 
 Texture load_texture(u8* pixel_data, int width, int height,
 					 int filter, int wrap,
-					 int internal_format);
+					 u32 gl_format);
 
 Texture load_depth_texture(int width, int height);
 
@@ -52,7 +52,7 @@ struct Framebuffer {
 
 Framebuffer load_framebuffer(int width, int height,
 							 int filter, int wrap,
-							 int internal_format, bool depth_texture);
+							 u32 gl_format, bool depth_texture);
 
 void free_framebuffer(Framebuffer* f);
 
@@ -114,6 +114,9 @@ void break_batch(); // makes the draw call
 
 void set_shader(u32 shader);
 void reset_shader();
+
+void set_render_target(const Framebuffer& f);
+void reset_render_target();
 
 void set_proj_mat (const mat4& proj_mat);
 void set_view_mat (const mat4& view_mat);

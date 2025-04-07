@@ -5,21 +5,25 @@
 #include "assets.h"
 #include "sound_mixer.h"
 #include "game.h"
+#include "input.h"
 
 #ifdef DEVELOPER
 #include "console.h"
 #endif
 
 
-int main(int /*argc*/, char* /*argv*/[]) {
+int main(int argc, char* argv[]) {
 	init_window_and_opengl("touhou10", GAME_W, GAME_H, 2, false, false);
 	defer { deinit_window_and_opengl(); };
 
-	init_mixer();
-	defer { deinit_mixer(); };
-
 	init_package();
 	defer { deinit_package(); };
+
+	input.init();
+	defer { input.deinit(); };
+
+	init_mixer();
+	defer { deinit_mixer(); };
 
 	load_global_assets();
 	defer { free_all_assets(); };
@@ -30,43 +34,63 @@ int main(int /*argc*/, char* /*argv*/[]) {
 	game.init();
 	defer { game.deinit(); };
 
-#ifdef DEVELOPER
-	console.init(console_callback, nullptr, get_font(fnt_consolas_bold), g_ConsoleCommands);
-	defer { console.deinit(); };
-#endif
+	#ifdef DEVELOPER
+		console.init(console_callback, nullptr, get_font(fnt_consolas_bold), g_ConsoleCommands);
+		defer { console.deinit(); };
+	#endif
 
 	while (!window.should_quit) {
 		begin_frame();
 
-		SDL_Event ev;
-		while (SDL_PollEvent(&ev)) {
-			handle_event(ev);
+		// handle events
+		{
+			input.clear();
 
-#ifdef DEVELOPER
-			console.handle_event(ev);
-#endif
+			SDL_Event ev;
+			while (SDL_PollEvent(&ev)) {
+				bool handled = false;
+
+				if (!handled) handled = handle_event(ev);
+
+				#ifdef DEVELOPER
+					if (!handled) handled = console.handle_event(ev);
+				#endif
+
+				if (!handled) handled = input.handle_event(ev);
+			}
 		}
 
 		// update
-		game.update(window.delta);
+		{
+			input.update(window.delta);
 
-#ifdef DEVELOPER
-		console.update(window.delta);
-#endif
+			game.update(window.delta);
 
-		// render
-		vec4 clear_color = {};
-		render_begin_frame(clear_color);
+			#ifdef DEVELOPER
+				console.update(window.delta);
+			#endif
+		}
 
-		game.draw(window.delta);
+		// draw
+		{
+			vec4 clear_color = {};
+			render_begin_frame(clear_color);
 
-		render_end_frame();
+			game.draw(window.delta);
 
-		game.late_draw(window.delta);
+			render_end_frame();
+		}
 
-#ifdef DEVELOPER
-		console.draw(window.delta);
-#endif
+		// late draw
+		{
+			game.late_draw(window.delta);
+
+			#ifdef DEVELOPER
+				console.draw(window.delta);
+			#endif
+
+			break_batch();
+		}
 
 		swap_buffers();
 	}

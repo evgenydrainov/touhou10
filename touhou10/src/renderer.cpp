@@ -157,17 +157,17 @@ void main()
 
 
 
-static u32 get_format_from_internal_format(int internal_format) {
-	switch (internal_format) {
-		case GL_RGB8:  return GL_RGB;
-		case GL_RGBA8: return GL_RGBA;
+static int get_internal_format_from_gl_format(u32 gl_format) {
+	switch (gl_format) {
+		case GL_RGB:  return GL_RGB8;
+		case GL_RGBA: return GL_RGBA8;
 	}
-	Assert(!"internal format not supported");
+	Assert(!"format not supported");
 }
 
 Texture load_texture(u8* pixel_data, int width, int height,
 					 int filter, int wrap,
-					 int internal_format) {
+					 u32 gl_format) {
 	Texture t = {};
 	t.width = width;
 	t.height = height;
@@ -180,8 +180,8 @@ Texture load_texture(u8* pixel_data, int width, int height,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 
-	u32 format = get_format_from_internal_format(internal_format);
-	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, pixel_data);
+	int internal_format = get_internal_format_from_gl_format(gl_format);
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, gl_format, GL_UNSIGNED_BYTE, pixel_data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return t;
@@ -213,9 +213,9 @@ void free_texture(Texture* t) {
 
 Framebuffer load_framebuffer(int width, int height,
 							 int filter, int wrap,
-							 int internal_format, bool depth_texture) {
+							 u32 gl_format, bool depth_texture) {
 	Framebuffer f = {};
-	f.texture = load_texture(nullptr, width, height, filter, wrap, internal_format);
+	f.texture = load_texture(nullptr, width, height, filter, wrap, gl_format);
 	if (depth_texture) {
 		f.depth = load_depth_texture(width, height);
 	}
@@ -310,9 +310,9 @@ void init_renderer() {
 		renderer.vertices = malloc_bump_array<Vertex>(BATCH_MAX_VERTICES);
 
 		u8 pixel_data[] = {255, 255, 255, 255};
-		renderer.texture_for_shapes = load_texture(pixel_data, 1, 1, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_RGBA8);
+		renderer.texture_for_shapes = load_texture(pixel_data, 1, 1, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_RGBA);
 
-		renderer.framebuffer = load_framebuffer(window.game_width, window.game_height, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_RGB8, true);
+		renderer.framebuffer = load_framebuffer(window.game_width, window.game_height, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_RGB, false);
 	}
 
 	// 
@@ -356,10 +356,7 @@ void deinit_renderer() {
 }
 
 void render_begin_frame(vec4 clear_color) {
-	if (renderer.vertices.count != 0) {
-		log_warn("Renderer was not flushed!");
-		break_batch();
-	}
+	Assert(renderer.vertices.count == 0);
 
 	renderer.draw_took_t = get_time();
 
@@ -372,34 +369,35 @@ void render_begin_frame(vec4 clear_color) {
 	renderer.curr_total_triangles = 0;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, renderer.framebuffer.id);
+	glViewport(0, 0, renderer.framebuffer.texture.width, renderer.framebuffer.texture.height);
 
 	if (clear_color.a > 0) {
 		glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	glViewport(0, 0, window.game_width, window.game_height);
+	// setup default matrices
+	renderer.proj_mat = get_ortho(0, renderer.framebuffer.texture.width, renderer.framebuffer.texture.height, 0);
+	renderer.view_mat = get_identity();
+	renderer.model_mat = get_identity();
 }
 
 void render_end_frame() {
-	if (renderer.vertices.count != 0) {
-		log_warn("Renderer was not flushed!");
-		break_batch();
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	break_batch();
 
 	int backbuffer_width;
 	int backbuffer_height;
 	SDL_GL_GetDrawableSize(window.handle, &backbuffer_width, &backbuffer_height);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, backbuffer_width, backbuffer_height);
-	renderer.proj_mat = glm::ortho(0.0f, (float)backbuffer_width, (float)backbuffer_height, 0.0f);
-	renderer.view_mat = {1};
-	renderer.model_mat = {1};
 
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	renderer.proj_mat = get_ortho(0, backbuffer_width, backbuffer_height, 0);
+	renderer.view_mat = get_identity();
+	renderer.model_mat = get_identity();
 
 	{
 		u32 program = renderer.sharp_bilinear_shader.id;
@@ -560,6 +558,22 @@ void reset_shader() {
 		// @Cleanup: to be able to set uniforms
 		glUseProgram(renderer.current_shader);
 	}
+}
+
+void set_render_target(const Framebuffer& f) {
+	break_batch();
+	glBindFramebuffer(GL_FRAMEBUFFER, f.id);
+	glViewport(0, 0, f.texture.width, f.texture.height);
+
+	renderer.proj_mat = get_ortho(0, f.texture.width, f.texture.height, 0);
+}
+
+void reset_render_target() {
+	break_batch();
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer.framebuffer.id);
+	glViewport(0, 0, renderer.framebuffer.texture.width, renderer.framebuffer.texture.height);
+
+	renderer.proj_mat = get_ortho(0, renderer.framebuffer.texture.width, renderer.framebuffer.texture.height, 0);
 }
 
 void set_proj_mat(const mat4& proj_mat) {

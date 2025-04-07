@@ -274,30 +274,18 @@ void deinit_window_and_opengl() {
 	SDL_Quit();
 }
 
-void handle_event(const SDL_Event& ev) {
+bool handle_event(const SDL_Event& ev) {
 	switch (ev.type) {
 		case SDL_QUIT: {
 			window.should_quit = true;
-			break;
+			return true;
 		}
 
 		case SDL_KEYDOWN: {
 			SDL_Scancode scancode = ev.key.keysym.scancode;
 
 			if (scancode >= 0 && scancode < window.NUM_KEYS) {
-				bool ignore = false;
-
-				// ignore alt+f4
-				if (scancode == SDL_SCANCODE_F4 && (ev.key.keysym.mod & KMOD_ALT)) {
-					ignore = true;
-				}
-
-				// ignore alt+enter
-				if (scancode == SDL_SCANCODE_RETURN && (ev.key.keysym.mod & KMOD_ALT)) {
-					ignore = true;
-				}
-
-				if (!ignore) {
+				if (!(ev.key.keysym.mod & KMOD_ALT)) {
 					if (ev.key.repeat) {
 						window.key_repeat[scancode / 32] |= 1 << (scancode % 32);
 					} else {
@@ -312,40 +300,50 @@ void handle_event(const SDL_Event& ev) {
 					if (!ev.key.repeat) {
 						if (ev.key.keysym.mod & KMOD_ALT) {
 							set_fullscreen(!is_fullscreen());
+							return true;
 						}
 					}
-					break;
+					return false;
+				}
+
+				// eat alt+f4 event
+				case SDL_SCANCODE_F4: {
+					if (ev.key.keysym.mod & KMOD_ALT) {
+						return true;
+					}
+					return false;
 				}
 
 				// fullscreen on F11
 				case SDL_SCANCODE_F11: {
 					if (!ev.key.repeat) {
 						set_fullscreen(!is_fullscreen());
+						return true;
 					}
-					break;
+					return false;
 				}
 
 				// enable frame advance mode/goto next frame
 				case SDL_SCANCODE_F5: {
 					window.frame_advance_mode = true;
 					window.should_skip_frame = false;
-					break;
+					return true;
 				}
 
 				// disable frame advance mode
 				case SDL_SCANCODE_F6: {
 					window.frame_advance_mode = false;
-					break;
+					return true;
 				}
 
 #ifdef __ANDROID__
 				/*case SDL_SCANCODE_AC_BACK: {
 					SDL_StartTextInput();
-					break;
+					return true;
 				}*/
 #endif
 			}
-			break;
+			return false;
 		}
 
 		case SDL_CONTROLLERDEVICEADDED: {
@@ -354,7 +352,7 @@ void handle_event(const SDL_Event& ev) {
 
 				log_info("Opened controller %s.", SDL_GameControllerName(window.controller));
 			}
-			break;
+			return false;
 		}
 
 		case SDL_CONTROLLERDEVICEREMOVED: {
@@ -367,7 +365,7 @@ void handle_event(const SDL_Event& ev) {
 					window.controller = nullptr;
 				}
 			}
-			break;
+			return false;
 		}
 
 		case SDL_CONTROLLERBUTTONDOWN: {
@@ -381,9 +379,11 @@ void handle_event(const SDL_Event& ev) {
 					}
 				}
 			}
-			break;
+			return false;
 		}
 	}
+
+	return false;
 }
 
 void begin_frame() {
@@ -499,6 +499,14 @@ bool is_key_held(SDL_Scancode key) {
 	}
 
 	const u8* state = SDL_GetKeyboardState(nullptr);
+
+	// ignore alt+f4 and alt+enter
+	if (key == SDL_SCANCODE_RETURN || key == SDL_SCANCODE_F4) {
+		if (state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT]) {
+			return false;
+		}
+	}
+
 	return (state[key] != 0);
 }
 

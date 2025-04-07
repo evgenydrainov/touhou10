@@ -802,8 +802,28 @@ mat4 World::cam3d_get_mvp() {
 void World::draw(float delta_not_modified) {
 	float delta = delta_not_modified * delta_multiplier;
 
-	set_proj_mat(get_ortho(0, GAME_W, GAME_H, 0));
-	defer { set_proj_mat(get_identity()); };
+	{
+		// Draw Stage BG to framebuffer.
+		set_render_target(game.stage_bg_fbo);
+
+		if (boss_spellcard_background_alpha < 1) {
+			StageData* stage = GetStageData(game.stage_index);
+			if (stage->draw_background) {
+				stage->draw_background(delta);
+			}
+		}
+
+		if (boss_spellcard_background_alpha > 0) {
+			if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
+				BossData* data = boss.GetData();
+				if (data->draw_spellcard_background) {
+					data->draw_spellcard_background(delta);
+				}
+			}
+		}
+
+		reset_render_target();
+	}
 
 	// Draw background
 	{
@@ -873,33 +893,32 @@ void World::draw(float delta_not_modified) {
 	}
 
 	set_viewport(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
-
-	break_batch();
-	glEnable(GL_SCISSOR_TEST);
-	glScissor(PLAY_AREA_X, PLAY_AREA_Y, PLAY_AREA_W, PLAY_AREA_H);
-
-	defer { break_batch(); glDisable(GL_SCISSOR_TEST); };
-
-	if (boss_spellcard_background_alpha < 1) {
-		StageData* stage = GetStageData(game.stage_index);
-		if (stage->draw_background) {
-			stage->draw_background(delta);
-		}
-	}
-
 	set_proj_mat(get_ortho(0, PLAY_AREA_W, PLAY_AREA_H, 0));
 
-	if (boss_spellcard_background_alpha > 0) {
+	// Draw Stage BG framebuffer.
+	{
+		vec2 position = {999, 999};
+
 		if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
-			BossData* data = boss.GetData();
-			if (data->draw_spellcard_background) {
-				data->draw_spellcard_background(delta);
-			}
+			position = {boss.x, boss.y};
 		}
+
+		set_shader(get_shader(shd_heat_haze).id);
+
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_2D, get_texture(tex_heat_haze_leopard).id);
+
+		glUniform1i(glGetUniformLocation(get_shader(shd_heat_haze).id, "u_DistortionTexture"), 1);
+		glUniform1f(glGetUniformLocation(get_shader(shd_heat_haze).id, "u_Time"),              get_time() * 0.1);
+		glUniform2f(glGetUniformLocation(get_shader(shd_heat_haze).id, "u_Position"),          position.x, position.y);
+
+		draw_texture(game.stage_bg_fbo.texture, {}, {}, {1, 1}, {}, 0, color_white, {false, true});
+
+		reset_shader();
 	}
 
 	// 
-	// Draw game objects.
+	// Draw objects.
 	// 
 
 	if (!(boss.flags & FLAG_INSTANCE_DEAD)) {
@@ -907,6 +926,11 @@ void World::draw(float delta_not_modified) {
 
 		float x = b->x;
 		float y = b->y;
+
+		{
+			float scale = 1.6f + sinf(get_time() * 2) * 0.1f;
+			draw_sprite(get_sprite(spr_boss_pentagram), 0, {x, y}, {scale, scale}, get_time() * 250, {1, 1, 1, 0.5f});
+		}
 
 		if (b->spd <= BOSS_MOVE_THRESHOLD_VISUAL) {
 			y += 2 * sinf(SDL_GetTicks() / 200.0f);
@@ -1031,14 +1055,17 @@ void World::draw(float delta_not_modified) {
 
 	// draw player death effect
 	if (death_effect.show) {
-		break_batch(); glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-		defer { break_batch(); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); };
+		break_batch();
+		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
 
 		float radius = lerp(0.0f, 600.0f, death_effect.t);
 		draw_circle({death_effect.x - 40, death_effect.y}, radius, color_white);
 		draw_circle({death_effect.x + 40, death_effect.y}, radius, color_white);
 		draw_circle({death_effect.x, death_effect.y - 40}, radius, color_white);
 		draw_circle({death_effect.x, death_effect.y + 40}, radius, color_white);
+
+		break_batch();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	For (a, animations) {
@@ -1152,7 +1179,9 @@ void World::draw(float delta_not_modified) {
 				  sep_x, sep_y, labels, MENU_DRAW_CENTERED);
 	}
 
-	break_batch();
+	// cleanup
+	set_viewport(0, 0, GAME_W, GAME_H);
+	set_proj_mat(get_ortho(0, GAME_W, GAME_H, 0));
 }
 
 instance_id World::get_instance_id(ObjType type) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game.h"
+#include "world.h"
 
 #define self (((Coro_User_Data*)co->user_data)->self)
 

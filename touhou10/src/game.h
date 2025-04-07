@@ -1,19 +1,14 @@
 #pragma once
 
 #include "common.h"
-
-#include "world.h"
-#include "title_screen.h"
+#include "renderer.h"
+#include "xoshiro128plus.h"
 
 #define GAME_W 640
 #define GAME_H 480
 
-#define PLAY_AREA_W 384
-#define PLAY_AREA_H 448
 #define PLAY_AREA_X 32
 #define PLAY_AREA_Y 16
-
-u32 load_3d_model_from_obj_file(const char* fname, int* out_num_vertices);
 
 struct Stats {
 	int score;
@@ -39,7 +34,7 @@ struct Game {
 	bool skip_to_boss;
 	bool skip_to_midboss;
 
-	Mix_Music* music;
+	Framebuffer stage_bg_fbo;
 
 	xoshiro128plus rng_visual{{0x68756F54, 0x7250756F, 0x63656A6F, 0x35393474}};
 

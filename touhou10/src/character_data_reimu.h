@@ -38,7 +38,7 @@ static void reimu_shot_type(Player* p, float delta) {
 
 	while (p->reimu.fire_timer >= 4.0f) {
 		if (p->reimu.fire_queue == 0) {
-			if (is_key_held(SDL_SCANCODE_Z)) {
+			if (is_input_held(INPUT_FIRE)) {
 				p->reimu.fire_queue = 8;
 			}
 		}

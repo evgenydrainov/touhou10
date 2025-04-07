@@ -1,6 +1,6 @@
 #include "objects.h"
 
-#include "game.h"
+#include "world.h"
 
 void object_init(Object* o, ObjType type) {
 	o->id = world.get_instance_id(type);

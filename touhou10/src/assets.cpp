@@ -13,8 +13,6 @@ static Shader     shaders[NUM_SHADERS];
 
 void load_global_assets() {
 	{
-		static_assert(NUM_TEXTURES == 18, "");
-
 		textures[tex_characters]   = load_texture_from_file("textures/characters.png",  FILTER_FOR_SPRITES);
 		textures[tex_projectiles]  = load_texture_from_file("textures/projectiles.png", FILTER_FOR_SPRITES);
 		textures[tex_ui]           = load_texture_from_file("textures/ui.png",          FILTER_FOR_SPRITES);
@@ -52,6 +50,8 @@ void load_global_assets() {
 		textures[tex_spellcard_attack_anim_label]  = load_texture_from_file("textures/spellcard_attack_anim_label.png");
 		textures[tex_pcb_youmu_bg]                 = load_texture_from_file("textures/pcb_youmu_bg.png", GL_LINEAR);
 		textures[tex_pcb_youmu_bg_flowers]         = load_texture_from_file("textures/pcb_youmu_bg_flowers.png", GL_LINEAR);
+		textures[tex_title_screen_bg]              = load_texture_from_file("textures/title_screen_bg.png");
+		textures[tex_heat_haze_leopard]            = load_texture_from_file("textures/heat_haze_leopard.png", GL_LINEAR, GL_REPEAT);
 	}
 
 	{
@@ -71,21 +71,22 @@ void load_global_assets() {
 	{
 		const Texture& t = get_texture(tex_projectiles);
 
-		sprites[spr_lazer]                     = create_sprite(t,   0,   0, 16, 16,  8,  0, 16);
-		sprites[spr_bullet_arrow]              = create_sprite(t,   0,  16, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_outline]            = create_sprite(t,   0,  32, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_filled]             = create_sprite(t,   0,  48, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_rice]               = create_sprite(t,   0,  64, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_kunai]              = create_sprite(t,   0,  80, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_shard]              = create_sprite(t,   0,  96, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_card]               = create_sprite(t,   0, 112, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_bullet]             = create_sprite(t,   0, 128, 16, 16,  8,  8, 16);
-		sprites[spr_bullet_small]              = create_sprite(t,  64, 176,  8,  8,  4,  4, 16,  8);
-		sprites[spr_bullet_spawn_particle]     = create_sprite(t,   0, 144, 32, 32, 16, 16,  8);
-		sprites[spr_enemy_death_particle_blue] = create_sprite(t,   0, 176, 64, 64, 32, 32);
-		sprites[spr_kira_particle]             = create_sprite(t,  64, 192, 32, 32, 16, 16);
-		sprites[spr_pickup]                    = create_sprite(t, 128, 176, 16, 16,  8,  8, 16,  8);
-		sprites[spr_particle_graze]            = create_sprite(t,  64, 224,  8,  8,  4,  4,  4,  4, 0.25f);
+		sprites[spr_lazer]                     = create_sprite(t,   0,   0,  16,  16,  8,  0, 16);
+		sprites[spr_bullet_arrow]              = create_sprite(t,   0,  16,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_outline]            = create_sprite(t,   0,  32,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_filled]             = create_sprite(t,   0,  48,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_rice]               = create_sprite(t,   0,  64,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_kunai]              = create_sprite(t,   0,  80,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_shard]              = create_sprite(t,   0,  96,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_card]               = create_sprite(t,   0, 112,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_bullet]             = create_sprite(t,   0, 128,  16,  16,  8,  8, 16);
+		sprites[spr_bullet_small]              = create_sprite(t,  64, 176,   8,   8,  4,  4, 16,  8);
+		sprites[spr_bullet_spawn_particle]     = create_sprite(t,   0, 144,  32,  32, 16, 16,  8);
+		sprites[spr_enemy_death_particle_blue] = create_sprite(t,   0, 176,  64,  64, 32, 32);
+		sprites[spr_kira_particle]             = create_sprite(t,  64, 192,  32,  32, 16, 16);
+		sprites[spr_pickup]                    = create_sprite(t, 128, 176,  16,  16,  8,  8, 16,  8);
+		sprites[spr_particle_graze]            = create_sprite(t,  64, 224,   8,   8,  4,  4,  4,  4, 0.25f);
+		sprites[spr_boss_pentagram]            = create_sprite(t,   0, 240, 128, 128, 64, 64);
 	}
 
 	{
@@ -117,13 +118,12 @@ void load_global_assets() {
 	{
 		fonts[fnt_consolas_bold] = load_bmfont_file("fonts/consolas_bold.fnt", "fonts/consolas_bold_0.png");
 		fonts[fnt_cirno]         = load_bmfont_file("fonts/cirno.fnt",         "fonts/cirno_0.png");
+		fonts[fnt_indigo_hunter] = load_bmfont_file("fonts/indigo_hunter.fnt", "fonts/indigo_hunter_0.png");
 
 		fonts[fnt_main] = load_font_from_texture("fonts/fnt_main.png", 15, 15, 15, 16, 16);
 	}
 
 	{
-		static_assert(NUM_SOUNDS == 17, "");
-
 		sounds[snd_boss_die]         = load_sound("sounds/boss_die.wav");
 		sounds[snd_char_reimu_shoot] = load_sound("sounds/char_reimu_shoot.wav");
 		sounds[snd_enemy_die]        = load_sound("sounds/enemy_die.wav");
@@ -147,9 +147,18 @@ void load_global_assets() {
 		}
 	}
 
+	reload_shaders();
+}
+
+void reload_shaders() {
+	for (int i = 0; i < NUM_SHADERS; i++) {
+		free_shader(&shaders[i]);
+	}
+
 	{
 		shaders[shd_stage0_bg] = load_shader_from_file("shaders/stage0_bg.vert", "shaders/stage0_bg.frag");
 		shaders[shd_basic_3d]  = load_shader_from_file("shaders/basic_3d.vert",  "shaders/basic_3d.frag");
+		shaders[shd_heat_haze] = load_shader_from_file("shaders/heat_haze.vert", "shaders/heat_haze.frag");
 	}
 }
 

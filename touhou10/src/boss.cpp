@@ -1,6 +1,6 @@
 #include "objects.h"
 
-#include "game.h"
+#include "world.h"
 
 #define BOSS_PHASE_START_TIME_SPELL    150.0f
 #define BOSS_PHASE_START_TIME_NONSPELL 60.0f

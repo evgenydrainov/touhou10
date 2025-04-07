@@ -1,5 +1,4 @@
 #include "scripting.h"
-
 #include "renderer.h"
 #include "util.h"
 
@@ -27,7 +26,7 @@ static void draw_world_origin_axis(float delta) {
 
 	if (!vao) {
 		// @Leak
-		vao = create_vertex_array_obj(vertices, ArrayLength(vertices));
+		vao = create_vertex_array_obj(vertices);
 	}
 
 	u32 program = renderer.texture_shader.id;
@@ -158,7 +157,11 @@ void Stage_1_Init_Background() {
 
 	if (!vao) {
 		// @Leak
-		vao = load_3d_model_from_obj_file("models/pcb_youmu_stairs.obj", &num_vertices);
+		auto vertices = load_3d_model_from_obj_file("models/pcb_youmu_stairs.obj");
+		vao = create_vertex_array_obj(vertices);
+		num_vertices = vertices.count;
+
+		free(vertices.data);
 	}
 
 	if (!program) {

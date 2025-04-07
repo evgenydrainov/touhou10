@@ -562,6 +562,10 @@ inline mat4 get_translation(vec3 v) {
 	return glm::translate<float>(mat4{1.0f}, v);
 }
 
+inline mat4 get_rotation(float angle_radians, vec3 v) {
+	return glm::rotate<float>(mat4{1.0f}, angle_radians, v);
+}
+
 inline mat4 get_identity() {
 	return mat4{1.0f};
 }

@@ -1,6 +1,6 @@
-#include "renderer.h"
-#include "util.h"
 #include "scripting.h"
+#include "game.h"
+#include "renderer.h"
 #include "window_creation.h"
 
 void Stage_0_Script(mco_coro* co) {
@@ -146,20 +146,15 @@ void Stage_0_Draw_Background(float delta) {
 	const vec4 fog_color = {1, 1, 1, 1};
 	float t = (float)get_time();
 
-	render_clear_color(fog_color);
-
 	mat4 view =
 		world.cam3d_get_view_mat()
-		* glm::rotate(mat4{1.0f}, to_radians(sinf(t * 0.5f) * 2), vec3{0, 0, 1});
+		* get_rotation(to_radians(sinf(t * 0.5f) * 2), vec3{0, 0, 1});
+
+	render_clear_color(fog_color);
+	set_proj_mat(world.cam3d_get_proj_mat());
 	set_view_mat(view);
 
-	defer { set_view_mat(mat4{1.0f}); };
-
-	set_proj_mat(world.cam3d_get_proj_mat());
-	defer { set_proj_mat(mat4{1.0f}); };
-
 	set_shader(program);
-	defer { reset_shader(); };
 
 	glUniform1f(u_FogStart, 0);
 	glUniform1f(u_FogEnd, 5);
@@ -232,4 +227,9 @@ void Stage_0_Draw_Background(float delta) {
 		draw_quad(get_texture(tex_gfw_misty_lake4), vertices);
 		pos_y += 0.01f;
 	}
+
+	// cleanup
+	reset_shader();
+	set_proj_mat(get_ortho(0, PLAY_AREA_W, PLAY_AREA_H, 0));
+	set_view_mat(get_identity());
 }
