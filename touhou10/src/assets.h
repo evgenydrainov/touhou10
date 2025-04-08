@@ -75,9 +75,15 @@ enum {
 	spr_boss_youmu_right,
 
 	spr_boss_daiyousei_idle,
-	spr_fairy_0,
-	spr_fairy_1,
-	spr_enemy_0,
+	spr_enemy_fairy_blue_idle,
+	spr_enemy_fairy_blue_right,
+	spr_enemy_fairy_red_idle,
+	spr_enemy_fairy_red_right,
+	spr_enemy_fairy_green_idle,
+	spr_enemy_fairy_green_right,
+	spr_enemy_fairy_yellow_idle,
+	spr_enemy_fairy_yellow_right,
+	spr_enemy_pcb_spinner,
 
 	NUM_SPRITES,
 };

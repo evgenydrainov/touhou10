@@ -144,10 +144,14 @@ struct Enemy : Object {
 	float hp;
 	int drops;
 
+	float angle;
+
+	u32 sprite_idle;
+	u32 sprite_right;
+	float facing = 1;
+
 	void (*death_callback)(Object*);
 	void (*update_callback)(Object*, float);
-
-	float angle;
 };
 
 enum BulletType {

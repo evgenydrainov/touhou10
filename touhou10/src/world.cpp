@@ -427,6 +427,29 @@ void World::update(float delta_not_modified) {
 
 			e->dir = wrapf(e->dir, 360.0f);
 
+			if (e->sprite_right != 0) {
+				if (e->spd > BOSS_MOVE_THRESHOLD_VISUAL) {
+					if (90.0f <= e->dir && e->dir < 270.0f) {
+						if (e->sprite_index != e->sprite_right || e->facing != -1) {
+							e->sprite_index = e->sprite_right;
+							e->frame_index = 0;
+							e->facing = -1;
+						}
+					} else {
+						if (e->sprite_index != e->sprite_right || e->facing != 1) {
+							e->sprite_index = e->sprite_right;
+							e->frame_index = 0;
+							e->facing = 1;
+						}
+					}
+				} else {
+					if (e->sprite_index != e->sprite_idle) {
+						e->sprite_index = e->sprite_idle;
+						e->frame_index = 0;
+					}
+				}
+			}
+
 			if (e->update_callback) {
 				e->update_callback(e, delta);
 			}
@@ -940,7 +963,8 @@ void World::draw(float delta_not_modified) {
 	}
 
 	For (e, enemies) {
-		draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y}, {1, 1}, e->angle);
+		vec2 scale = {e->facing, 1};
+		draw_sprite(e->GetSprite(), (int)e->frame_index, {e->x, e->y}, scale, e->angle);
 	}
 
 	player_draw(&player, delta);

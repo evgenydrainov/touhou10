@@ -38,7 +38,7 @@ void Stage_0_Script(mco_coro* co) {
 		float x = random_rangef(&world.rng, 0.0f, (float)PLAY_AREA_W);
 		float y = 0;
 
-		CreateEnemy(x, y, 2, 270 + random_rangef(&world.rng, -30.0f, 30.0f), 0, spr_enemy_0, 10, 1, Script, OnDeath, OnUpdate);
+		CreateEnemy(x, y, 2, 270 + random_rangef(&world.rng, -30.0f, 30.0f), 0, enemy_pcb_spinner, 10, 1, Script, OnDeath, OnUpdate);
 	};
 
 
@@ -69,7 +69,7 @@ void Stage_0_Script(mco_coro* co) {
 				}
 				float y = 0;
 
-				CreateEnemy(x, y, 2, point_direction(x, y, world.player.x, world.player.y), 0, spr_fairy_0, 10, 2);
+				CreateEnemy(x, y, 2, point_direction(x, y, world.player.x, world.player.y), 0, enemy_fairy_blue, 10, 2);
 
 				if (i >= 12) {
 					spawn_spinner();

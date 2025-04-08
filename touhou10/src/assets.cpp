@@ -109,10 +109,16 @@ void load_global_assets() {
 	{
 		const Texture& t = get_texture(tex_enemies);
 
-		sprites[spr_boss_daiyousei_idle] = create_sprite(t,   0,  64, 48, 48, 24, 24, 1);
-		sprites[spr_fairy_0]             = create_sprite(t,   0,   0, 32, 32, 16, 16, 8,  8, 0.10f);
-		sprites[spr_fairy_1]             = create_sprite(t,   0,  32, 32, 32, 16, 16, 8,  8, 0.10f);
-		sprites[spr_enemy_0]             = create_sprite(t,  48,  64, 32, 32, 16, 16, 1);
+		sprites[spr_boss_daiyousei_idle]       = create_sprite(t,   0, 128, 48, 48, 24, 24);
+		sprites[spr_enemy_fairy_blue_idle]     = create_sprite(t,   0,   0, 32, 32, 16, 16, 5,  5, 0.20f);
+		sprites[spr_enemy_fairy_blue_right]    = create_sprite(t, 160,   0, 32, 32, 16, 16, 7,  7, 0.20f, 3);
+		sprites[spr_enemy_fairy_red_idle]      = create_sprite(t,   0,  32, 32, 32, 16, 16, 5,  5, 0.20f);
+		sprites[spr_enemy_fairy_red_right]     = create_sprite(t, 160,  32, 32, 32, 16, 16, 7,  7, 0.20f, 3);
+		sprites[spr_enemy_fairy_green_idle]    = create_sprite(t,   0,  64, 32, 32, 16, 16, 5,  5, 0.20f);
+		sprites[spr_enemy_fairy_green_right]   = create_sprite(t, 160,  64, 32, 32, 16, 16, 7,  7, 0.20f, 3);
+		sprites[spr_enemy_fairy_yellow_idle]   = create_sprite(t,   0,  96, 32, 32, 16, 16, 5,  5, 0.20f);
+		sprites[spr_enemy_fairy_yellow_right]  = create_sprite(t, 160,  96, 32, 32, 16, 16, 7,  7, 0.20f, 3);
+		sprites[spr_enemy_pcb_spinner]         = create_sprite(t,  48, 128, 32, 32, 16, 16);
 	}
 
 	{

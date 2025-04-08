@@ -175,6 +175,11 @@ void player_update(Player* p, float delta) {
 					drop_pickup(p->x, p->y, PICKUP_TYPE_FULL_POWER);
 				}
 
+				world.death_effect = {};
+				world.death_effect.show = true;
+				world.death_effect.x = p->x;
+				world.death_effect.y = p->y;
+
 				object_cleanup(p);
 				player_init(p);
 				return;
@@ -207,11 +212,6 @@ bool player_get_hit(Player* p) {
 			p->timer = PLAYER_DEATH_TIME;
 
 			play_sound(get_sound(snd_pichuun));
-
-			world.death_effect = {};
-			world.death_effect.show = true;
-			world.death_effect.x = p->x;
-			world.death_effect.y = p->y;
 
 			return true;
 		}

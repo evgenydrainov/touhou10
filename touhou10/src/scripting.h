@@ -274,8 +274,16 @@ static Boss* CreateBoss(u32 boss_index,
 	return b;
 }
 
+enum EnemyType {
+	enemy_fairy_blue,
+	enemy_fairy_red,
+	enemy_fairy_green,
+	enemy_fairy_yellow,
+	enemy_pcb_spinner,
+};
+
 static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
-						  u32 sprite_index, float hp, int drops,
+						  EnemyType type, float hp, int drops,
 						  void (*script)(mco_coro*) = nullptr,
 						  void (*death_callback)(Object*) = nullptr,
 						  void (*update_callback)(Object*, float) = nullptr) {
@@ -287,10 +295,38 @@ static Enemy* CreateEnemy(float x, float y, float spd, float dir, float acc,
 	e.spd = spd;
 	e.dir = dir;
 	e.acc = acc;
-	e.sprite_index = sprite_index;
 	e.hp = hp;
 	e.drops = drops;
 	e.radius = 10;
+
+	switch (type) {
+		case enemy_fairy_blue: {
+			e.sprite_idle  = spr_enemy_fairy_blue_idle;
+			e.sprite_right = spr_enemy_fairy_blue_right;
+			break;
+		}
+		case enemy_fairy_red: {
+			e.sprite_idle  = spr_enemy_fairy_red_idle;
+			e.sprite_right = spr_enemy_fairy_red_right;
+			break;
+		}
+		case enemy_fairy_green: {
+			e.sprite_idle  = spr_enemy_fairy_green_idle;
+			e.sprite_right = spr_enemy_fairy_green_right;
+			break;
+		}
+		case enemy_fairy_yellow: {
+			e.sprite_idle  = spr_enemy_fairy_yellow_idle;
+			e.sprite_right = spr_enemy_fairy_yellow_right;
+			break;
+		}
+		case enemy_pcb_spinner: {
+			e.sprite_idle  = spr_enemy_pcb_spinner;
+			break;
+		}
+	}
+
+	e.sprite_index = e.sprite_idle;
 
 	if (script) {
 		coroutine_create(&e.co, script);

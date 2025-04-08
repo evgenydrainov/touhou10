@@ -284,16 +284,6 @@ bool handle_event(const SDL_Event& ev) {
 		case SDL_KEYDOWN: {
 			SDL_Scancode scancode = ev.key.keysym.scancode;
 
-			if (scancode >= 0 && scancode < window.NUM_KEYS) {
-				if (!(ev.key.keysym.mod & KMOD_ALT)) {
-					if (ev.key.repeat) {
-						window.key_repeat[scancode / 32] |= 1 << (scancode % 32);
-					} else {
-						window.key_pressed[scancode / 32] |= 1 << (scancode % 32);
-					}
-				}
-			}
-
 			switch (scancode) {
 				// fullscreen on alt+enter
 				case SDL_SCANCODE_RETURN: {
@@ -303,7 +293,7 @@ bool handle_event(const SDL_Event& ev) {
 							return true;
 						}
 					}
-					return false;
+					break;
 				}
 
 				// eat alt+f4 event
@@ -311,7 +301,7 @@ bool handle_event(const SDL_Event& ev) {
 					if (ev.key.keysym.mod & KMOD_ALT) {
 						return true;
 					}
-					return false;
+					break;
 				}
 
 				// fullscreen on F11
@@ -320,7 +310,7 @@ bool handle_event(const SDL_Event& ev) {
 						set_fullscreen(!is_fullscreen());
 						return true;
 					}
-					return false;
+					break;
 				}
 
 				// enable frame advance mode/goto next frame
@@ -343,7 +333,17 @@ bool handle_event(const SDL_Event& ev) {
 				}*/
 #endif
 			}
-			return false;
+
+			if (scancode >= 0 && scancode < window.NUM_KEYS) {
+				if (!(ev.key.keysym.mod & KMOD_ALT)) {
+					if (ev.key.repeat) {
+						window.key_repeat[scancode / 32] |= 1 << (scancode % 32);
+					} else {
+						window.key_pressed[scancode / 32] |= 1 << (scancode % 32);
+					}
+				}
+			}
+			break;
 		}
 
 		case SDL_CONTROLLERDEVICEADDED: {
@@ -352,7 +352,7 @@ bool handle_event(const SDL_Event& ev) {
 
 				log_info("Opened controller %s.", SDL_GameControllerName(window.controller));
 			}
-			return false;
+			break;
 		}
 
 		case SDL_CONTROLLERDEVICEREMOVED: {
@@ -365,7 +365,7 @@ bool handle_event(const SDL_Event& ev) {
 					window.controller = nullptr;
 				}
 			}
-			return false;
+			break;
 		}
 
 		case SDL_CONTROLLERBUTTONDOWN: {
@@ -379,7 +379,7 @@ bool handle_event(const SDL_Event& ev) {
 					}
 				}
 			}
-			return false;
+			break;
 		}
 	}
 
